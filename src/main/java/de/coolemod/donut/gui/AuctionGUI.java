@@ -54,16 +54,16 @@ public class AuctionGUI {
             ItemMeta meta = is.getItemMeta();
             if (meta != null) {
                 List<String> lore = meta.hasLore() ? new ArrayList<>(meta.getLore()) : new ArrayList<>();
-                lore.add(0, "§8╔══════════════════════╗");
-                lore.add(1, "§x§5§5§F§F§5§5 💰 §7Preis: §x§0§0§F§F§0§0§l$" + String.format("%.2f", a.price));
+                lore.addFirst("§8╔══════════════════════╗");
+                lore.add(1, "§x§5§5§F§F§5§5 💰 §7Preis: §x§0§0§F§F§0§0§l$" + "%.2f".formatted(a.price));
                 double worth = plugin.getWorthManager().getWorth(a.item);
                 if (worth > 0) {
-                    lore.add(2, "§x§F§F§D§7§0§0 ⚡ §7Item-Wert: §e§l$" + String.format("%.2f", worth));
+                    lore.add(2, "§x§F§F§D§7§0§0 ⚡ §7Item-Wert: §e§l$" + "%.2f".formatted(worth));
                     double profit = worth - a.price;
                     if (profit > 0) {
-                        lore.add(3, "§x§0§0§F§F§0§0 ✔ §a§lProfit: §l+$" + String.format("%.2f", profit));
+                        lore.add(3, "§x§0§0§F§F§0§0 ✔ §a§lProfit: §l+$" + "%.2f".formatted(profit));
                     } else if (profit < 0) {
-                        lore.add(3, "§x§F§F§0§0§0§0 ✗ §c§lVerlust: §l-$" + String.format("%.2f", Math.abs(profit)));
+                        lore.add(3, "§x§F§F§0§0§0§0 ✗ §c§lVerlust: §l-$" + "%.2f".formatted(Math.abs(profit)));
                     }
                 }
                 lore.add("§8");
@@ -113,11 +113,11 @@ public class AuctionGUI {
             ItemMeta meta = is.getItemMeta();
             if (meta != null) {
                 List<String> lore = meta.hasLore() ? new ArrayList<>(meta.getLore()) : new ArrayList<>();
-                lore.add(0, "§8╔══════════════════════╗");
-                lore.add(1, "§x§5§5§F§F§5§5 💰 §7Preis: §x§0§0§F§F§0§0§l$" + String.format("%.2f", a.price));
+                lore.addFirst("§8╔══════════════════════╗");
+                lore.add(1, "§x§5§5§F§F§5§5 💰 §7Preis: §x§0§0§F§F§0§0§l$" + "%.2f".formatted(a.price));
                 double worth = plugin.getWorthManager().getWorth(a.item);
                 if (worth > 0) {
-                    lore.add(2, "§x§F§F§D§7§0§0 ⚡ §7Item-Wert: §e§l$" + String.format("%.2f", worth));
+                    lore.add(2, "§x§F§F§D§7§0§0 ⚡ §7Item-Wert: §e§l$" + "%.2f".formatted(worth));
                 }
                 lore.add("§8");
                 lore.add("§8╚══════════════════════╝");

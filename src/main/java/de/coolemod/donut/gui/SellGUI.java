@@ -119,7 +119,7 @@ public class SellGUI {
                 List<String> wl = new ArrayList<>();
                 wl.add("§8────────────────");
                 wl.add("§7Aktueller Wert:");
-                wl.add("§a$" + String.format("%.2f", total));
+                wl.add("§a$" + "%.2f".formatted(total));
                 wl.add("§8────────────────");
                 wl.add("§7Wird automatisch");
                 wl.add("§7aktualisiert");

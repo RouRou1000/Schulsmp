@@ -220,7 +220,7 @@ public class InventoryClickListener implements Listener {
                     
                     p_confirm.closeInventory();
                     de.coolemod.donut.gui.AuctionCreateGUI.clearPrice(p_confirm);
-                    p_confirm.sendMessage("§a✓ " + auctionItems.size() + " Auktion(en) erstellt für je $" + String.format("%.2f", price) + "!");
+                    p_confirm.sendMessage("§a✓ " + auctionItems.size() + " Auktion(en) erstellt für je $" + "%.2f".formatted(price) + "!");
                     p_confirm.playSound(p_confirm.getLocation(), org.bukkit.Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 1f);
                     return;
                 case "back":
@@ -429,8 +429,8 @@ public class InventoryClickListener implements Listener {
                         
                         // Geld geben
                         plugin.getEconomy().deposit(p15.getUniqueId(), total);
-                        p15.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§a✓ §e" + itemsSold + " Items §afür §e$" + String.format("%.2f", total) + " §averkauft!");
-                        p15.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§7Neuer Kontostand: §a$" + String.format("%.2f", plugin.getEconomy().getBalance(p15.getUniqueId())));
+                        p15.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§a✓ §e" + itemsSold + " Items §afür §e$" + "%.2f".formatted(total) + " §averkauft!");
+                        p15.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§7Neuer Kontostand: §a$" + "%.2f".formatted(plugin.getEconomy().getBalance(p15.getUniqueId())));
                         p15.playSound(p15.getLocation(), org.bukkit.Sound.ENTITY_PLAYER_LEVELUP, 0.5f, 1.5f);
                         
                         // Update Worth Display
@@ -646,7 +646,7 @@ public class InventoryClickListener implements Listener {
                     }
                 }
                 plugin.getOrdersManager().deliverToOrder(id, player.getUniqueId(), deliverAmount);
-                player.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§a✓ " + deliverAmount + " Items geliefert! Verdient: §a$" + String.format("%.2f", deliverAmount * order.pricePerItem));
+                player.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§a✓ " + deliverAmount + " Items geliefert! Verdient: §a$" + "%.2f".formatted(deliverAmount * order.pricePerItem));
                 player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 1f);
                 player.closeInventory();
                 return;

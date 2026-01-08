@@ -96,7 +96,7 @@ public class AuctionCreateGUI {
         ItemStack priceBtn = new ItemStack(Material.GOLD_INGOT);
         ItemMeta pm = priceBtn.getItemMeta();
         if (savedPrice > 0) {
-            pm.setDisplayName("§x§F§F§D§7§0§0§l💰 §x§F§F§E§3§5§5§lᴘ§x§F§F§E§F§7§7§lʀ§x§F§F§F§B§9§9§lᴇ§x§F§F§F§F§B§B§lɪ§x§F§F§F§F§D§D§lѕ§f§l: §a§l$" + String.format("%.2f", savedPrice));
+            pm.setDisplayName("§x§F§F§D§7§0§0§l💰 §x§F§F§E§3§5§5§lᴘ§x§F§F§E§F§7§7§lʀ§x§F§F§F§B§9§9§lᴇ§x§F§F§F§F§B§B§lɪ§x§F§F§F§F§D§D§lѕ§f§l: §a§l$" + "%.2f".formatted(savedPrice));
         } else {
             pm.setDisplayName("§x§F§F§D§7§0§0§l💰 §x§F§F§E§3§5§5§lᴘ§x§F§F§E§F§7§7§lʀ§x§F§F§F§B§9§9§lᴇ§x§F§F§F§F§B§B§lɪ§x§F§F§F§F§D§D§lѕ §c§lꜰᴇѕᴛʟᴇɢᴇɴ");
         }

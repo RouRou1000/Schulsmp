@@ -36,7 +36,7 @@ public class PlayerChatListener implements Listener {
                 
                 // Speichere Preis
                 de.coolemod.donut.gui.AuctionCreateGUI.setPrice(p, price);
-                p.sendMessage("§a✓ Preis gesetzt: §e$" + String.format("%.2f", price));
+                p.sendMessage("§a✓ Preis gesetzt: §e$" + "%.2f".formatted(price));
                 
                 // Öffne GUI wieder
                 org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
@@ -87,10 +87,10 @@ public class PlayerChatListener implements Listener {
                 org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
                     String id = plugin.getOrdersManager().createOrder(p.getUniqueId(), itemType, amount, pricePerItem);
                     if (id == null) {
-                        p.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§c✗ Nicht genug Geld! Benötigt: §e$" + String.format("%.2f", total));
+                        p.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§c✗ Nicht genug Geld! Benötigt: §e$" + "%.2f".formatted(total));
                         p.playSound(p.getLocation(), org.bukkit.Sound.ENTITY_VILLAGER_NO, 1f, 1f);
                     } else {
-                        p.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§a✓ Order erstellt! §7(§e" + amount + "x §7für §e$" + String.format("%.2f", pricePerItem) + "§7/Stück, gesamt §e$" + String.format("%.2f", total) + "§7)");
+                        p.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§a✓ Order erstellt! §7(§e" + amount + "x §7für §e$" + "%.2f".formatted(pricePerItem) + "§7/Stück, gesamt §e$" + "%.2f".formatted(total) + "§7)");
                         p.playSound(p.getLocation(), org.bukkit.Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 1f);
                     }
                 });

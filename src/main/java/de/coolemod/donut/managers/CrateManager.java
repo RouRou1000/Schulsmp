@@ -211,7 +211,7 @@ public class CrateManager {
             acc += pe.weight;
             if (r <= acc) return pe.item.clone();
         }
-        return c.pool.get(0).item.clone();
+        return c.pool.getFirst().item.clone();
     }
 
     public void openCrateAnimated(Player p, String crateId) {

@@ -58,7 +58,7 @@ public class SidebarManager {
         
         obj.getScore(" ").setScore(9);
         
-        String money = "§6⛃ §7ɢᴇʟᴅ§8: §a§l$" + String.format("%.2f", plugin.getEconomy().getBalance(p.getUniqueId()));
+        String money = "§6⛃ §7ɢᴇʟᴅ§8: §a§l$" + "%.2f".formatted(plugin.getEconomy().getBalance(p.getUniqueId()));
         obj.getScore(money).setScore(8);
         
         String shards = "§b❖ §7ѕʜᴀʀᴅѕ§8: §b§l" + plugin.getShards().getShards(p.getUniqueId());
@@ -72,7 +72,7 @@ public class SidebarManager {
         String deaths = "§4☠ §7ᴅᴇᴀᴛʜѕ§8: §c§l" + plugin.getStats().getDeaths(p.getUniqueId());
         obj.getScore(deaths).setScore(4);
         
-        String kd = "§6★ §7ᴋ/ᴅ§8: §f§l" + String.format("%.2f", plugin.getStats().getKD(p.getUniqueId()));
+        String kd = "§6★ §7ᴋ/ᴅ§8: §f§l" + "%.2f".formatted(plugin.getStats().getKD(p.getUniqueId()));
         obj.getScore(kd).setScore(3);
         
         obj.getScore("   ").setScore(2);

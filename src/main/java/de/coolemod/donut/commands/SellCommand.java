@@ -48,7 +48,7 @@ public class SellCommand implements CommandExecutor {
             double total = worth * amount;
             p.getInventory().setItemInMainHand(null);
             plugin.getEconomy().deposit(p.getUniqueId(), total);
-            p.sendMessage(prefix + "§x§0§0§F§F§0§0 ✔ §a" + amount + "x §f" + itemName + " §aꜰüʀ §x§F§F§F§0§0§0§l$" + String.format("%.2f", total) + " §aᴠᴇʀᴋᴀᴜꜰᴛ!");
+            p.sendMessage(prefix + "§x§0§0§F§F§0§0 ✔ §a" + amount + "x §f" + itemName + " §aꜰüʀ §x§F§F§F§0§0§0§l$" + "%.2f".formatted(total) + " §aᴠᴇʀᴋᴀᴜꜰᴛ!");
             p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 1f);
             return true;
         }
@@ -78,8 +78,8 @@ public class SellCommand implements CommandExecutor {
         }
         
         plugin.getEconomy().deposit(p.getUniqueId(), total);
-        p.sendMessage(prefix + "§x§0§0§F§F§0§0 ✔ §x§F§F§F§0§0§0§l" + itemsSold + " ɪᴛᴇᴍѕ §aꜰüʀ §x§F§F§F§0§0§0§l$" + String.format("%.2f", total) + " §aᴠᴇʀᴋᴀᴜꜰᴛ!");
-        p.sendMessage(prefix + "§8▸ §7ᴋᴏɴᴛᴏѕᴛᴀɴᴅ: §x§0§0§F§F§0§0§l$" + String.format("%.2f", plugin.getEconomy().getBalance(p.getUniqueId())));
+        p.sendMessage(prefix + "§x§0§0§F§F§0§0 ✔ §x§F§F§F§0§0§0§l" + itemsSold + " ɪᴛᴇᴍѕ §aꜰüʀ §x§F§F§F§0§0§0§l$" + "%.2f".formatted(total) + " §aᴠᴇʀᴋᴀᴜꜰᴛ!");
+        p.sendMessage(prefix + "§8▸ §7ᴋᴏɴᴛᴏѕᴛᴀɴᴅ: §x§0§0§F§F§0§0§l$" + "%.2f".formatted(plugin.getEconomy().getBalance(p.getUniqueId())));
         p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.5f, 1.5f);
         return true;
     }

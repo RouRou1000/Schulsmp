@@ -30,7 +30,7 @@ public class MainMenuGUI {
         pim.setDisplayName("§6§l" + p.getName());
         List<String> pil = new ArrayList<>();
         pil.add("§8────────────────");
-        pil.add("§7Geld: §a$" + String.format("%.2f", plugin.getEconomy().getBalance(p.getUniqueId())));
+        pil.add("§7Geld: §a$" + "%.2f".formatted(plugin.getEconomy().getBalance(p.getUniqueId())));
         pil.add("§7Shards: §d" + plugin.getShards().getShards(p.getUniqueId()));
         pil.add("§7Kills: §c" + plugin.getStats().getKills(p.getUniqueId()));
         pil.add("§7Deaths: §7" + plugin.getStats().getDeaths(p.getUniqueId()));
@@ -133,7 +133,7 @@ public class MainMenuGUI {
         bm.setDisplayName("§e§l💰 KONTOSTAND");
         List<String> bl = new ArrayList<>();
         bl.add("§8────────────────");
-        bl.add("§7Dein Geld: §a$" + String.format("%.2f", plugin.getEconomy().getBalance(p.getUniqueId())));
+        bl.add("§7Dein Geld: §a$" + "%.2f".formatted(plugin.getEconomy().getBalance(p.getUniqueId())));
         bl.add("§7Deine Shards: §d" + plugin.getShards().getShards(p.getUniqueId()));
         bl.add("§8────────────────");
         bm.setLore(bl);

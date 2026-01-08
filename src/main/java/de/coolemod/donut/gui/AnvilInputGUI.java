@@ -104,7 +104,7 @@ public class AnvilInputGUI implements Listener {
                 p.sendMessage("§cPreis muss positiv sein!");
             } else {
                 AuctionCreateGUI.setPrice(p, price);
-                p.sendMessage("§a✓ Preis gesetzt: §e$" + String.format("%.2f", price));
+                p.sendMessage("§a✓ Preis gesetzt: §e$" + "%.2f".formatted(price));
             }
         } catch (NumberFormatException ex) {
             p.sendMessage("§cNur Zahlen erlaubt!");

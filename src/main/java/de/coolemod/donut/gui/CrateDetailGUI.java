@@ -75,7 +75,7 @@ public class CrateDetailGUI {
             ItemMeta gm = g.getItemMeta();
             if (gm != null) {
                 List<String> lore = gm.hasLore() ? new ArrayList<>(gm.getLore()) : new ArrayList<>();
-                lore.add(0, "§a✓ §7GARANTIERT");
+                lore.addFirst("§a✓ §7GARANTIERT");
                 lore.add(1, "§8────────────────");
                 gm.setLore(lore);
                 g.setItemMeta(gm);
@@ -110,7 +110,7 @@ public class CrateDetailGUI {
             ItemMeta itm = it.getItemMeta();
             if (itm != null) {
                 List<String> lore = itm.hasLore() ? new ArrayList<>(itm.getLore()) : new ArrayList<>();
-                lore.add(0, "§e♦ §7Chance: §e" + pe.weight);
+                lore.addFirst("§e♦ §7Chance: §e" + pe.weight);
                 lore.add(1, "§8────────────────");
                 itm.setLore(lore);
                 it.setItemMeta(itm);

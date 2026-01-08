@@ -56,7 +56,7 @@ public class AuctionHouseManager {
         else buyer.getInventory().addItem(item);
         // Verkäufer informieren, falls online
         org.bukkit.entity.Player seller = org.bukkit.Bukkit.getPlayer(a.seller);
-        if (seller != null) seller.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§aDein Artikel wurde verkauft und du hast §e" + String.format("%.2f", price) + "§a erhalten.");
+        if (seller != null) seller.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§aDein Artikel wurde verkauft und du hast §e" + "%.2f".formatted(price) + "§a erhalten.");
         auctions.remove(id);
         save();
         return true;

@@ -29,7 +29,7 @@ public class WorthCommand implements CommandExecutor {
         ItemStack inHand = p.getInventory().getItemInMainHand();
         if (inHand == null || inHand.getType().isAir()) { p.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§eHalte ein Item in der Hand."); return true; }
         double worth = plugin.getWorthManager().getWorth(inHand);
-        p.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "Wert: §a" + String.format("%.2f", worth) + " §7pro Stück.");
+        p.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "Wert: §a" + "%.2f".formatted(worth) + " §7pro Stück.");
         return true;
     }
 }

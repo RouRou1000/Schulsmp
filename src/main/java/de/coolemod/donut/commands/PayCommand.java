@@ -70,7 +70,7 @@ public class PayCommand implements CommandExecutor {
         
         double balance = plugin.getEconomy().getBalance(p.getUniqueId());
         if (balance < amount) {
-            p.sendMessage(prefix + "§c✗ Nicht genug Geld! Du hast §a$" + String.format("%.2f", balance));
+            p.sendMessage(prefix + "§c✗ Nicht genug Geld! Du hast §a$" + "%.2f".formatted(balance));
             p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
             return true;
         }
@@ -80,11 +80,11 @@ public class PayCommand implements CommandExecutor {
         plugin.getEconomy().deposit(target.getUniqueId(), amount);
         
         // Feedback
-        String amountStr = String.format("%.2f", amount);
+        String amountStr = "%.2f".formatted(amount);
         p.sendMessage("");
         p.sendMessage(prefix + "§a✓ Transaktion erfolgreich!");
         p.sendMessage("  §7Gesendet: §a$" + amountStr + " §7an §f" + target.getName());
-        p.sendMessage("  §7Neuer Kontostand: §a$" + String.format("%.2f", plugin.getEconomy().getBalance(p.getUniqueId())));
+        p.sendMessage("  §7Neuer Kontostand: §a$" + "%.2f".formatted(plugin.getEconomy().getBalance(p.getUniqueId())));
         p.sendMessage("");
         p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 1f);
         
@@ -92,7 +92,7 @@ public class PayCommand implements CommandExecutor {
         target.sendMessage(prefix + "§a✓ Geld erhalten!");
         target.sendMessage("  §7Von: §f" + p.getName());
         target.sendMessage("  §7Betrag: §a$" + amountStr);
-        target.sendMessage("  §7Neuer Kontostand: §a$" + String.format("%.2f", plugin.getEconomy().getBalance(target.getUniqueId())));
+        target.sendMessage("  §7Neuer Kontostand: §a$" + "%.2f".formatted(plugin.getEconomy().getBalance(target.getUniqueId())));
         target.sendMessage("");
         target.playSound(target.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.5f, 1.5f);
         

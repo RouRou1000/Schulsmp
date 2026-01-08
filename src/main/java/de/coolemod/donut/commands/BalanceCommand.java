@@ -30,7 +30,7 @@ public class BalanceCommand implements CommandExecutor {
             int kills = plugin.getStats().getKills(target.getUniqueId());
             sender.sendMessage("");
             sender.sendMessage(prefix + "§e✦ Kontostand von §f" + target.getName() + " §e✦");
-            sender.sendMessage("  §7├─ §aGeld: §f$" + String.format("%.2f", bal));
+            sender.sendMessage("  §7├─ §aGeld: §f$" + "%.2f".formatted(bal));
             sender.sendMessage("  §7├─ §dShards: §f" + shards);
             sender.sendMessage("  §7└─ §cKills: §f" + kills);
             sender.sendMessage("");
@@ -48,10 +48,10 @@ public class BalanceCommand implements CommandExecutor {
         
         p.sendMessage("");
         p.sendMessage(prefix + "§e✦ Dein Kontostand §e✦");
-        p.sendMessage("  §7├─ §aGeld: §f$" + String.format("%.2f", bal));
+        p.sendMessage("  §7├─ §aGeld: §f$" + "%.2f".formatted(bal));
         p.sendMessage("  §7├─ §dShards: §f" + shards);
         p.sendMessage("  §7├─ §cKills: §f" + kills + " §8| §7Deaths: §f" + deaths);
-        p.sendMessage("  §7└─ §6K/D: §f" + String.format("%.2f", kd));
+        p.sendMessage("  §7└─ §6K/D: §f" + "%.2f".formatted(kd));
         p.sendMessage("");
         p.sendMessage("  §7§oNutze §f/sell §7§ozum Verkaufen von Items.");
         p.sendMessage("");

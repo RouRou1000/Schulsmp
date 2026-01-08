@@ -34,8 +34,8 @@ public class OrdersGUI {
             ItemMeta meta = is.getItemMeta();
             if (meta != null) {
                 List<String> lore = meta.hasLore() ? meta.getLore() : new ArrayList<>();
-                lore.add(0, "§7Benötigt: §a" + o.requiredAmount + " (geliefert: " + o.delivered + ")");
-                lore.add(1, "§7Preis/Stück: §a" + String.format("%.2f", o.pricePerItem));
+                lore.addFirst("§7Benötigt: §a" + o.requiredAmount + " (geliefert: " + o.delivered + ")");
+                lore.add(1, "§7Preis/Stück: §a" + "%.2f".formatted(o.pricePerItem));
                 meta.getPersistentDataContainer().set(new org.bukkit.NamespacedKey(plugin, "order_id"), org.bukkit.persistence.PersistentDataType.STRING, o.id);
                 meta.setLore(lore);
                 is.setItemMeta(meta);
@@ -76,10 +76,10 @@ public class OrdersGUI {
             ItemMeta meta = is.getItemMeta();
             if (meta != null) {
                 List<String> lore = meta.hasLore() ? new ArrayList<>(meta.getLore()) : new ArrayList<>();
-                lore.add(0, "§8──────────────");
+                lore.addFirst("§8──────────────");
                 lore.add(1, "§7Benötigt: §a" + o.requiredAmount);
                 lore.add(2, "§7Geliefert: §e" + o.delivered);
-                lore.add(3, "§7Preis/Stück: §a$" + String.format("%.2f", o.pricePerItem));
+                lore.add(3, "§7Preis/Stück: §a$" + "%.2f".formatted(o.pricePerItem));
                 lore.add(4, "§8──────────────");
                 lore.add(5, "§c➤ Rechtsklick zum Stornieren");
                 meta.getPersistentDataContainer().set(new org.bukkit.NamespacedKey(plugin, "order_cancel"), org.bukkit.persistence.PersistentDataType.STRING, o.id);

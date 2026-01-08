@@ -26,7 +26,7 @@ public class ShopGUI {
         ItemStack balInfo = new ItemStack(Material.GOLD_INGOT);
         ItemMeta bi = balInfo.getItemMeta();
         bi.setDisplayName("§eDein Guthaben");
-        bi.setLore(Arrays.asList("§7Balance: §a$" + String.format("%.2f", balance)));
+        bi.setLore(Arrays.asList("§7Balance: §a$" + "%.2f".formatted(balance)));
         balInfo.setItemMeta(bi);
         inv.setItem(4, balInfo);
 
