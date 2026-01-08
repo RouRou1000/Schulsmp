@@ -1,0 +1,174 @@
+# DonutCore - Konfiguration (Deutsch)
+settings:
+  shard-per-kill: 10
+  spawner-cost-multiplier: 1.0
+  scoreboard-update-ticks: 20
+  default-money: 0.0
+  # Key-Preise mit Geld (Money)
+  key-price:
+    basic: 100
+    rare: 500
+    legendary: 2000
+  # Key-Preise mit Shards
+  key-price-shards:
+    basic: 50
+    rare: 250
+    legendary: 1000
+  crate-tiers:
+    basic:
+      enchant-level: 2
+      enchant-chance: 0.10
+    rare:
+      enchant-level: 8
+      enchant-chance: 0.35
+    legendary:
+      enchant-level: 18
+      enchant-chance: 0.60
+allowed-spawners:
+  - ZOMBIE
+  - SKELETON
+  - CREEPER
+worth:
+  DIAMOND: 1000
+  EMERALD: 250
+  IRON_INGOT: 10
+  GOLD_INGOT: 20
+  COAL: 2
+  COPPER_INGOT: 5
+  LAPIS_LAZULI: 15
+  REDSTONE: 8
+  QUARTZ: 12
+  AMETHYST_SHARD: 25
+  NETHERITE_INGOT: 10000
+  NETHERITE_SCRAP: 2500
+  NETHER_STAR: 5000
+  ENCHANTED_GOLDEN_APPLE: 2500
+  GOLDEN_APPLE: 100
+  TOTEM_OF_UNDYING: 3000
+  ELYTRA: 8000
+  TRIDENT: 4000
+  SHULKER_SHELL: 500
+  ENDER_PEARL: 50
+  BLAZE_ROD: 75
+  GHAST_TEAR: 200
+  WITHER_SKELETON_SKULL: 1500
+  DRAGON_BREATH: 300
+  END_CRYSTAL: 400
+  BEACON: 15000
+  CONDUIT: 5000
+  HEART_OF_THE_SEA: 2000
+  NAUTILUS_SHELL: 250
+  TURTLE_EGG: 150
+  MUSIC_DISC_PIGSTEP: 1000
+  SPAWNER: 10000
+
+# Crates-Konfiguration
+# Pool-Einträge: "MATERIAL:amount:weight"  -> weight ist optional, wird für die gewichtete Auswahl genutzt
+# Guaranteed: Liste von garantierten Einträgen (Format: MATERIAL:amount oder MATERIAL:amount:namedWorthKey)
+# Bundles: Optional; Items in einem Bundle mit Semikolon getrennt, z. B. "GOLD_INGOT:10;EMERALD:2"
+crates:
+  basic:
+    display: "§a✦ Basis-Kiste ✦"
+    key: "Basic Key"
+    tier: "basic"
+    guaranteed:
+      - "IRON_INGOT:8"
+      - "COAL:16"
+    animation:
+      ticks: 2
+      cycles: 30
+    pool:
+      - "IRON_INGOT:10:80"
+      - "GOLD_INGOT:5:50"
+      - "EMERALD:2:20"
+      - "DIAMOND:1:5"
+    bundles:
+      - "GOLD_INGOT:10;EMERALD:2"
+
+  rare:
+    display: "§5✦ Seltene Kiste ✦"
+    key: "Rare Key"
+    tier: "rare"
+    guaranteed:
+      - "GOLD_INGOT:4"
+      - "DIAMOND:1"
+    animation:
+      ticks: 2
+      cycles: 45
+    pool:
+      - "EMERALD:5:70"
+      - "DIAMOND:1:30"
+      - "ENCHANTED_GOLDEN_APPLE:1:10"
+      - "NETHERITE_SCRAP:1:5"
+    bundles:
+      - "DIAMOND:3;EMERALD:5"
+
+  legendary:
+    display: "§6✦ Legendäre Kiste ✦"
+    key: "Legend Key"
+    tier: "legendary"
+    guaranteed:
+      - "DIAMOND_SWORD:1:LEGEND_SWORD"
+      - "NETHERITE_INGOT:1"
+    animation:
+      ticks: 3
+      cycles: 80
+    pool:
+      - "ENCHANTED_GOLDEN_APPLE:1:100"
+      - "DIAMOND:5:50"
+      - "NETHER_STAR:1:20"
+      - "ELYTRA:1:5"
+      - "TOTEM_OF_UNDYING:1:15"
+    bundles:
+      - "DIAMOND:10;EMERALD:20;GOLD_INGOT:32"
+      - "NETHERITE_SCRAP:4;DIAMOND:8"
+
+# Enchantment-Worth-Multiplikatoren (pro Enchant-Level)
+worth-enchant-multipliers:
+  DAMAGE_ALL: 200
+  DURABILITY: 50
+  ARROW_DAMAGE: 120
+  KNOCKBACK: 80
+  FIRE_ASPECT: 150
+  SHARPNESS: 180
+  PROTECTION: 100
+  EFFICIENCY: 60
+  FORTUNE: 300
+  LOOTING: 250
+  SILK_TOUCH: 500
+  MENDING: 800
+  INFINITY: 400
+  THORNS: 100
+  DEPTH_STRIDER: 75
+  FROST_WALKER: 150
+  SOUL_SPEED: 200
+  SWIFT_SNEAK: 250
+
+# Named-Worth (spezifische Items mit Display-Namen)
+# Unterstützung für zwei Formate:
+# 1) "MATERIAL|DisplayName": wert
+# 2) "KEY": wert (kann in Crates als namedWorthKey verwendet werden, z. B. LEGEND_SWORD)
+worth-named:
+  "DIAMOND_SWORD|§6Legendäres Schwert": 5000
+  "ENCHANTED_GOLDEN_APPLE|§5Glitzernder Apfel": 4000
+  "LEGEND_SWORD": 12000 # benutzerdefinierter named-worth-key
+
+messages:
+  prefix: "&6&l⚡&r &e"
+  no-permission: "&cDu hast keine Berechtigung dafür."
+  not-enough-money: "&cDu hast nicht genug Geld."
+  not-enough-shards: "&cDu hast nicht genug Shards."
+  sold-all: "&a✓ &fArtikel verkauft! Erhalten: &a$%amount%"
+  paid-player: "&a✓ &fDu hast &e%player% &f$%amount% bezahlt."
+  received-payment: "&a✓ &fDu hast &a$%amount% &fvon &e%player% &ferhalten."
+  balance: "&eGuthaben: &a$%amount%"
+  shards: "&5Shards: &d%amount%"
+  kills: "&cKills: &f%amount%"
+  crate-opened: "&a✓ &fKiste geöffnet! Erhalten: &e%items%"
+  warp-teleport: "&a✓ &fTeleportiert zu &e%warp%"
+  auction-listed: "&a✓ &fItem im Auktionshaus gelistet für &a$%price%"
+  auction-bought: "&a✓ &fItem gekauft für &a$%price%"
+  auction-expired: "&c✗ &fDeine Auktion ist abgelaufen: &e%item%"
+  order-created: "&a✓ &fOrder erstellt: &e%amount%x %item% &ffür &a$%price%/Stück"
+  order-delivered: "&a✓ &f%amount%x geliefert! Verdient: &a$%earned%"
+data-file: data.yml

@@ -1,0 +1,52 @@
+name: DonutCore
+main: de.coolemod.donut.DonutPlugin
+version: 1.0.0
+api-version: 1.21
+author: Coole Mod
+commands:
+  shop:
+    description: "Öffnet das Shop-Menü"
+    usage: /<command>
+  slayshop:
+    description: "Öffnet den Slay Shop (PvP-Shop)"
+    usage: /<command>
+  sell:
+    description: "Verkauft Items aus dem Inventar"
+    usage: /<command> [hand|all]
+    aliases: [verkaufen]
+  worth:
+    description: "Zeigt den Wert eines Items an"
+    usage: /<command>
+  ah:
+    description: "Öffnet das Auktionshaus"
+    usage: /<command>
+  order:
+    description: "Erstellt oder verwaltet Orders"
+    usage: /<command>
+  pay:
+    description: "Zahlt Geld an einen Spieler"
+    usage: /pay <spieler> <betrag>
+  balance:
+    description: "Zeigt deinen Kontostand an"
+    usage: /<command>
+  crate:
+    description: "Öffnet Kisten-Menü oder verwaltet Kisten (admin)"
+    usage: /crate | /crate give <player> <crateId> <amount> | /crate reload
+  crateadmin:
+    description: "Administrative Kisten-Kommandos"
+    usage: /crateadmin <list|create|delete|addpool>
+  rtp:
+    description: "Random Teleport in eine Welt"
+    usage: /rtp <weltname>
+    aliases: [randomtp, randomteleport]
+  menu:
+    description: "Öffnet das Hauptmenü"
+    usage: /<command>
+    aliases: [hub, main]
+permissions:
+  donut.admin:
+    description: "Verwaltet das Plugin"
+    default: op
+  donut.crate.admin:
+    description: "Verwaltung von Kisten"
+    default: op
