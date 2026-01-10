@@ -36,7 +36,8 @@ allowed-spawners:
   - CREEPER
 
 # Comprehensive Worth Table for MC 1.21.5 - ALL 1549 Items
-worth:  ACACIA_BOAT: 5
+worth:
+  ACACIA_BOAT: 5
   ACACIA_BUTTON: 1
   ACACIA_CHEST_BOAT: 5
   ACACIA_DOOR: 3
@@ -1584,6 +1585,89 @@ worth:  ACACIA_BOAT: 5
   ZOMBIE_VILLAGER_SPAWN_EGG: 0
   ZOMBIE_WALL_HEAD: 50
   ZOMBIFIED_PIGLIN_SPAWN_EGG: 0
+
+# Crates-Konfiguration - ARMOR ONLY (No Weapons/Tools)
+crates:
+  basic:
+    display: "§a✪ Basis-Kiste ✪"
+    key: "Basic Key"
+    tier: "basic"
+    guaranteed:
+      - "IRON_HELMET:1"
+    animation:
+      ticks: 2
+      cycles: 30
+    pool:
+      - "DIAMOND_HELMET:1:40"
+      - "DIAMOND_CHESTPLATE:1:35"
+      - "DIAMOND_LEGGINGS:1:35"
+      - "DIAMOND_BOOTS:1:40"
+    bundles:
+      - "IRON_INGOT:5;COAL:10"
+
+  rare:
+    display: "§5✪ Seltene Kiste ✪"
+    key: "Rare Key"
+    tier: "rare"
+    guaranteed:
+      - "DIAMOND_HELMET:1"
+    animation:
+      ticks: 2
+      cycles: 45
+    pool:
+      - "DIAMOND_HELMET:1:40"
+      - "DIAMOND_CHESTPLATE:1:30"
+      - "DIAMOND_LEGGINGS:1:30"
+      - "DIAMOND_BOOTS:1:40"
+    bundles:
+      - "DIAMOND:2;EMERALD:3"
+
+  legendary:
+    display: "§6✪ Legendäre Kiste ✪"
+    key: "Legend Key"
+    tier: "legendary"
+    guaranteed:
+      - "NETHERITE_CHESTPLATE:1"
+    animation:
+      ticks: 3
+      cycles: 80
+    pool:
+      - "NETHERITE_HELMET:1:35"
+      - "NETHERITE_CHESTPLATE:1:30"
+      - "NETHERITE_LEGGINGS:1:30"
+      - "NETHERITE_BOOTS:1:35"
+      - "ELYTRA:1:8"
+      - "TOTEM_OF_UNDYING:1:12"
+    bundles:
+      - "DIAMOND:5;EMERALD:8;GOLD_INGOT:10"
+      - "NETHERITE_SCRAP:2;DIAMOND:4"
+
+# Enchantment-Worth-Multiplikatoren (pro Enchant-Level)
+worth-enchant-multipliers:
+  DAMAGE_ALL: 200
+  DURABILITY: 50
+  ARROW_DAMAGE: 120
+  KNOCKBACK: 80
+  FIRE_ASPECT: 150
+  SHARPNESS: 180
+  PROTECTION: 100
+  EFFICIENCY: 60
+  FORTUNE: 300
+  LOOTING: 250
+  SILK_TOUCH: 500
+  MENDING: 800
+  INFINITY: 400
+  THORNS: 100
+  DEPTH_STRIDER: 75
+  FROST_WALKER: 150
+  SOUL_SPEED: 200
+  SWIFT_SNEAK: 250
+
+# Named-Worth (spezifische Items mit Display-Namen)
+worth-named:
+  "DIAMOND_SWORD|§6Legendäres Schwert": 5000
+  "ENCHANTED_GOLDEN_APPLE|§5Glitzernder Apfel": 4000
+  "LEGEND_SWORD": 12000
 
 messages:
   prefix: "&6&l✯&r &e"
