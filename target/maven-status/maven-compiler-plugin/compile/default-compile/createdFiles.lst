@@ -57,9 +57,7 @@ de\coolemod\donut\managers\SpawnerManager.class
 de\coolemod\donut\commands\SellCommand.class
 de\coolemod\donut\DonutPlugin.class
 de\coolemod\donut\managers\ShardsManager.class
-de\coolemod\donut\gui\AuctionCreateGUI.java.old
 de\coolemod\donut\managers\CrateManager$Crate.class
-de\coolemod\donut\gui\AuctionGUI.java.old
 de\coolemod\donut\guis\AuctionCreateGUINew$CreationState.class
 de\coolemod\donut\systems\HomeListener.class
 de\coolemod\donut\listeners\SpawnerBreakListener.class
@@ -79,8 +77,6 @@ de\coolemod\donut\commands\PayCommand.class
 de\coolemod\donut\guis\AuctionGUINew$2.class
 de\coolemod\donut\managers\EconomyManager.class
 de\coolemod\donut\systems\HomeGUI.class
-de\coolemod\donut\managers\AuctionHouseManager.java.old
-de\coolemod\donut\commands\AuctionCommand.java.old
 de\coolemod\donut\listeners\AuctionEventHandlerNew.class
 de\coolemod\donut\orders\OrderSystem$Order.class
 de\coolemod\donut\commands\CrateCommand.class

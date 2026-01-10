@@ -1,42 +1,4 @@
-# DonutCore - Konfiguration (Deutsch) - MC 1.21.5 Nerfed Economy
-settings:
-  shard-per-kill: 8
-  spawner-cost-multiplier: 1.1
-  scoreboard-update-ticks: 20
-  default-money: 0.0
-  # Key-Preise mit Geld (Money) - Nerfed
-  key-price:
-    basic: 60
-    rare: 250
-    legendary: 900
-  # Key-Preise mit Shards - Nerfed
-  key-price-shards:
-    basic: 30
-    rare: 140
-    legendary: 450
-  crate-tiers:
-    basic:
-      enchant-level: 2
-      enchant-chance: 0.6
-      min-enchants: 1
-      max-enchants: 2
-    rare:
-      enchant-level: 3
-      enchant-chance: 0.8
-      min-enchants: 2
-      max-enchants: 4
-    legendary:
-      enchant-level: 5
-      enchant-chance: 1.0
-      min-enchants: 4
-      max-enchants: 6
-allowed-spawners:
-  - ZOMBIE
-  - SKELETON
-  - CREEPER
-
-# Comprehensive Worth Table for MC 1.21.5 - ALL 1549 Items
-worth:  ACACIA_BOAT: 5
+  ACACIA_BOAT: 5
   ACACIA_BUTTON: 1
   ACACIA_CHEST_BOAT: 5
   ACACIA_DOOR: 3
@@ -1584,23 +1546,3 @@ worth:  ACACIA_BOAT: 5
   ZOMBIE_VILLAGER_SPAWN_EGG: 0
   ZOMBIE_WALL_HEAD: 50
   ZOMBIFIED_PIGLIN_SPAWN_EGG: 0
-
-messages:
-  prefix: "&6&l✯&r &e"
-  no-permission: "&cDu hast keine Berechtigung dafür."
-  not-enough-money: "&cDu hast nicht genug Geld."
-  not-enough-shards: "&cDu hast nicht genug Shards."
-  sold-all: "&a&fArtikel verkauft! Erhalten: &a$%amount%"
-  paid-player: "&a£ &fDu hast &e%player% &f$%amount% bezahlt."
-  received-payment: "&a &fDu hast &a$%amount% &fvon &e%player% &ferhalten."
-  balance: "&eGuthaben: &a$%amount%"
-  shards: "&5Shards: &d%amount%"
-  kills: "&cKills: &f%amount%"
-  crate-opened: "&a✔ &fKiste geöffnet! Erhalten: &e%items%"
-  warp-teleport: "&a✔ &fTeleportiert zu &e%warp%"
-  auction-listed: "&a✔ &fItem im Auktionshaus gelistet für &a$%price%"
-  auction-bought: "&a✔ &fItem gekauft für &a$%price%"
-  auction-expired: "&c✗ &fDeine Auktion ist abgelaufen: &e%item%"
-  order-created: "&a✔ &fOrder erstellt: &e%amount%x %item% &ffür &a$%price%/Stück"
-  order-delivered: "&a✔ &f%amount%x geliefert! Verdient: &a$%earned%"
-data-file: data.yml

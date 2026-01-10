@@ -65,6 +65,9 @@ public class WorthManager {
                 } catch (Exception ignored) {}
             }
         }
+
+        // Fill every remaining Material with a reasonable fallback so all items are sellable.
+        applyFallbacks();
     }
 
     public double getWorth(Material m) {
@@ -181,6 +184,80 @@ public class WorthManager {
         baseValues.put(Material.BEACON, 2000.0);
         baseValues.put(Material.DRAGON_HEAD, 500.0);
         baseValues.put(Material.DRAGON_EGG, 5000.0);
+    }
+
+    /**
+     * Ensure every Material gets at least a fallback price so all items are sellable.
+     */
+    private void applyFallbacks() {
+        boolean changed = false;
+        for (Material material : Material.values()) {
+            if (baseValues.containsKey(material)) continue;
+            double fallback = computeFallback(material);
+            baseValues.put(material, fallback);
+
+            // Also persist into config if not present so config.yml gains every item with a price.
+            String path = "worth." + material.name();
+            if (!plugin.getConfig().isSet(path)) {
+                plugin.getConfig().set(path, fallback);
+                changed = true;
+            }
+        }
+
+        if (changed) {
+            plugin.saveConfig();
+        }
+    }
+
+    private double computeFallback(Material material) {
+        // Non-sellable / special cases
+        if (material.isAir()) return 0.0;
+        String name = material.name();
+        if (name.contains("SPAWN_EGG")) return 0.0; // avoid spawner egg economy breaking
+        if (name.contains("COMMAND_BLOCK") || name.contains("STRUCTURE") || name.contains("JIGSAW") ||
+                name.contains("DEBUG_STICK") || name.contains("BARRIER") || name.contains("KNOWLEDGE_BOOK") ||
+                name.contains("OPERATOR")) {
+            return 0.0;
+        }
+
+        // Wood family aligned to user scale (16)
+        if (name.contains("_LOG") || name.contains("_STEM") || name.contains("_HYPHAE") || name.contains("_PLANKS") ||
+                name.contains("BAMBOO_BLOCK") || name.contains("BAMBOO_PLANKS") || name.contains("_WOOD") ||
+                name.contains("STRIPPED_")) {
+            return 16.0;
+        }
+
+        // Common blocks: keep cheap (1) to match config scale
+        if (material.isBlock()) {
+            // Glass/terracotta/concrete variants usually at 2-4 in config; use 2 as safe midpoint
+            if (name.contains("GLASS") || name.contains("TERRACOTTA") || name.contains("CONCRETE") || name.contains("WOOL") ||
+                    name.contains("CARPET") || name.contains("BANNER") || name.contains("CANDLE") || name.contains("COPPER") ||
+                    name.contains("TUFF") || name.contains("BRICK") || name.contains("STONE") || name.contains("DEEPSLATE") ||
+                    name.contains("SANDSTONE") || name.contains("PRISMARINE") || name.contains("PURPUR") ||
+                    name.contains("QUARTZ") || name.contains("BLACKSTONE") || name.contains("BASALT") || name.contains("OBSIDIAN")) {
+                return 2.0;
+            }
+            return 1.0;
+        }
+
+        // Tools/armor/weapons fallback modest value
+        if (name.endsWith("_SWORD") || name.endsWith("_PICKAXE") || name.endsWith("_AXE") || name.endsWith("_SHOVEL") ||
+                name.endsWith("_HOE") || name.endsWith("_HELMET") || name.endsWith("_CHESTPLATE") ||
+                name.endsWith("_LEGGINGS") || name.endsWith("_BOOTS") || name.endsWith("_SHIELD") ||
+                name.contains("TRIDENT") || name.contains("MACE") || name.contains("BOW") || name.contains("CROSSBOW")) {
+            return 20.0;
+        }
+
+        // Consumables/food low value
+        if (name.contains("POTION") || name.contains("STEW") || name.contains("SOUP") || name.contains("BREAD") ||
+                name.contains("FISH") || name.contains("MEAT") || name.contains("COOKIE") || name.contains("PIE") ||
+                name.contains("BERRY") || name.contains("CARROT") || name.contains("POTATO") || name.contains("BEETROOT") ||
+                name.contains("MELON") || name.contains("PUMPKIN") || name.contains("APPLE")) {
+            return 4.0;
+        }
+
+        // Default catch-all
+        return 1.0;
     }
 
     // programmatic registry methods
