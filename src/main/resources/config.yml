@@ -17,13 +17,19 @@ settings:
   crate-tiers:
     basic:
       enchant-level: 2
-      enchant-chance: 0.06
+      enchant-chance: 0.6
+      min-enchants: 1
+      max-enchants: 2
     rare:
-      enchant-level: 6
-      enchant-chance: 0.22
+      enchant-level: 3
+      enchant-chance: 0.8
+      min-enchants: 2
+      max-enchants: 4
     legendary:
-      enchant-level: 14
-      enchant-chance: 0.45
+      enchant-level: 5
+      enchant-chance: 1.0
+      min-enchants: 4
+      max-enchants: 6
 allowed-spawners:
   - ZOMBIE
   - SKELETON
@@ -32,77 +38,75 @@ allowed-spawners:
 # Comprehensive Worth Table for MC 1.21.5 - Nerfed Economy
 worth:
   # Ores & Raw Materials (Nerfed)
-  DIAMOND: 250
-  EMERALD: 80
-  IRON_INGOT: 3
-  GOLD_INGOT: 5
-  COAL: 1
-  COPPER_INGOT: 2
-  LAPIS_LAZULI: 4
-  REDSTONE: 2
-  QUARTZ: 3
-  AMETHYST_SHARD: 8
-  NETHERITE_INGOT: 2500
-  NETHERITE_SCRAP: 600
-  RAW_IRON: 2
-  RAW_GOLD: 3
-  RAW_COPPER: 1
-  ANCIENT_DEBRIS: 800
+  DIAMOND: 50
+  EMERALD: 2
+  IRON_INGOT: 1
+  GOLD_INGOT: 1
+  COAL: 2.5
+  COPPER_INGOT: 6
+  LAPIS_LAZULI: 2
+  REDSTONE: 10
+  QUARTZ: 1
+  AMETHYST_SHARD: 5
+  NETHERITE_INGOT: 2200
+  NETHERITE_SCRAP: 500
+  RAW_IRON: 8
+  RAW_GOLD: 10
+  RAW_COPPER: 8
+  ANCIENT_DEBRIS: 250
   
   # Rare Items (Nerfed)
-  NETHER_STAR: 1200
-  ENCHANTED_GOLDEN_APPLE: 600
-  GOLDEN_APPLE: 30
-  TOTEM_OF_UNDYING: 800
-  ELYTRA: 2000
-  TRIDENT: 1000
-  SHULKER_SHELL: 150
-  ENDER_PEARL: 15
-  BLAZE_ROD: 20
-  GHAST_TEAR: 50
+  NETHER_STAR: 5000
+  ENCHANTED_GOLDEN_APPLE: 2000
+  GOLDEN_APPLE: 4
+  TOTEM_OF_UNDYING: 350
+  ELYTRA: 25000
+  TRIDENT: 5000
+  SHULKER_SHELL: 10
+  ENDER_PEARL: 5
+  BLAZE_ROD: 0.50
+  GHAST_TEAR: 6
   WITHER_SKELETON_SKULL: 400
-  DRAGON_BREATH: 80
-  END_CRYSTAL: 100
-  BEACON: 3500
-  CONDUIT: 1200
-  HEART_OF_THE_SEA: 500
+  DRAGON_BREATH: 3
+  END_CRYSTAL: 10
+  BEACON: 5000
+  CONDUIT: 1500
+  HEART_OF_THE_SEA: 200
   NAUTILUS_SHELL: 60
-  TURTLE_EGG: 40
-  SPAWNER: 2500
-  DRAGON_EGG: 5000
-  DRAGON_HEAD: 800
+  TURTLE_EGG: 20
+  SPAWNER: 0
+  DRAGON_EGG: 10000000
+  DRAGON_HEAD: 200
   
   # Music Discs
-  MUSIC_DISC_13: 100
-  MUSIC_DISC_CAT: 100
-  MUSIC_DISC_BLOCKS: 100
-  MUSIC_DISC_CHIRP: 100
-  MUSIC_DISC_FAR: 100
-  MUSIC_DISC_MALL: 100
-  MUSIC_DISC_MELLOHI: 100
-  MUSIC_DISC_STAL: 100
-  MUSIC_DISC_STRAD: 100
-  MUSIC_DISC_WARD: 100
-  MUSIC_DISC_11: 100
-  MUSIC_DISC_WAIT: 100
-  MUSIC_DISC_OTHERSIDE: 150
-  MUSIC_DISC_5: 150
-  MUSIC_DISC_PIGSTEP: 200
-  MUSIC_DISC_RELIC: 150
-  MUSIC_DISC_PRECIPICE: 150
-  MUSIC_DISC_CREATOR: 150
-  MUSIC_DISC_CREATOR_MUSIC_BOX: 150
+  MUSIC_DISC_13: 90
+  MUSIC_DISC_CAT: 90
+  MUSIC_DISC_BLOCKS: 90
+  MUSIC_DISC_CHIRP: 90
+  MUSIC_DISC_FAR: 90
+  MUSIC_DISC_MALL: 90
+  MUSIC_DISC_MELLOHI: 90
+  MUSIC_DISC_STAL: 90
+  MUSIC_DISC_STRAD: 90
+  MUSIC_DISC_WARD: 90
+  MUSIC_DISC_11: 90
+  MUSIC_DISC_WAIT: 90
+  MUSIC_DISC_OTHERSIDE: 90
+  MUSIC_DISC_5: 90
+  MUSIC_DISC_PIGSTEP: 90
+  MUSIC_DISC_RELIC: 90
+  MUSIC_DISC_PRECIPICE: 90
+  MUSIC_DISC_CREATOR: 90
+  MUSIC_DISC_CREATOR_MUSIC_BOX: 90
   
   # 1.21/1.21.5 New Items
-  MACE: 800
-  HEAVY_CORE: 600
-  BREEZE_ROD: 50
-  WIND_CHARGE: 5
-  TRIAL_KEY: 100
-  OMINOUS_TRIAL_KEY: 150
-  OMINOUS_BOTTLE: 40
-  VAULT: 300
-  TRIAL_SPAWNER: 400
+  MACE: 8000
+  HEAVY_CORE: 3000
+  BREEZE_ROD: 25
+  WIND_CHARGE: 20
+  TRIAL_KEY: 750
+  OMINOUS_TRIAL_KEY: 1500
+  OMINOUS_BOTTLE: 10
   
   # Common Blocks (Low Values)
   DIRT: 1
@@ -124,28 +128,28 @@ worth:
   BLACKSTONE: 1
   
   # Wood Types
-  OAK_LOG: 1
-  SPRUCE_LOG: 1
-  BIRCH_LOG: 1
-  JUNGLE_LOG: 1
-  ACACIA_LOG: 1
-  DARK_OAK_LOG: 1
-  MANGROVE_LOG: 1
-  CHERRY_LOG: 1
-  BAMBOO_BLOCK: 1
-  CRIMSON_STEM: 2
-  WARPED_STEM: 2
-  OAK_PLANKS: 1
-  SPRUCE_PLANKS: 1
-  BIRCH_PLANKS: 1
-  JUNGLE_PLANKS: 1
-  ACACIA_PLANKS: 1
-  DARK_OAK_PLANKS: 1
-  MANGROVE_PLANKS: 1
-  CHERRY_PLANKS: 1
-  BAMBOO_PLANKS: 1
-  CRIMSON_PLANKS: 2
-  WARPED_PLANKS: 2
+  OAK_LOG: 16
+  SPRUCE_LOG: 16
+  BIRCH_LOG: 16
+  JUNGLE_LOG: 16
+  ACACIA_LOG: 16
+  DARK_OAK_LOG: 16
+  MANGROVE_LOG: 16
+  CHERRY_LOG: 16
+  BAMBOO_BLOCK: 16
+  CRIMSON_STEM: 16  
+  WARPED_STEM: 16
+  OAK_PLANKS: 16
+  SPRUCE_PLANKS: 16
+  BIRCH_PLANKS: 16
+  JUNGLE_PLANKS: 16
+  ACACIA_PLANKS: 16
+  DARK_OAK_PLANKS: 16
+  MANGROVE_PLANKS: 16
+  CHERRY_PLANKS: 16
+  BAMBOO_PLANKS: 16
+  CRIMSON_PLANKS: 16
+  WARPED_PLANKS: 16
   
   # Wool & Dyes
   WHITE_WOOL: 2
@@ -166,24 +170,24 @@ worth:
   BLACK_WOOL: 2
   
   # Glass
-  GLASS: 1
-  TINTED_GLASS: 3
-  WHITE_STAINED_GLASS: 2
-  ORANGE_STAINED_GLASS: 2
-  MAGENTA_STAINED_GLASS: 2
-  LIGHT_BLUE_STAINED_GLASS: 2
-  YELLOW_STAINED_GLASS: 2
-  LIME_STAINED_GLASS: 2
-  PINK_STAINED_GLASS: 2
-  GRAY_STAINED_GLASS: 2
-  LIGHT_GRAY_STAINED_GLASS: 2
-  CYAN_STAINED_GLASS: 2
-  PURPLE_STAINED_GLASS: 2
-  BLUE_STAINED_GLASS: 2
-  BROWN_STAINED_GLASS: 2
-  GREEN_STAINED_GLASS: 2
-  RED_STAINED_GLASS: 2
-  BLACK_STAINED_GLASS: 2
+  GLASS: 4
+  TINTED_GLASS: 4
+  WHITE_STAINED_GLASS: 4
+  ORANGE_STAINED_GLASS: 4
+  MAGENTA_STAINED_GLASS: 4
+  LIGHT_BLUE_STAINED_GLASS: 4
+  YELLOW_STAINED_GLASS: 4
+  LIME_STAINED_GLASS: 4
+  PINK_STAINED_GLASS: 4
+  GRAY_STAINED_GLASS: 4
+  LIGHT_GRAY_STAINED_GLASS: 4
+  CYAN_STAINED_GLASS: 4
+  PURPLE_STAINED_GLASS: 4
+  BLUE_STAINED_GLASS: 4
+  BROWN_STAINED_GLASS: 4
+  GREEN_STAINED_GLASS: 4
+  RED_STAINED_GLASS: 4
+  BLACK_STAINED_GLASS: 4
   
   # Terracotta
   TERRACOTTA: 2
@@ -255,52 +259,52 @@ worth:
   TALL_DRY_GRASS: 1
   
   # Crops & Food
-  WHEAT: 1
-  WHEAT_SEEDS: 1
-  CARROT: 1
-  POTATO: 1
-  BEETROOT: 1
-  BEETROOT_SEEDS: 1
-  MELON: 2
-  PUMPKIN: 2
-  SUGAR_CANE: 1
-  CACTUS: 1
-  BAMBOO: 1
-  KELP: 1
-  SWEET_BERRIES: 1
-  GLOW_BERRIES: 2
-  COCOA_BEANS: 2
-  APPLE: 2
-  BREAD: 2
-  COOKED_BEEF: 3
-  COOKED_PORKCHOP: 3
-  COOKED_CHICKEN: 3
-  COOKED_MUTTON: 3
-  COOKED_RABBIT: 3
-  COOKED_COD: 2
-  COOKED_SALMON: 3
-  BAKED_POTATO: 2
-  COOKIE: 1
-  CAKE: 5
-  PUMPKIN_PIE: 3
+  WHEAT: 4
+  WHEAT_SEEDS: 2
+  CARROT: 4
+  POTATO: 4
+  BEETROOT: 4
+  BEETROOT_SEEDS: 2
+  MELON: 4
+  PUMPKIN: 4
+  SUGAR_CANE: 4
+  CACTUS: 4
+  BAMBOO: 4
+  KELP: 4
+  SWEET_BERRIES: 4
+  GLOW_BERRIES: 4
+  COCOA_BEANS: 4
+  APPLE: 4
+  BREAD: 4
+  COOKED_BEEF: 4
+  COOKED_PORKCHOP: 4
+  COOKED_CHICKEN: 4
+  COOKED_MUTTON: 4
+  COOKED_RABBIT: 4
+  COOKED_COD: 4
+  COOKED_SALMON: 4
+  BAKED_POTATO: 4
+  COOKIE: 4
+  CAKE: 10
+  PUMPKIN_PIE: 4
   
   # Mob Drops
-  BONE: 1
-  STRING: 1
-  SPIDER_EYE: 1
-  GUNPOWDER: 2
-  ROTTEN_FLESH: 1
-  SLIME_BALL: 3
-  LEATHER: 2
-  FEATHER: 1
-  RABBIT_HIDE: 1
-  RABBIT_FOOT: 3
-  PHANTOM_MEMBRANE: 5
-  PRISMARINE_SHARD: 3
-  PRISMARINE_CRYSTALS: 4
-  SCUTE: 8
-  ECHO_SHARD: 50
-  DISC_FRAGMENT_5: 40
+  BONE: 10
+  STRING: 4
+  SPIDER_EYE: 4
+  GUNPOWDER: 4
+  ROTTEN_FLESH: 4
+  SLIME_BALL: 4
+  LEATHER: 4
+  FEATHER: 4
+  RABBIT_HIDE: 4
+  RABBIT_FOOT: 4
+  PHANTOM_MEMBRANE: 30
+  PRISMARINE_SHARD: 30
+  PRISMARINE_CRYSTALS: 30
+  SCUTE: 30
+  ECHO_SHARD: 600
+  DISC_FRAGMENT_5: 100
   
   # Nether Items
   GLOWSTONE_DUST: 2
@@ -318,16 +322,16 @@ worth:
   POPPED_CHORUS_FRUIT: 3
   PURPUR_BLOCK: 2
   END_ROD: 3
-  SHULKER_BOX: 200
+  SHULKER_BOX: 100
   
   # Redstone & Tech
-  REDSTONE_BLOCK: 18
-  REDSTONE_TORCH: 3
-  REPEATER: 5
-  COMPARATOR: 6
-  OBSERVER: 8
-  PISTON: 5
-  STICKY_PISTON: 6
+  REDSTONE_BLOCK: 30
+  REDSTONE_TORCH: 6
+  REPEATER: 10
+  COMPARATOR: 12
+  OBSERVER: 16
+  PISTON: 10
+  STICKY_PISTON: 12
   HOPPER: 15
   DROPPER: 8
   DISPENSER: 8
@@ -390,7 +394,7 @@ worth:
   SANDSTONE: 2
   RED_SANDSTONE: 2
   OBSIDIAN: 8
-  BEDROCK: 1
+  BEDROCK: 9000000
   
   # Utility Items
   BUCKET: 6
@@ -484,7 +488,7 @@ worth:
   DIAMOND_ORE: 200
   DEEPSLATE_DIAMOND_ORE: 200
   EMERALD_ORE: 80
-  DEEPSLATE_EMERALD_ORE: 80
+  DEEPSLATE_EMERALD_ORE: 8000
   IRON_ORE: 3
   DEEPSLATE_IRON_ORE: 3
   GOLD_ORE: 5
@@ -547,33 +551,30 @@ worth:
   LODESTONE: 40
 
 # Crates-Konfiguration - ARMOR ONLY (No Weapons/Tools)
-# Pool-Einträge: "MATERIAL:amount:weight"  -> weight ist optional, wird für die gewichtete Auswahl genutzt
-# Guaranteed: Liste von garantierten Einträgen (Format: MATERIAL:amount oder MATERIAL:amount:namedWorthKey)
+# Pool-Eintr├ñge: "MATERIAL:amount:weight"  -> weight ist optional, wird f├╝r die gewichtete Auswahl genutzt
+# Guaranteed: Liste von garantierten Eintr├ñgen (Format: MATERIAL:amount oder MATERIAL:amount:namedWorthKey)
 # Bundles: Optional; Items in einem Bundle mit Semikolon getrennt, z. B. "GOLD_INGOT:10;EMERALD:2"
 crates:
   basic:
-    display: "§a✦ Basis-Kiste ✦"
+    display: "┬ºaÔ£ª Basis-Kiste Ô£ª"
     key: "Basic Key"
     tier: "basic"
     guaranteed:
-      - "IRON_CHESTPLATE:1"
+      - "IRON_HELMET:1"
     animation:
       ticks: 2
       cycles: 30
     pool:
-      - "CHAINMAIL_HELMET:1:40"
-      - "CHAINMAIL_CHESTPLATE:1:35"
-      - "CHAINMAIL_LEGGINGS:1:35"
-      - "CHAINMAIL_BOOTS:1:40"
-      - "IRON_HELMET:1:50"
-      - "IRON_CHESTPLATE:1:45"
-      - "IRON_LEGGINGS:1:45"
-      - "IRON_BOOTS:1:50"
+      - "DIAMOND_HELMET:1:40"
+      - "DIAMOND_CHESTPLATE:1:35"
+      - "DIAMOND_LEGGINGS:1:35"
+      - "DIAMOND_BOOTS:1:40"
+    
     bundles:
       - "IRON_INGOT:5;COAL:10"
 
   rare:
-    display: "§5✦ Seltene Kiste ✦"
+    display: "┬º5Ô£ª Seltene Kiste Ô£ª"
     key: "Rare Key"
     tier: "rare"
     guaranteed:
@@ -590,7 +591,7 @@ crates:
       - "DIAMOND:2;EMERALD:3"
 
   legendary:
-    display: "§6✦ Legendäre Kiste ✦"
+    display: "┬º6Ô£ª Legend├ñre Kiste Ô£ª"
     key: "Legend Key"
     tier: "legendary"
     guaranteed:
@@ -631,30 +632,30 @@ worth-enchant-multipliers:
   SWIFT_SNEAK: 250
 
 # Named-Worth (spezifische Items mit Display-Namen)
-# Unterstützung für zwei Formate:
+# Unterst├╝tzung f├╝r zwei Formate:
 # 1) "MATERIAL|DisplayName": wert
 # 2) "KEY": wert (kann in Crates als namedWorthKey verwendet werden, z. B. LEGEND_SWORD)
 worth-named:
-  "DIAMOND_SWORD|§6Legendäres Schwert": 5000
-  "ENCHANTED_GOLDEN_APPLE|§5Glitzernder Apfel": 4000
+  "DIAMOND_SWORD|┬º6Legend├ñres Schwert": 5000
+  "ENCHANTED_GOLDEN_APPLE|┬º5Glitzernder Apfel": 4000
   "LEGEND_SWORD": 12000 # benutzerdefinierter named-worth-key
 
 messages:
-  prefix: "&6&l⚡&r &e"
-  no-permission: "&cDu hast keine Berechtigung dafür."
+  prefix: "&6&lÔÜí&r &e"
+  no-permission: "&cDu hast keine Berechtigung daf├╝r."
   not-enough-money: "&cDu hast nicht genug Geld."
   not-enough-shards: "&cDu hast nicht genug Shards."
-  sold-all: "&a✓ &fArtikel verkauft! Erhalten: &a$%amount%"
-  paid-player: "&a✓ &fDu hast &e%player% &f$%amount% bezahlt."
-  received-payment: "&a✓ &fDu hast &a$%amount% &fvon &e%player% &ferhalten."
+  sold-all: "&aÔ£ô &fArtikel verkauft! Erhalten: &a$%amount%"
+  paid-player: "&aÔ£ô &fDu hast &e%player% &f$%amount% bezahlt."
+  received-payment: "&aÔ£ô &fDu hast &a$%amount% &fvon &e%player% &ferhalten."
   balance: "&eGuthaben: &a$%amount%"
   shards: "&5Shards: &d%amount%"
   kills: "&cKills: &f%amount%"
-  crate-opened: "&a✓ &fKiste geöffnet! Erhalten: &e%items%"
-  warp-teleport: "&a✓ &fTeleportiert zu &e%warp%"
-  auction-listed: "&a✓ &fItem im Auktionshaus gelistet für &a$%price%"
-  auction-bought: "&a✓ &fItem gekauft für &a$%price%"
-  auction-expired: "&c✗ &fDeine Auktion ist abgelaufen: &e%item%"
-  order-created: "&a✓ &fOrder erstellt: &e%amount%x %item% &ffür &a$%price%/Stück"
-  order-delivered: "&a✓ &f%amount%x geliefert! Verdient: &a$%earned%"
+  crate-opened: "&aÔ£ô &fKiste ge├Âffnet! Erhalten: &e%items%"
+  warp-teleport: "&aÔ£ô &fTeleportiert zu &e%warp%"
+  auction-listed: "&aÔ£ô &fItem im Auktionshaus gelistet f├╝r &a$%price%"
+  auction-bought: "&aÔ£ô &fItem gekauft f├╝r &a$%price%"
+  auction-expired: "&cÔ£ù &fDeine Auktion ist abgelaufen: &e%item%"
+  order-created: "&aÔ£ô &fOrder erstellt: &e%amount%x %item% &ff├╝r &a$%price%/St├╝ck"
+  order-delivered: "&aÔ£ô &f%amount%x geliefert! Verdient: &a$%earned%"
 data-file: data.yml
