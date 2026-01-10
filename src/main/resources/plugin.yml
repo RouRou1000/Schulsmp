@@ -43,6 +43,24 @@ commands:
     description: "Öffnet das Hauptmenü"
     usage: /<command>
     aliases: [hub, main]
+  home:
+    description: "Home Teleport System"
+    usage: /home <name> | /home set <name> | /home del <name> | /home list
+    aliases: [sethome, delhome]
+  homes:
+    description: "Öffnet die Home-GUI"
+    usage: /homes
+  tpa:
+    description: "Teleport-Anfrage an einen Spieler"
+    usage: /tpa <spieler>
+  tpaccept:
+    description: "Akzeptiere eine TPA-Anfrage"
+    usage: /<command>
+    aliases: [tpaaccept]
+  tpdeny:
+    description: "Lehne eine TPA-Anfrage ab"
+    usage: /<command>
+    aliases: [tpadeny]
 permissions:
   donut.admin:
     description: "Verwaltet das Plugin"

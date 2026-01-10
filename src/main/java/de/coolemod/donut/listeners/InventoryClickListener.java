@@ -1,7 +1,7 @@
 package de.coolemod.donut.listeners;
 
 import de.coolemod.donut.DonutPlugin;
-import de.coolemod.donut.gui.AuctionGUI;
+// import de.coolemod.donut.gui.AuctionGUI; // OLD - Now using AuctionEventHandler
 import de.coolemod.donut.gui.OrdersGUI;
 import de.coolemod.donut.gui.SlayShopGUI;
 import de.coolemod.donut.gui.ShopGUI;
@@ -92,14 +92,14 @@ public class InventoryClickListener implements Listener {
             
             // Wenn im Top-Inventory (GUI)
             if (slot < 54) {
-                // Blockiere ALLE Items die GUI-Komponenten sind
+                // Prüfe ob es ein Button ist - aber blockiere den Click NICHT mit return!
                 if (current != null && current.hasItemMeta() && current.getItemMeta().getPersistentDataContainer().has(new NamespacedKey(plugin, "donut_gui_action"), PersistentDataType.STRING)) {
                     e.setCancelled(true);
-                    return;
+                    // KEIN RETURN - lasse Code weiterlaufen zu Action-Handlern
                 } else if (current != null && (current.getType() == Material.BLACK_STAINED_GLASS_PANE || current.getType() == Material.GRAY_STAINED_GLASS_PANE)) {
                     e.setCancelled(true);
                     return;
-                } else if (current != null && (current.getType() == Material.WRITABLE_BOOK || current.getType() == Material.EMERALD || current.getType() == Material.BARRIER || current.getType() == Material.ARROW)) {
+                } else if (current != null && (current.getType() == Material.WRITABLE_BOOK || current.getType() == Material.EMERALD || current.getType() == Material.BARRIER || current.getType() == Material.ARROW || current.getType() == Material.SUNFLOWER || current.getType() == Material.GOLD_INGOT || current.getType() == Material.LIME_STAINED_GLASS_PANE)) {
                     e.setCancelled(true); // Info/Worth/Navigation Items
                     return;
                 } else if (slot < 9 || slot >= 45 || slot % 9 == 0 || slot % 9 == 8) {
@@ -129,8 +129,8 @@ public class InventoryClickListener implements Listener {
                     e.setCancelled(true);
                     // KEIN return - lasse Code zu Action-Handlern weiterlaufen
                 }
-                // Jetzt blockiere alle anderen UI-Elemente
-                else if (current != null && (current.getType() == Material.BLACK_STAINED_GLASS_PANE || current.getType() == Material.GRAY_STAINED_GLASS_PANE)) {
+                // Blockiere alle Glass Panes OHNE Action-Key (inkl. grauer Confirm-Button)
+                else if (current != null && current.getType().name().contains("GLASS_PANE")) {
                     e.setCancelled(true);
                     return;
                 } else if (current != null && current.getType() == Material.WRITABLE_BOOK) {
@@ -145,6 +145,15 @@ public class InventoryClickListener implements Listener {
                 }
                 // Sonst: Erlaube Item-Interaktion in den freien Slots (10-43)
             }
+            
+            // OLD AUCTION SYSTEM - Now handled by AuctionEventHandler
+            // Update GUI nach Item-Änderung
+            // org.bukkit.Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            //     if (e.getView().getTitle().contains("ᴀᴜᴋᴛɪᴏɴ ᴇʀѕᴛᴇʟʟᴇɴ") || e.getView().getTitle().contains("AUKTION ERSTELLEN")) {
+            //         org.bukkit.entity.Player p = (org.bukkit.entity.Player)e.getWhoClicked();
+            //         new de.coolemod.donut.gui.AuctionCreateGUI(plugin).open(p);
+            //     }
+            // }, 1L);
         }
 
         // Prüfe AH-Aktionen
@@ -153,80 +162,92 @@ public class InventoryClickListener implements Listener {
             String ahAction = clicked.getItemMeta().getPersistentDataContainer().get(ahKey, PersistentDataType.STRING);
             org.bukkit.Bukkit.getLogger().info("AH Action: " + ahAction);
             switch (ahAction) {
+                // OLD AUCTION SYSTEM - Now handled by AuctionEventHandler
                 case "setprice":
-                    org.bukkit.entity.Player p_price = (org.bukkit.entity.Player)e.getWhoClicked();
-                    org.bukkit.Bukkit.getLogger().info("Opening price input for " + p_price.getName());
-                    
-                    // Speichere Items aus der GUI
-                    de.coolemod.donut.gui.AuctionCreateGUI.saveItems(p_price, e.getView().getTopInventory());
-                    
-                    // Markiere Spieler als in Preis-Eingabe (damit Items nicht zurückgegeben werden)
-                    p_price.setMetadata("ah_setting_price", new org.bukkit.metadata.FixedMetadataValue(plugin, true));
-                    
-                    // Schließe GUI erst, dann öffne Sign im nächsten Tick
-                    p_price.closeInventory();
-                    org.bukkit.Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                        try {
-                            new de.coolemod.donut.gui.AnvilInputGUI(plugin).openPriceInput(p_price);
-                        } catch (Exception ex) {
-                            org.bukkit.Bukkit.getLogger().severe("Error in setprice: " + ex.getMessage());
-                            ex.printStackTrace();
-                            p_price.sendMessage("§cFehler beim Öffnen der Preis-Eingabe!");
-                            p_price.removeMetadata("ah_setting_price", plugin);
-                        }
-                    }, 2L);
+                    // org.bukkit.entity.Player p_price = (org.bukkit.entity.Player)e.getWhoClicked();
+                    // org.bukkit.Bukkit.getLogger().info("Opening price input for " + p_price.getName());
+                    // 
+                    // // Speichere Items aus der GUI
+                    // de.coolemod.donut.gui.AuctionCreateGUI.saveItems(p_price, e.getView().getTopInventory());
+                    // 
+                    // // Markiere Spieler als in Preis-Eingabe (damit Items nicht zurückgegeben werden)
+                    // p_price.setMetadata("ah_setting_price", new org.bukkit.metadata.FixedMetadataValue(plugin, true));
+                    // 
+                    // // Schließe GUI erst, dann öffne Sign im nächsten Tick
+                    // p_price.closeInventory();
+                    // org.bukkit.Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                    //     try {
+                    //         new de.coolemod.donut.gui.AnvilInputGUI(plugin).openPriceInput(p_price);
+                    //     } catch (Exception ex) {
+                    //         org.bukkit.Bukkit.getLogger().severe("Error in setprice: " + ex.getMessage());
+                    //         ex.printStackTrace();
+                    //         p_price.sendMessage("§cFehler beim Öffnen der Preis-Eingabe!");
+                    //         p_price.removeMetadata("ah_setting_price", plugin);
+                    //     }
+                    // }, 2L);
                     return;
+                // OLD AUCTION SYSTEM - Now handled by AuctionEventHandler
                 case "confirm":
-                    org.bukkit.entity.Player p_confirm = (org.bukkit.entity.Player)e.getWhoClicked();
-                    org.bukkit.inventory.Inventory createInv = e.getView().getTopInventory();
-                    
-                    // Prüfe Preis aus HashMap
-                    double price = de.coolemod.donut.gui.AuctionCreateGUI.getPrice(p_confirm);
-                    if (price <= 0) {
-                        p_confirm.sendMessage("§cKein Preis gesetzt!");
-                        return;
-                    }
-                    
-                    // Sammle Items
-                    java.util.List<ItemStack> auctionItems = new java.util.ArrayList<>();
-                    for (int i = 10; i <= 43; i++) {
-                        if (i % 9 == 0 || i % 9 == 8) continue;
-                        ItemStack aItem = createInv.getItem(i);
-                        if (aItem == null || aItem.getType() == Material.AIR) continue;
-                        if (aItem.hasItemMeta() && aItem.getItemMeta().getPersistentDataContainer().has(ahKey, PersistentDataType.STRING)) continue;
-                        if (aItem.getType() == Material.BLACK_STAINED_GLASS_PANE || aItem.getType() == Material.GRAY_STAINED_GLASS_PANE) continue;
-                        auctionItems.add(aItem.clone());
-                    }
-                    
-                    if (auctionItems.isEmpty()) {
-                        p_confirm.sendMessage("§cKeine Items in der Auktion!");
-                        return;
-                    }
-                    
-                    // Erstelle Auktionen
-                    for (ItemStack auctionItem : auctionItems) {
-                        plugin.getAuctionManager().listItem(p_confirm.getUniqueId(), auctionItem, price);
-                    }
-                    
-                    // Lösche Items aus GUI
-                    for (int i = 10; i <= 43; i++) {
-                        if (i % 9 == 0 || i % 9 == 8) continue;
-                        ItemStack delItem = createInv.getItem(i);
-                        if (delItem == null || delItem.getType() == Material.AIR) continue;
-                        if (delItem.hasItemMeta() && delItem.getItemMeta().getPersistentDataContainer().has(ahKey, PersistentDataType.STRING)) continue;
-                        if (delItem.getType() == Material.BLACK_STAINED_GLASS_PANE || delItem.getType() == Material.GRAY_STAINED_GLASS_PANE) continue;
-                        createInv.setItem(i, null);
-                    }
-                    
-                    p_confirm.closeInventory();
-                    de.coolemod.donut.gui.AuctionCreateGUI.clearPrice(p_confirm);
-                    p_confirm.sendMessage("§a✓ " + auctionItems.size() + " Auktion(en) erstellt für je $" + "%.2f".formatted(price) + "!");
-                    p_confirm.playSound(p_confirm.getLocation(), org.bukkit.Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 1f);
+                    // org.bukkit.entity.Player p_confirm = (org.bukkit.entity.Player)e.getWhoClicked();
+                    // org.bukkit.inventory.Inventory createInv = e.getView().getTopInventory();
+                    // 
+                    // // Prüfe Preis aus HashMap
+                    // double price = de.coolemod.donut.gui.AuctionCreateGUI.getPrice(p_confirm);
+                    // if (price <= 0) {
+                    //     p_confirm.sendMessage("§cKein Preis gesetzt!");
+                    //     return;
+                    // }
+                    // 
+                    // // Sammle Items
+                    // java.util.List<ItemStack> auctionItems = new java.util.ArrayList<>();
+                    //     if (i % 9 == 0 || i % 9 == 8) continue;
+                    //     ItemStack aItem = createInv.getItem(i);
+                    //     if (aItem == null || aItem.getType() == Material.AIR) continue;
+                    //     if (aItem.hasItemMeta() && aItem.getItemMeta().getPersistentDataContainer().has(ahKey, PersistentDataType.STRING)) continue;
+                    //     // Blockiere ALLE Glass Panes (nicht nur Black/Gray)
+                    //     if (aItem.getType().name().contains("GLASS_PANE")) continue;
+                    //     // Blockiere andere GUI-Elemente
+                    //     if (aItem.getType() == Material.WRITABLE_BOOK || aItem.getType() == Material.ARROW || 
+                    //         aItem.getType() == Material.GOLD_INGOT || aItem.getType() == Material.BARRIER) continue;
+                    //     auctionItems.add(aItem.clone());
+                    // }
+                    // 
+                    // if (auctionItems.isEmpty()) {
+                    //     p_confirm.sendMessage("§cKeine Items in der Auktion!");
+                    //     return;
+                    // }
+                    // 
+                    // // Erstelle Auktionen
+                    // for (ItemStack auctionItem : auctionItems) {
+                    //     plugin.getAuctionManager().listItem(p_confirm.getUniqueId(), auctionItem, price);
+                    // }
+                    // 
+                    // // Lösche Items aus GUI
+                    // for (int i = 10; i <= 43; i++) {
+                    //     if (i % 9 == 0 || i % 9 == 8) continue;
+                    //     ItemStack delItem = createInv.getItem(i);
+                    //     if (delItem == null || delItem.getType() == Material.AIR) continue;
+                    //     if (delItem.hasItemMeta() && delItem.getItemMeta().getPersistentDataContainer().has(ahKey, PersistentDataType.STRING)) continue;
+                    //     // Blockiere ALLE Glass Panes (nicht nur Black/Gray)
+                    //     if (delItem.getType().name().contains("GLASS_PANE")) continue;
+                    //     // Blockiere andere GUI-Elemente
+                    //     if (delItem.getType() == Material.WRITABLE_BOOK || delItem.getType() == Material.ARROW || 
+                    //         delItem.getType() == Material.GOLD_INGOT || delItem.getType() == Material.BARRIER) continue;
+                    //     createInv.setItem(i, null);
+                    // }
+                    // 
+                    // p_confirm.closeInventory();
+                    // // WICHTIG: Lösche gespeicherte Items + Preis aus HashMap (verhindert Dupe!)
+                    // de.coolemod.donut.gui.AuctionCreateGUI.clearPrice(p_confirm);
+                    // de.coolemod.donut.gui.AuctionCreateGUI.clearItems(p_confirm);
+                    // p_confirm.sendMessage("§a✓ " + auctionItems.size() + " Auktion(en) erstellt für je $" + "%.2f".formatted(price) + "!");
+                    // p_confirm.playSound(p_confirm.getLocation(), org.bukkit.Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 1f);
                     return;
+                // OLD AUCTION SYSTEM - Now handled by AuctionEventHandler
                 case "back":
-                    org.bukkit.entity.Player p_back = (org.bukkit.entity.Player)e.getWhoClicked();
-                    p_back.closeInventory();
-                    new AuctionGUI(plugin).open(p_back, 1);
+                    // org.bukkit.entity.Player p_back = (org.bukkit.entity.Player)e.getWhoClicked();
+                    // p_back.closeInventory();
+                    // new AuctionGUI(plugin).open(p_back, 1);
                     return;
             }
         }
@@ -239,51 +260,54 @@ public class InventoryClickListener implements Listener {
             String action = is.getItemMeta().getPersistentDataContainer().get(actionKey, PersistentDataType.STRING);
             Integer page = is.getItemMeta().getPersistentDataContainer().has(pageKey, PersistentDataType.INTEGER) ? is.getItemMeta().getPersistentDataContainer().get(pageKey, PersistentDataType.INTEGER) : 1;
             switch (action) {
+                // OLD AUCTION SYSTEM - Now handled by AuctionEventHandler
                 case "auction_prev":
                 case "auction_next":
-                    new AuctionGUI(plugin).open((org.bukkit.entity.Player)e.getWhoClicked(), page);
+                    // new AuctionGUI(plugin).open((org.bukkit.entity.Player)e.getWhoClicked(), page);
                     return;
                 case "auction_close":
-                    ((org.bukkit.entity.Player)e.getWhoClicked()).closeInventory();
+                    // ((org.bukkit.entity.Player)e.getWhoClicked()).closeInventory();
                     return;
                 case "auction_my":
-                    new AuctionGUI(plugin).openMyAuctions((org.bukkit.entity.Player)e.getWhoClicked());
+                    // new AuctionGUI(plugin).openMyAuctions((org.bukkit.entity.Player)e.getWhoClicked());
                     return;
                 case "auction_back":
-                    new AuctionGUI(plugin).open((org.bukkit.entity.Player)e.getWhoClicked(), 1);
+                    // new AuctionGUI(plugin).open((org.bukkit.entity.Player)e.getWhoClicked(), 1);
                     return;
                 case "auction_browse":
-                    new AuctionGUI(plugin).open((org.bukkit.entity.Player)e.getWhoClicked(), 1);
+                    // new AuctionGUI(plugin).open((org.bukkit.entity.Player)e.getWhoClicked(), 1);
                     return;
+                // OLD AUCTION SYSTEM - Now handled by AuctionEventHandler
                 case "auction_create_close":
-                    org.bukkit.entity.Player p_close = (org.bukkit.entity.Player)e.getWhoClicked();
-                    org.bukkit.inventory.Inventory closeInv = e.getView().getTopInventory();
-                    
-                    // Gib alle Items zurück
-                    for (int i = 10; i <= 43; i++) {
-                        if (i % 9 == 0 || i % 9 == 8) continue;
-                        ItemStack returnItem = closeInv.getItem(i);
-                        if (returnItem == null || returnItem.getType() == Material.AIR) continue;
-                        if (returnItem.hasItemMeta() && returnItem.getItemMeta().getPersistentDataContainer().has(new NamespacedKey(plugin, "donut_gui_action"), PersistentDataType.STRING)) {
-                            continue;
-                        }
-                        if (returnItem.getType() == Material.BLACK_STAINED_GLASS_PANE || returnItem.getType() == Material.GRAY_STAINED_GLASS_PANE) continue;
-                        
-                        // Gib Item zurück
-                        java.util.HashMap<Integer, ItemStack> leftover = p_close.getInventory().addItem(returnItem);
-                        if (!leftover.isEmpty()) {
-                            for (ItemStack left : leftover.values()) {
-                                p_close.getWorld().dropItemNaturally(p_close.getLocation(), left);
-                            }
-                        }
-                    }
-                    
-                    p_close.closeInventory();
+                    // org.bukkit.entity.Player p_close = (org.bukkit.entity.Player)e.getWhoClicked();
+                    // org.bukkit.inventory.Inventory closeInv = e.getView().getTopInventory();
+                    // 
+                    // // Gib alle Items zurück
+                    // for (int i = 10; i <= 43; i++) {
+                    //     if (i % 9 == 0 || i % 9 == 8) continue;
+                    //     ItemStack returnItem = closeInv.getItem(i);
+                    //     if (returnItem == null || returnItem.getType() == Material.AIR) continue;
+                    //     if (returnItem.hasItemMeta() && returnItem.getItemMeta().getPersistentDataContainer().has(new NamespacedKey(plugin, "donut_gui_action"), PersistentDataType.STRING)) {
+                    //         continue;
+                    //     }
+                    //     if (returnItem.getType() == Material.BLACK_STAINED_GLASS_PANE || returnItem.getType() == Material.GRAY_STAINED_GLASS_PANE) continue;
+                    //     
+                    //     // Gib Item zurück
+                    //     java.util.HashMap<Integer, ItemStack> leftover = p_close.getInventory().addItem(returnItem);
+                    //     if (!leftover.isEmpty()) {
+                    //         for (ItemStack left : leftover.values()) {
+                    //             p_close.getWorld().dropItemNaturally(p_close.getLocation(), left);
+                    //         }
+                    //     }
+                    // }
+                    // 
+                    // p_close.closeInventory();
                     return;
+                // OLD AUCTION SYSTEM - Now handled by AuctionEventHandler
                 case "auction_create":
-                    // Öffne Create-GUI für neue Auktion
-                    org.bukkit.entity.Player pl_create = (org.bukkit.entity.Player)e.getWhoClicked();
-                    new de.coolemod.donut.gui.AuctionCreateGUI(plugin).open(pl_create);
+                    // // Öffne Create-GUI für neue Auktion
+                    // org.bukkit.entity.Player pl_create = (org.bukkit.entity.Player)e.getWhoClicked();
+                    // new de.coolemod.donut.gui.AuctionCreateGUI(plugin).open(pl_create);
                     return;
                 case "orders_prev":
                 case "orders_next":
@@ -354,8 +378,10 @@ public class InventoryClickListener implements Listener {
                         new de.coolemod.donut.gui.SlayShopGUI(plugin).open(p8);
                         return;
                     } else if (action.equals("open_auction")) {
-                        org.bukkit.entity.Player p9 = (org.bukkit.entity.Player)e.getWhoClicked();
-                        new de.coolemod.donut.gui.AuctionCreateGUI(plugin).open(p9);
+                        // OLD AUCTION SYSTEM - Now handled by AuctionEventHandler
+                        // org.bukkit.entity.Player p9 = (org.bukkit.entity.Player)e.getWhoClicked();
+                        // new de.coolemod.donut.gui.AuctionCreateGUI(plugin).open(p9);
+                        // Use /ah create instead
                         return;
                     } else if (action.equals("open_orders")) {
                         org.bukkit.entity.Player p10 = (org.bukkit.entity.Player)e.getWhoClicked();
@@ -448,7 +474,12 @@ public class InventoryClickListener implements Listener {
                             if (returnItem.hasItemMeta() && returnItem.getItemMeta().getPersistentDataContainer().has(new NamespacedKey(plugin, "donut_gui_action"), PersistentDataType.STRING)) {
                                 continue;
                             }
-                            if (returnItem.getType() == Material.BLACK_STAINED_GLASS_PANE || returnItem.getType() == Material.GRAY_STAINED_GLASS_PANE) continue;
+                            // Blockiere ALLE Glass Panes
+                            if (returnItem.getType().name().contains("GLASS_PANE")) continue;
+                            // Blockiere GUI-Elemente
+                            if (returnItem.getType() == Material.WRITABLE_BOOK || returnItem.getType() == Material.ARROW || 
+                                returnItem.getType() == Material.GOLD_INGOT || returnItem.getType() == Material.BARRIER || 
+                                returnItem.getType() == Material.EMERALD || returnItem.getType() == Material.SUNFLOWER) continue;
                             
                             // Gib Item zurück
                             java.util.HashMap<Integer, ItemStack> leftover = p16.getInventory().addItem(returnItem);
@@ -527,7 +558,8 @@ public class InventoryClickListener implements Listener {
             String action = meta.getPersistentDataContainer().has(new NamespacedKey(plugin, "donut_gui_action"), PersistentDataType.STRING) 
                 ? meta.getPersistentDataContainer().get(new NamespacedKey(plugin, "donut_gui_action"), PersistentDataType.STRING) : null;
             if ("shop_close".equals(action)) { buyer.closeInventory(); return; }
-            if ("open_auction".equals(action)) { new de.coolemod.donut.gui.AuctionCreateGUI(plugin).open(buyer); return; }
+            // OLD AUCTION SYSTEM - Now handled by AuctionEventHandler
+            // if ("open_auction".equals(action)) { new de.coolemod.donut.gui.AuctionCreateGUI(plugin).open(buyer); return; }
             // Kauflogik
             if (meta.getPersistentDataContainer().has(new NamespacedKey(plugin, "shop_cost_money"), PersistentDataType.INTEGER)) {
                 int cost = meta.getPersistentDataContainer().get(new NamespacedKey(plugin, "shop_cost_money"), PersistentDataType.INTEGER);
@@ -580,18 +612,19 @@ public class InventoryClickListener implements Listener {
                 return;
             }
             
+            // OLD AUCTION SYSTEM - Now handled by AuctionEventHandler
             // Stornieren (Rechtsklick in "Meine Auktionen")
-            if (meta.getPersistentDataContainer().has(new NamespacedKey(plugin, "auction_cancel"), PersistentDataType.STRING) && e.getClick().isRightClick()) {
-                String id = meta.getPersistentDataContainer().get(new NamespacedKey(plugin, "auction_cancel"), PersistentDataType.STRING);
-                if (plugin.getAuctionManager().cancel(buyer.getUniqueId(), id)) {
-                    buyer.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§a✓ Auktion zurückgezogen!");
-                    buyer.playSound(buyer.getLocation(), org.bukkit.Sound.ENTITY_ITEM_PICKUP, 1f, 1f);
-                    new AuctionGUI(plugin).openMyAuctions(buyer);
-                } else {
-                    buyer.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§c✗ Konnte Auktion nicht zurückziehen.");
-                }
-                return;
-            }
+            // if (meta.getPersistentDataContainer().has(new NamespacedKey(plugin, "auction_cancel"), PersistentDataType.STRING) && e.getClick().isRightClick()) {
+            //     String id = meta.getPersistentDataContainer().get(new NamespacedKey(plugin, "auction_cancel"), PersistentDataType.STRING);
+            //     if (plugin.getAuctionManager().cancel(buyer.getUniqueId(), id)) {
+            //         buyer.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§a✓ Auktion zurückgezogen!");
+            //         buyer.playSound(buyer.getLocation(), org.bukkit.Sound.ENTITY_ITEM_PICKUP, 1f, 1f);
+            //         new AuctionGUI(plugin).openMyAuctions(buyer);
+            //     } else {
+            //         buyer.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§c✗ Konnte Auktion nicht zurückziehen.");
+            //     }
+            //     return;
+            // }
             return;
         }
 

@@ -22,31 +22,32 @@ public class PlayerChatListener implements Listener {
         Player p = e.getPlayer();
         String msg = e.getMessage().trim();
 
+        // OLD AUCTION SYSTEM - Now handled by AuctionEventHandler
         // AH Preis-Eingabe
-        if (p.hasMetadata("ah_price_input")) {
-            e.setCancelled(true);
-            p.removeMetadata("ah_price_input", plugin);
-            
-            try {
-                double price = Double.parseDouble(msg);
-                if (price <= 0) {
-                    p.sendMessage("§cPreis muss positiv sein!");
-                    return;
-                }
-                
-                // Speichere Preis
-                de.coolemod.donut.gui.AuctionCreateGUI.setPrice(p, price);
-                p.sendMessage("§a✓ Preis gesetzt: §e$" + "%.2f".formatted(price));
-                
-                // Öffne GUI wieder
-                org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
-                    new de.coolemod.donut.gui.AuctionCreateGUI(plugin).open(p);
-                });
-            } catch (NumberFormatException ex) {
-                p.sendMessage("§cNur Zahlen erlaubt!");
-            }
-            return;
-        }
+        // if (p.hasMetadata("ah_price_input")) {
+        //     e.setCancelled(true);
+        //     p.removeMetadata("ah_price_input", plugin);
+        //     
+        //     try {
+        //         double price = Double.parseDouble(msg);
+        //         if (price <= 0) {
+        //             p.sendMessage("§cPreis muss positiv sein!");
+        //             return;
+        //         }
+        //         
+        //         // Speichere Preis
+        //         de.coolemod.donut.gui.AuctionCreateGUI.setPrice(p, price);
+        //         p.sendMessage("§a✓ Preis gesetzt: §e$" + "%.2f".formatted(price));
+        //         
+        //         // Öffne GUI wieder
+        //         org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
+        //             new de.coolemod.donut.gui.AuctionCreateGUI(plugin).open(p);
+        //         });
+        //     } catch (NumberFormatException ex) {
+        //         p.sendMessage("§cNur Zahlen erlaubt!");
+        //     }
+        //     return;
+        // }
 
         // Order erstellen (nur Orders, keine Auktionen mehr via Chat!)
         if (p.hasMetadata("order_create_pending")) {

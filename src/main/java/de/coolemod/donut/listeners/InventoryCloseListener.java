@@ -25,16 +25,18 @@ public class InventoryCloseListener implements Listener {
         Player p = (Player) e.getPlayer();
         Inventory inv = e.getInventory();
 
+        // OLD AUCTION SYSTEM - Now handled by AuctionEventHandler
         // Bei Auction Create GUI - Items zurückgeben
-        if (title.contains("ᴀᴜᴋᴛɪᴏɴ ᴇʀѕᴛᴇʟʟᴇɴ") || title.contains("AUKTION ERSTELLEN")) {
-            // Nicht zurückgeben wenn Spieler gerade Preis eingibt
-            if (!p.hasMetadata("ah_setting_price")) {
-                returnItemsToPlayer(p, inv, 10, 43);
-                // Lösche gespeicherten Preis und Items aus HashMap
-                de.coolemod.donut.gui.AuctionCreateGUI.clearPrice(p);
-                de.coolemod.donut.gui.AuctionCreateGUI.clearItems(p);
-            }
-        }
+        // if (title.contains("ᴀᴜᴋᴛɪᴏɴ ᴇʀѕᴛᴇʟʟᴇɴ") || title.contains("AUKTION ERSTELLEN")) {
+        //     // Nicht zurückgeben wenn Spieler gerade Preis eingibt ODER wenn Items aus HashMap kommen
+        //     if (!p.hasMetadata("ah_setting_price")) {
+        //         // NUR aus GUI zurückgeben, NICHT aus HashMap (würde duplizieren)
+        //         returnItemsFromGUIOnly(p, inv, 10, 43);
+        //         // Lösche gespeicherten Preis und Items aus HashMap
+        //         de.coolemod.donut.gui.AuctionCreateGUI.clearPrice(p);
+        //         de.coolemod.donut.gui.AuctionCreateGUI.clearItems(p);
+        //     }
+        // }
         
         // Bei Sell GUI - Items zurückgeben
         if (title.contains("ɪᴛᴇᴍѕ ᴠᴇʀᴋᴀᴜꜰᴇɴ") || title.contains("ITEMS VERKAUFEN")) {
@@ -44,6 +46,7 @@ public class InventoryCloseListener implements Listener {
 
     /**
      * Gibt Items aus dem angegebenen Slot-Bereich an den Spieler zurück
+     * (für Sell GUI)
      */
     private void returnItemsToPlayer(Player p, Inventory inv, int startSlot, int endSlot) {
         for (int i = startSlot; i <= endSlot; i++) {
@@ -56,8 +59,15 @@ public class InventoryCloseListener implements Listener {
                     continue;
                 }
                 
-                // Überspringe Border-Items
-                if (item.getType() == Material.BLACK_STAINED_GLASS_PANE || item.getType() == Material.GRAY_STAINED_GLASS_PANE) {
+                // Überspringe ALLE Glass Panes
+                if (item.getType().name().contains("GLASS_PANE")) {
+                    continue;
+                }
+                
+                // Überspringe GUI-Elemente
+                if (item.getType() == Material.WRITABLE_BOOK || item.getType() == Material.ARROW || 
+                    item.getType() == Material.GOLD_INGOT || item.getType() == Material.BARRIER || 
+                    item.getType() == Material.EMERALD) {
                     continue;
                 }
                 
@@ -70,5 +80,15 @@ public class InventoryCloseListener implements Listener {
                 }
             }
         }
+    }
+    
+    /**
+     * Gibt NUR Items aus dem GUI zurück (nicht aus HashMap)
+     * Für Auction Create GUI um Duplication zu vermeiden
+     */
+    private void returnItemsFromGUIOnly(Player p, Inventory inv, int startSlot, int endSlot) {
+        // Diese Methode macht NICHTS mehr - Items sind im HashMap und werden beim
+        // nächsten Öffnen geladen, oder wurden bereits in Auktionen umgewandelt
+        // Dadurch vermeiden wir Duplikation
     }
 }

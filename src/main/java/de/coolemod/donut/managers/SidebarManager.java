@@ -48,7 +48,7 @@ public class SidebarManager {
         ScoreboardManager sm = Bukkit.getScoreboardManager();
         if (sm == null) return;
         Scoreboard board = sm.getNewScoreboard();
-        Objective obj = board.registerNewObjective("donut_sidebar", "dummy", "§6§l⚡ §e§lѕᴄʜᴜʟ-ѕᴍᴘ §6§l⚡");
+        Objective obj = board.registerNewObjective("donut_sidebar", "dummy", "§6⚡ §eѕᴄʜᴜʟ-ѕᴍᴘ §6⚡");
         obj.setDisplaySlot(DisplaySlot.SIDEBAR);
 
         obj.getScore("§8§m━━━━━━━━━━━━━━").setScore(11);
@@ -58,21 +58,21 @@ public class SidebarManager {
         
         obj.getScore(" ").setScore(9);
         
-        String money = "§6⛃ §7ɢᴇʟᴅ§8: §a§l$" + "%.2f".formatted(plugin.getEconomy().getBalance(p.getUniqueId()));
+        String money = "§6⛃ §7ɢᴇʟᴅ§8: §a$" + "%.2f".formatted(plugin.getEconomy().getBalance(p.getUniqueId()));
         obj.getScore(money).setScore(8);
         
-        String shards = "§b❖ §7ѕʜᴀʀᴅѕ§8: §b§l" + plugin.getShards().getShards(p.getUniqueId());
+        String shards = "§b❖ §7ѕʜᴀʀᴅѕ§8: §b" + plugin.getShards().getShards(p.getUniqueId());
         obj.getScore(shards).setScore(7);
         
         obj.getScore("  ").setScore(6);
         
-        String kills = "§c⚔ §7ᴋɪʟʟѕ§8: §e§l" + plugin.getStats().getKills(p.getUniqueId());
+        String kills = "§c⚔ §7ᴋɪʟʟѕ§8: §e" + plugin.getStats().getKills(p.getUniqueId());
         obj.getScore(kills).setScore(5);
         
-        String deaths = "§4☠ §7ᴅᴇᴀᴛʜѕ§8: §c§l" + plugin.getStats().getDeaths(p.getUniqueId());
+        String deaths = "§4☠ §7ᴅᴇᴀᴛʜѕ§8: §c" + plugin.getStats().getDeaths(p.getUniqueId());
         obj.getScore(deaths).setScore(4);
         
-        String kd = "§6★ §7ᴋ/ᴅ§8: §f§l" + "%.2f".formatted(plugin.getStats().getKD(p.getUniqueId()));
+        String kd = "§6★ §7ᴋ/ᴅ§8: §f" + "%.2f".formatted(plugin.getStats().getKD(p.getUniqueId()));
         obj.getScore(kd).setScore(3);
         
         obj.getScore("   ").setScore(2);

@@ -24,17 +24,19 @@ public class WarpCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!(sender instanceof Player)) { sender.sendMessage("Nur Spieler."); return true; }
+        if (!(sender instanceof Player)) { sender.sendMessage("§cDieser Befehl ist nur für Spieler!"); return true; }
         Player p = (Player) sender;
         
         if (args.length == 0) {
-            p.sendMessage("§6§lRandom Teleport");
-            p.sendMessage("§7Verwendung: §e/rtp <weltname>");
-            p.sendMessage("§7Verfügbare Welten:");
+            p.sendMessage("");
+            p.sendMessage("§8┃ §a§lRTP §8┃ §7Random Teleport");
+            p.sendMessage("§8  ▸ §7Verwendung: §e/rtp <welt>");
+            p.sendMessage("§8  ▸ §7Verfügbare Welten:");
             for (World w : Bukkit.getWorlds()) {
                 String env = getEnvironmentIcon(w.getEnvironment());
-                p.sendMessage("§7 - " + env + " §f" + w.getName());
+                p.sendMessage("§8    " + env + " §f" + w.getName());
             }
+            p.sendMessage("");
             return true;
         }
         
@@ -42,26 +44,26 @@ public class WarpCommand implements CommandExecutor {
         World world = Bukkit.getWorld(worldName);
         
         if (world == null) {
-            p.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§c✗ Welt '§f" + worldName + "§c' nicht gefunden!");
-            p.sendMessage("§7Verfügbare Welten:");
+            p.sendMessage("§8┃ §a§lRTP §8┃ §cWelt '§f" + worldName + "§c' nicht gefunden!");
+            p.sendMessage("§8  ▸ §7Verfügbar:");
             for (World w : Bukkit.getWorlds()) {
-                p.sendMessage("§7 - §f" + w.getName());
+                p.sendMessage("§8    ▸ §f" + w.getName());
             }
             return true;
         }
         
-        p.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§eSuche sichere Position...");
+        p.sendMessage("§8┃ §a§lRTP §8┃ §7Suche sichere Position...");
         
         // Finde sichere Random-Position
         Location safeLoc = findSafeLocation(world);
         if (safeLoc == null) {
-            p.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§c✗ Konnte keine sichere Position finden. Versuche es erneut!");
+            p.sendMessage("§8┃ §a§lRTP §8┃ §cKeine sichere Position gefunden. Versuche es erneut!");
             return true;
         }
         
         p.teleport(safeLoc);
-        p.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§a✓ Teleportiert zu §e" + world.getName() + "§a!");
-        p.sendMessage("§7Position: §f" + safeLoc.getBlockX() + "§7, §f" + safeLoc.getBlockY() + "§7, §f" + safeLoc.getBlockZ());
+        p.sendMessage("§8┃ §a§lRTP §8┃ §aTeleportiert nach §e" + world.getName() + "§a!");
+        p.sendMessage("§8  ▸ §7Position: §f" + safeLoc.getBlockX() + "§8, §f" + safeLoc.getBlockY() + "§8, §f" + safeLoc.getBlockZ());
         
         // Effekte
         try {

@@ -49,8 +49,12 @@ public class AuctionCreateGUI {
         for (int i = 10; i <= 43; i++) {
             if (i % 9 == 0 || i % 9 == 8) continue;
             ItemStack item = inv.getItem(i);
-            if (item != null && item.getType() != Material.AIR && item.getType() != Material.BLACK_STAINED_GLASS_PANE) {
-                savedItems.add(item.clone());
+            if (item != null && item.getType() != Material.AIR && !item.getType().name().contains("GLASS_PANE")) {
+                // Prüfe ob es kein GUI-Element ist
+                if (item.getType() != Material.WRITABLE_BOOK && item.getType() != Material.ARROW && 
+                    item.getType() != Material.GOLD_INGOT && item.getType() != Material.BARRIER) {
+                    savedItems.add(item.clone());
+                }
             }
         }
         if (!savedItems.isEmpty()) {
@@ -63,6 +67,13 @@ public class AuctionCreateGUI {
     }
 
     public void open(Player p) {
+        // Speichere zuerst aktuelle Items aus vorherigem GUI (falls vorhanden)
+        if (p.getOpenInventory() != null && p.getOpenInventory().getTitle() != null && 
+            (p.getOpenInventory().getTitle().contains("ᴀᴜᴋᴛɪᴏɴ ᴇʀѕᴛᴇʟʟᴇɴ") || 
+             p.getOpenInventory().getTitle().contains("AUKTION ERSTELLEN"))) {
+            saveItems(p, p.getOpenInventory().getTopInventory());
+        }
+        
         Inventory inv = Bukkit.createInventory(null, 54, "§x§F§F§A§5§0§0§lA§x§F§F§B§0§0§0§lU§x§F§F§B§B§0§0§lK§x§F§F§C§6§0§0§lT§x§F§F§D§1§0§0§lI§x§F§F§D§C§0§0§lO§x§F§F§E§7§0§0§lN §x§F§F§F§2§0§0§lE§x§F§F§F§D§0§0§lR§x§F§F§F§F§0§8§lS§x§F§F§F§F§1§3§lT§x§F§F§F§F§1§E§lE§x§F§F§F§F§2§9§lL§x§F§F§F§F§3§4§lL§x§F§F§F§F§3§F§lE§x§F§F§F§F§4§A§lN");
         
         // Rahmen mit Glas füllen
@@ -105,11 +116,30 @@ public class AuctionCreateGUI {
         priceBtn.setItemMeta(pm);
         inv.setItem(49, priceBtn);
 
-        // Erstellen-Button
-        ItemStack confirm = new ItemStack(Material.LIME_STAINED_GLASS_PANE);
-        ItemMeta cm = confirm.getItemMeta();
-        cm.setDisplayName("§x§0§0§F§F§0§0§l✔ §x§5§5§F§F§5§5§lᴀ§x§7§7§F§F§7§7§lᴜ§x§9§9§F§F§9§9§lᴋ§x§B§B§F§F§B§B§lᴛ§x§D§D§F§F§D§D§lɪ§x§F§F§F§F§F§F§lᴏ§x§F§F§F§F§F§F§lɴ §a§lᴇʀѕᴛᴇʟʟᴇɴ");
-        cm.getPersistentDataContainer().set(key, PersistentDataType.STRING, "confirm");
+        // Erstellen-Button - nur aktiv wenn Items + Preis vorhanden
+        boolean hasItems = items.containsKey(p.getUniqueId()) && !items.get(p.getUniqueId()).isEmpty();
+        boolean hasPrice = savedPrice > 0;
+        
+        ItemStack confirm;
+        ItemMeta cm;
+        
+        if (hasItems && hasPrice) {
+            // Grün = Bereit zum Erstellen
+            confirm = new ItemStack(Material.LIME_STAINED_GLASS_PANE);
+            cm = confirm.getItemMeta();
+            cm.setDisplayName("§x§0§0§F§F§0§0§l✔ §x§5§5§F§F§5§5§lᴀ§x§7§7§F§F§7§7§lᴜ§x§9§9§F§F§9§9§lᴋ§x§B§B§F§F§B§B§lᴛ§x§D§D§F§F§D§D§lɪ§x§F§F§F§F§F§F§lᴏ§x§F§F§F§F§F§F§lɴ §a§lᴇʀѕᴛᴇʟʟᴇɴ");
+            cm.getPersistentDataContainer().set(key, PersistentDataType.STRING, "confirm");
+        } else {
+            // Grau = Noch nicht bereit
+            confirm = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
+            cm = confirm.getItemMeta();
+            List<String> lore = new ArrayList<>();
+            cm.setDisplayName("§7§l✖ §7§lɴɪᴄʜᴛ ʙᴇʀᴇɪᴛ");
+            if (!hasItems) lore.add("§c✖ Keine Items eingelegt");
+            if (!hasPrice) lore.add("§c✖ Kein Preis festgelegt");
+            cm.setLore(lore);
+            // KEIN PDC Key = nicht klickbar
+        }
         confirm.setItemMeta(cm);
         inv.setItem(50, confirm);
 
