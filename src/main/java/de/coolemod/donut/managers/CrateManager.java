@@ -291,11 +291,10 @@ public class CrateManager {
             if (!plugin.getConfig().isConfigurationSection(base)) return item;
             int maxLevel = plugin.getConfig().getInt(base + ".enchant-level", 0);
             double chance = plugin.getConfig().getDouble(base + ".enchant-chance", 0.0);
-            int minEnchants = plugin.getConfig().getInt(base + ".min-enchants", 1);
-            int maxEnchants = plugin.getConfig().getInt(base + ".max-enchants", 3);
             if (maxLevel <= 0 || chance <= 0.0) return item;
+            if (random.nextDouble() > chance) return item;
 
-            // Collect all possible enchantments for this item
+            // pick a random enchantment that can enchant this item
             List<org.bukkit.enchantments.Enchantment> possible = new ArrayList<>();
             for (org.bukkit.enchantments.Enchantment e : org.bukkit.enchantments.Enchantment.values()) {
                 try {
@@ -303,36 +302,10 @@ public class CrateManager {
                 } catch (Throwable ignored) {}
             }
             if (possible.isEmpty()) return item;
-            
+            org.bukkit.enchantments.Enchantment chosen = possible.get(random.nextInt(possible.size()));
+            int lvl = 1 + random.nextInt(Math.max(1, maxLevel));
             ItemStack clone = item.clone();
-            java.util.Collections.shuffle(possible);
-            
-            // Determine how many enchantments to add
-            int numEnchants = minEnchants + random.nextInt(Math.max(1, maxEnchants - minEnchants + 1));
-            int added = 0;
-            
-            for (org.bukkit.enchantments.Enchantment ench : possible) {
-                if (added >= numEnchants) break;
-                if (random.nextDouble() > chance) continue;
-                
-                // Calculate level based on tier
-                int enchMaxLevel = Math.min(maxLevel, ench.getMaxLevel());
-                int lvl = Math.max(1, random.nextInt(enchMaxLevel) + 1);
-                
-                // Check for conflicts with existing enchantments
-                boolean conflicts = false;
-                for (org.bukkit.enchantments.Enchantment existing : clone.getEnchantments().keySet()) {
-                    if (ench.conflictsWith(existing)) {
-                        conflicts = true;
-                        break;
-                    }
-                }
-                if (conflicts) continue;
-                
-                clone.addUnsafeEnchantment(ench, lvl);
-                added++;
-            }
-            
+            clone.addUnsafeEnchantment(chosen, lvl);
             return clone;
         } catch (Exception ex) {
             plugin.getLogger().warning("Fehler beim Anwenden von Tier-Enchant auf Item: " + ex.getMessage());
