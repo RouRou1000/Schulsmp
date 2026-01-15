@@ -53,6 +53,9 @@ commands:
   tpa:
     description: "Teleport-Anfrage an einen Spieler"
     usage: /tpa <spieler>
+  tpahere:
+    description: "Teleport-Anfrage dass jemand zu dir kommt"
+    usage: /tpahere <spieler>
   tpaccept:
     description: "Akzeptiere eine TPA-Anfrage"
     usage: /<command>

@@ -44,6 +44,18 @@ public class TpaCommand implements CommandExecutor, TabCompleter {
                 }
                 tpaManager.sendTpaRequest(player, target);
             }
+            case "tpahere" -> {
+                if (args.length < 1) {
+                    player.sendMessage("§8┃ §b§lTPA §8┃ §7Verwendung: §e/tpahere <spieler>");
+                    return true;
+                }
+                Player target = Bukkit.getPlayer(args[0]);
+                if (target == null || !target.isOnline()) {
+                    player.sendMessage("§8┃ §b§lTPA §8┃ §cSpieler §f" + args[0] + " §cnicht gefunden!");
+                    return true;
+                }
+                tpaManager.sendTpaHereRequest(player, target);
+            }
             case "tpaccept", "tpaaccept" -> {
                 tpaManager.acceptTpa(player);
             }
@@ -59,7 +71,8 @@ public class TpaCommand implements CommandExecutor, TabCompleter {
     public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player player)) return null;
         
-        if (command.getName().equalsIgnoreCase("tpa") && args.length == 1) {
+        String cmdName = command.getName().toLowerCase();
+        if ((cmdName.equalsIgnoreCase("tpa") || cmdName.equalsIgnoreCase("tpahere")) && args.length == 1) {
             return Bukkit.getOnlinePlayers().stream()
                 .map(Player::getName)
                 .filter(name -> !name.equals(player.getName()))

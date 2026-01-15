@@ -106,6 +106,8 @@ public final class DonutPlugin extends JavaPlugin {
             TpaCommand tpaCommand = new TpaCommand(this, tpaManager);
             getCommand("tpa").setExecutor(tpaCommand);
             getCommand("tpa").setTabCompleter(tpaCommand);
+            getCommand("tpahere").setExecutor(tpaCommand);
+            getCommand("tpahere").setTabCompleter(tpaCommand);
             getCommand("tpaccept").setExecutor(tpaCommand);
             getCommand("tpdeny").setExecutor(tpaCommand);
 

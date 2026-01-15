@@ -28,6 +28,7 @@ de\coolemod\donut\commands\ShopCommand.class
 de\coolemod\donut\gui\ShopGUI.class
 de\coolemod\donut\guis\AuctionCreateGUI_V2.class
 de\coolemod\donut\listeners\PlayerInteractListener.class
+de\coolemod\donut\systems\TpaManager$TpaHereRequest.class
 de\coolemod\donut\systems\HomeManager.class
 de\coolemod\donut\managers\AuctionHouseManagerNew.class
 de\coolemod\donut\guis\AuctionCreateGUINew$CreateSession.class
@@ -44,6 +45,7 @@ de\coolemod\donut\auctionhouse\AuctionHouse$CreateSession.class
 de\coolemod\donut\orders\OrderListener.class
 de\coolemod\donut\listeners\PlayerJoinListener.class
 de\coolemod\donut\listeners\InventoryCloseListener.class
+de\coolemod\donut\systems\TpaManager$2.class
 de\coolemod\donut\systems\TpaManager$TpaRequest.class
 de\coolemod\donut\auctionhouse\AuctionHouse$BrowseSession.class
 de\coolemod\donut\auctionhouse\AuctionHouse.class
