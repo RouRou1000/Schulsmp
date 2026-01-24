@@ -538,22 +538,35 @@ public class InventoryClickListener implements Listener {
         // Donut Shop Klicks - erweiterte Kauflogik mit Geld
         if (title.contains("DONUT SHOP") || title.contains("SHOP")) {
             e.setCancelled(true);
-            // Nur LEFT-Click erlauben
+            
+            // WICHTIG: Prüfe ob im oberen Inventar geklickt wurde
+            if (e.getRawSlot() >= e.getView().getTopInventory().getSize()) {
+                // Im eigenen Inventar geklickt - erlaube
+                e.setCancelled(false);
+                return;
+            }
+            
+            // Nur LEFT-Click erlauben im GUI
             if (e.getClick() != org.bukkit.event.inventory.ClickType.LEFT) {
                 return;
             }
-            // Blockiere UI-Elemente (Panes, Navigation Buttons, etc.)
-            if (clicked.getType() == Material.BLACK_STAINED_GLASS_PANE || 
-                clicked.getType() == Material.GRAY_STAINED_GLASS_PANE || 
-                clicked.getType() == Material.GOLD_INGOT || 
-                clicked.getType() == Material.AMETHYST_SHARD ||
-                clicked.getType() == Material.PAPER) {
+            
+            // Blockiere ALLE UI-Elemente - kein Item darf herausgenommen werden außer bei Kauf
+            if (clicked == null || !clicked.hasItemMeta()) {
                 return;
             }
-            if (e.isShiftClick()) return;
-            if (!clicked.hasItemMeta()) return;
+            
             org.bukkit.inventory.meta.ItemMeta meta = clicked.getItemMeta();
             org.bukkit.entity.Player buyer = (org.bukkit.entity.Player) e.getWhoClicked();
+            
+            // Blockiere alle Kategorie-Items (COOKED_BEEF, TOTEM, NETHER_WART, END_STONE, SPAWNER ohne Kosten)
+            if (!meta.getPersistentDataContainer().has(new NamespacedKey(plugin, "shop_cost_money"), PersistentDataType.INTEGER) &&
+                !meta.getPersistentDataContainer().has(new NamespacedKey(plugin, "shop_cost_shards"), PersistentDataType.INTEGER) &&
+                !meta.getPersistentDataContainer().has(new NamespacedKey(plugin, "shop_category"), PersistentDataType.STRING) &&
+                !meta.getPersistentDataContainer().has(new NamespacedKey(plugin, "shop_back"), PersistentDataType.STRING)) {
+                // Kein Shop-Item und keine Navigation → UI-Element → Blockieren
+                return;
+            }
             
             // Shop-Kategorie-Navigation
             if (meta.getPersistentDataContainer().has(new NamespacedKey(plugin, "shop_category"), PersistentDataType.STRING)) {
@@ -598,6 +611,7 @@ public class InventoryClickListener implements Listener {
                     
                 if (plugin.getEconomy().withdraw(buyer.getUniqueId(), cost)) {
                     ItemStack give = new ItemStack(clicked.getType(), amount);
+                    // Wichtig: Kein PDC im gekauften Item!
                     buyer.getInventory().addItem(give);
                     buyer.sendMessage("");
                     buyer.sendMessage("§8┃ §6§lSHOP §8┃ §a§l✓ GEKAUFT!");
@@ -613,6 +627,7 @@ public class InventoryClickListener implements Listener {
                     buyer.sendMessage("");
                     buyer.playSound(buyer.getLocation(), org.bukkit.Sound.ENTITY_VILLAGER_NO, 1f, 1f);
                 }
+                return; // WICHTIG: Verhindert, dass Item herausgenommen wird
             }
             
             // Kauflogik mit Shards (für Spawner)
@@ -652,6 +667,7 @@ public class InventoryClickListener implements Listener {
                     buyer.sendMessage("");
                     buyer.playSound(buyer.getLocation(), org.bukkit.Sound.ENTITY_VILLAGER_NO, 1f, 1f);
                 }
+                return; // WICHTIG: Verhindert, dass Item herausgenommen wird
             }
             return;
         }
