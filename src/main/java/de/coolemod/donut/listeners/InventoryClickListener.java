@@ -537,23 +537,22 @@ public class InventoryClickListener implements Listener {
 
         // Schul Shop Klicks - erweiterte Kauflogik mit Geld
         if (title.contains("SCHUL") || title.contains("SHOP") || title.contains("FOOD") || title.contains("GEAR") || title.contains("NETHER") || title.contains("SHARDS")) {
-            // KRITISCH: Cancelle Event SOFORT für ALLE Aktionen
+            // WICHTIG: Cancelle Event um Items im Shop zu halten
             e.setCancelled(true);
-            e.setResult(org.bukkit.event.Event.Result.DENY);
             
-            // Blockiere Klicks im eigenen Inventar vollständig (verhindert Shift-Click ins Shop-GUI)
+            // Blockiere Klicks im eigenen Inventar (verhindert Shift-Click ins Shop-GUI)
             if (e.getRawSlot() >= e.getView().getTopInventory().getSize()) {
-                return; // Event bleibt cancelled
+                return; 
             }
             
-            // Blockiere ALLE Click-Typen außer LEFT-Click im Shop-GUI
+            // Erlaube nur LEFT-Click im Shop-GUI
             if (e.getClick() != org.bukkit.event.inventory.ClickType.LEFT) {
-                return; // Event bleibt cancelled
+                return; 
             }
             
-            // Blockiere wenn kein Item geklickt wurde
+            // Wenn kein Item geklickt wurde
             if (clicked == null || !clicked.hasItemMeta()) {
-                return; // Event bleibt cancelled
+                return; 
             }
             
             org.bukkit.inventory.meta.ItemMeta meta = clicked.getItemMeta();
@@ -577,14 +576,14 @@ public class InventoryClickListener implements Listener {
                 } else if (category.contains("SHARD")) {
                     shopGUI.openShardShop(buyer);
                 }
-                return; // Event bleibt cancelled
+                return; 
             }
             
             // Zurück-Button (geht zurück zum Hauptmenü)
             if (meta.getPersistentDataContainer().has(new NamespacedKey(plugin, "shop_back"), PersistentDataType.STRING)) {
                 buyer.playSound(buyer.getLocation(), org.bukkit.Sound.UI_BUTTON_CLICK, 0.5f, 1f);
                 new ShopGUI(plugin).open(buyer);
-                return; // Event bleibt cancelled
+                return; 
             }
             
             // Schließen-Button
@@ -592,8 +591,18 @@ public class InventoryClickListener implements Listener {
                 if (clicked.hasItemMeta() && clicked.getItemMeta().getDisplayName().contains("SCHLIESSEN")) {
                     buyer.playSound(buyer.getLocation(), org.bukkit.Sound.UI_BUTTON_CLICK, 0.5f, 1f);
                     buyer.closeInventory();
-                    return; // Event bleibt cancelled
+                    return; 
                 }
+            }
+            
+            // Balance-Info Item (keine Aktion)
+            if (clicked.getType() == Material.GOLD_INGOT) {
+                return; // Nur Info, keine Aktion
+            }
+            
+            // Info-Item (keine Aktion)
+            if (clicked.getType() == Material.PAPER) {
+                return; // Nur Info, keine Aktion
             }
             
             // Kauflogik mit Geld (kauft Item und gibt es dem Spieler)
@@ -602,27 +611,41 @@ public class InventoryClickListener implements Listener {
                 int amount = meta.getPersistentDataContainer().has(new NamespacedKey(plugin, "shop_amount"), PersistentDataType.INTEGER) 
                     ? meta.getPersistentDataContainer().get(new NamespacedKey(plugin, "shop_amount"), PersistentDataType.INTEGER) 
                     : 1;
-                    
-                if (plugin.getEconomy().withdraw(buyer.getUniqueId(), cost)) {
+                
+                double balance = plugin.getEconomy().getBalance(buyer.getUniqueId());
+                
+                if (balance >= cost && plugin.getEconomy().withdraw(buyer.getUniqueId(), cost)) {
+                    // Erstelle NEUES Item ohne PDC (nur Material + Amount)
                     ItemStack give = new ItemStack(clicked.getType(), amount);
-                    // Wichtig: Kein PDC im gekauften Item - nur das reine Item!
-                    give.setItemMeta(null);
-                    buyer.getInventory().addItem(give);
+                    
+                    // Gib Item ins Inventar
+                    java.util.HashMap<Integer, ItemStack> leftover = buyer.getInventory().addItem(give);
+                    
+                    // Falls Inventar voll, droppe Items
+                    if (!leftover.isEmpty()) {
+                        for (ItemStack left : leftover.values()) {
+                            buyer.getWorld().dropItemNaturally(buyer.getLocation(), left);
+                        }
+                        buyer.sendMessage("§8┃ §e⚠ Inventar voll! Items gedroppt.");
+                    }
+                    
                     buyer.sendMessage("");
                     buyer.sendMessage("§8┃ §6§lSCHUL SHOP §8┃ §a§l✓ GEKAUFT!");
                     buyer.sendMessage("§8┃ §7Item§8: §f" + clicked.getType().name() + " §8x" + amount);
                     buyer.sendMessage("§8┃ §7Preis§8: §e$" + cost);
+                    buyer.sendMessage("§8┃ §7Neuer Kontostand§8: §a$" + String.format("%.2f", plugin.getEconomy().getBalance(buyer.getUniqueId())));
                     buyer.sendMessage("");
                     buyer.playSound(buyer.getLocation(), org.bukkit.Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 1f);
                 } else {
                     buyer.sendMessage("");
                     buyer.sendMessage("§8┃ §c§l✖ SCHUL SHOP §8┃ §cNicht genug Geld!");
                     buyer.sendMessage("§8┃ §7Benötigt§8: §e$" + cost);
-                    buyer.sendMessage("§8┃ §7Dein Geld§8: §e$" + String.format("%.2f", plugin.getEconomy().getBalance(buyer.getUniqueId())));
+                    buyer.sendMessage("§8┃ §7Dein Geld§8: §e$" + String.format("%.2f", balance));
+                    buyer.sendMessage("§8┃ §7Fehlt§8: §c$" + String.format("%.2f", cost - balance));
                     buyer.sendMessage("");
                     buyer.playSound(buyer.getLocation(), org.bukkit.Sound.ENTITY_VILLAGER_NO, 1f, 1f);
                 }
-                return; // Event bleibt cancelled - Item wird NICHT herausgenommen!
+                return; // Event bleibt cancelled - Item bleibt im Shop!
             }
             
             // Kauflogik mit Shards (für Spawner)
