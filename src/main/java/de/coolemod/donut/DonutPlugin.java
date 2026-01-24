@@ -81,6 +81,8 @@ public final class DonutPlugin extends JavaPlugin {
             getServer().getPluginManager().registerEvents(new AuctionHouseListener(this, auctionHouse), this);
             // NEW: Komplett neues Order System
             getServer().getPluginManager().registerEvents(new OrderListener(this, orderSystem), this);
+            // NEW: Komplett neuer Shop mit InventoryHolder
+            getServer().getPluginManager().registerEvents(new de.coolemod.donut.listeners.ShopListener_NEW(this), this);
             getLogger().info("Listener erfolgreich registriert.");
 
             // Commands registrieren

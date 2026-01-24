@@ -1,7 +1,7 @@
 package de.coolemod.donut.commands;
 
 import de.coolemod.donut.DonutPlugin;
-import de.coolemod.donut.gui.ShopGUI;
+import de.coolemod.donut.gui.ShopGUI_NEW;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -15,7 +15,7 @@ public class ShopCommand implements CommandExecutor {
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) { sender.sendMessage("Nur Spieler."); return true; }
         Player p = (Player) sender;
-        new ShopGUI(plugin).open(p);
+        new ShopGUI_NEW(plugin).openMainMenu(p);
         return true;
     }
 }

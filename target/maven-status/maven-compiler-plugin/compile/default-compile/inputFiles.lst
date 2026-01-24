@@ -25,6 +25,7 @@ C:\projects\Schulsmp\src\main\java\de\coolemod\donut\gui\MainMenuGUI.java
 C:\projects\Schulsmp\src\main\java\de\coolemod\donut\gui\OrdersGUI.java
 C:\projects\Schulsmp\src\main\java\de\coolemod\donut\gui\SellGUI.java
 C:\projects\Schulsmp\src\main\java\de\coolemod\donut\gui\ShopGUI.java
+C:\projects\Schulsmp\src\main\java\de\coolemod\donut\gui\ShopGUI_NEW.java
 C:\projects\Schulsmp\src\main\java\de\coolemod\donut\gui\SlayShopGUI.java
 C:\projects\Schulsmp\src\main\java\de\coolemod\donut\guis\AuctionCreateGUI_V2.java
 C:\projects\Schulsmp\src\main\java\de\coolemod\donut\guis\AuctionCreateGUINew.java
@@ -41,6 +42,7 @@ C:\projects\Schulsmp\src\main\java\de\coolemod\donut\listeners\PlayerChatListene
 C:\projects\Schulsmp\src\main\java\de\coolemod\donut\listeners\PlayerDeathListener.java
 C:\projects\Schulsmp\src\main\java\de\coolemod\donut\listeners\PlayerInteractListener.java
 C:\projects\Schulsmp\src\main\java\de\coolemod\donut\listeners\PlayerJoinListener.java
+C:\projects\Schulsmp\src\main\java\de\coolemod\donut\listeners\ShopListener_NEW.java
 C:\projects\Schulsmp\src\main\java\de\coolemod\donut\listeners\SpawnerBreakListener.java
 C:\projects\Schulsmp\src\main\java\de\coolemod\donut\managers\AuctionHouseManagerNew.java
 C:\projects\Schulsmp\src\main\java\de\coolemod\donut\managers\CrateManager.java

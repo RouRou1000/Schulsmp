@@ -10,9 +10,11 @@ de\coolemod\donut\listeners\PlayerChatListener.class
 de\coolemod\donut\systems\CombatManager.class
 de\coolemod\donut\managers\AuctionHouseManagerNew$Auction.class
 de\coolemod\donut\guis\AuctionGUINew.class
+de\coolemod\donut\listeners\ShopListener_NEW.class
 de\coolemod\donut\listeners\AuctionHandler_V2.class
 de\coolemod\donut\commands\HomeCommand.class
 de\coolemod\donut\gui\SlayShopGUI.class
+de\coolemod\donut\gui\ShopGUI_NEW.class
 de\coolemod\donut\listeners\AuctionEventHandler.class
 de\coolemod\donut\managers\OrdersManager$Order.class
 de\coolemod\donut\listeners\GlassPaneProtectionListener.class
@@ -25,6 +27,7 @@ de\coolemod\donut\guis\AuctionCreateGUI_V2$Session.class
 de\coolemod\donut\guis\AuctionGUINew$1.class
 de\coolemod\donut\auctionhouse\AuctionHouseCommand.class
 de\coolemod\donut\commands\ShopCommand.class
+de\coolemod\donut\gui\ShopGUI_NEW$ShopItem.class
 de\coolemod\donut\gui\ShopGUI.class
 de\coolemod\donut\guis\AuctionCreateGUI_V2.class
 de\coolemod\donut\listeners\PlayerInteractListener.class
