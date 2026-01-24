@@ -81,7 +81,7 @@ public class InventoryClickListener implements Listener {
         if (clicked == null) return;
 
         // Allgemein: alle Menü-Klicks abbrechen (außer Sell-GUI und AuctionCreate-GUI)
-        if (title.contains("Slay Shop") || title.contains("Shop") || title.contains("ᴀᴜᴋᴛɪᴏɴѕʜᴀᴜѕ") || title.contains("AUKTIONSHAUS") || title.contains("Orders") || title.contains("Kiste") || title.contains("DONUT CORE") || title.contains("ᴍᴇɪɴᴇ ᴀᴜᴋᴛɪᴏɴᴇɴ") || title.contains("MEINE AUKTIONEN")) {
+        if (title.contains("Slay Shop") || title.contains("SHOP") || title.contains("ᴀᴜᴋᴛɪᴏɴѕʜᴀᴜѕ") || title.contains("AUKTIONSHAUS") || title.contains("Orders") || title.contains("Kiste") || title.contains("DONUT CORE") || title.contains("ᴍᴇɪɴᴇ ᴀᴜᴋᴛɪᴏɴᴇɴ") || title.contains("MEINE AUKTIONEN")) {
             e.setCancelled(true);
         }
         
@@ -536,7 +536,7 @@ public class InventoryClickListener implements Listener {
         }
 
         // Donut Shop Klicks - erweiterte Kauflogik mit Geld
-        if (title.contains("Donut Shop")) {
+        if (title.contains("DONUT SHOP") || title.contains("SHOP")) {
             e.setCancelled(true);
             // Nur LEFT-Click erlauben
             if (e.getClick() != org.bukkit.event.inventory.ClickType.LEFT) {
@@ -545,31 +545,111 @@ public class InventoryClickListener implements Listener {
             // Blockiere UI-Elemente (Panes, Navigation Buttons, etc.)
             if (clicked.getType() == Material.BLACK_STAINED_GLASS_PANE || 
                 clicked.getType() == Material.GRAY_STAINED_GLASS_PANE || 
-                clicked.getType() == Material.ARROW || 
-                clicked.getType() == Material.EMERALD || 
-                clicked.getType() == Material.BARRIER) {
+                clicked.getType() == Material.GOLD_INGOT || 
+                clicked.getType() == Material.AMETHYST_SHARD ||
+                clicked.getType() == Material.PAPER) {
                 return;
             }
             if (e.isShiftClick()) return;
             if (!clicked.hasItemMeta()) return;
             org.bukkit.inventory.meta.ItemMeta meta = clicked.getItemMeta();
             org.bukkit.entity.Player buyer = (org.bukkit.entity.Player) e.getWhoClicked();
-            // Navigation actions
-            String action = meta.getPersistentDataContainer().has(new NamespacedKey(plugin, "donut_gui_action"), PersistentDataType.STRING) 
-                ? meta.getPersistentDataContainer().get(new NamespacedKey(plugin, "donut_gui_action"), PersistentDataType.STRING) : null;
-            if ("shop_close".equals(action)) { buyer.closeInventory(); return; }
-            // OLD AUCTION SYSTEM - Now handled by AuctionEventHandler
-            // if ("open_auction".equals(action)) { new de.coolemod.donut.gui.AuctionCreateGUI(plugin).open(buyer); return; }
-            // Kauflogik
+            
+            // Shop-Kategorie-Navigation
+            if (meta.getPersistentDataContainer().has(new NamespacedKey(plugin, "shop_category"), PersistentDataType.STRING)) {
+                String category = meta.getPersistentDataContainer().get(new NamespacedKey(plugin, "shop_category"), PersistentDataType.STRING);
+                ShopGUI shopGUI = new ShopGUI(plugin);
+                if (category.contains("FOOD")) {
+                    shopGUI.openFoodShop(buyer);
+                } else if (category.contains("GEAR")) {
+                    shopGUI.openGearShop(buyer);
+                } else if (category.contains("NETHER")) {
+                    shopGUI.openNetherShop(buyer);
+                } else if (category.contains("END")) {
+                    buyer.sendMessage("§8┃ §5§lEND SHOP §8┃ §cNoch nicht verfügbar!");
+                    buyer.playSound(buyer.getLocation(), org.bukkit.Sound.ENTITY_VILLAGER_NO, 1f, 1f);
+                } else if (category.contains("SHARD")) {
+                    shopGUI.openShardShop(buyer);
+                }
+                return;
+            }
+            
+            // Zurück-Button
+            if (meta.getPersistentDataContainer().has(new NamespacedKey(plugin, "shop_back"), PersistentDataType.STRING)) {
+                new ShopGUI(plugin).open(buyer);
+                return;
+            }
+            
+            // Schließen-Button
+            if (clicked.getType() == Material.BARRIER || clicked.getType() == Material.ARROW) {
+                if (clicked.getType() == Material.BARRIER || 
+                    (clicked.hasItemMeta() && clicked.getItemMeta().getDisplayName().contains("SCHLIESSEN"))) {
+                    buyer.closeInventory();
+                    return;
+                }
+            }
+            
+            // Kauflogik mit Geld
             if (meta.getPersistentDataContainer().has(new NamespacedKey(plugin, "shop_cost_money"), PersistentDataType.INTEGER)) {
                 int cost = meta.getPersistentDataContainer().get(new NamespacedKey(plugin, "shop_cost_money"), PersistentDataType.INTEGER);
+                int amount = meta.getPersistentDataContainer().has(new NamespacedKey(plugin, "shop_amount"), PersistentDataType.INTEGER) 
+                    ? meta.getPersistentDataContainer().get(new NamespacedKey(plugin, "shop_amount"), PersistentDataType.INTEGER) 
+                    : 1;
+                    
                 if (plugin.getEconomy().withdraw(buyer.getUniqueId(), cost)) {
-                    ItemStack give = new ItemStack(clicked.getType(), clicked.getAmount() > 0 ? clicked.getAmount() : 1);
+                    ItemStack give = new ItemStack(clicked.getType(), amount);
                     buyer.getInventory().addItem(give);
-                    buyer.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§a✓ Gekauft für §a$" + cost + "§a!");
+                    buyer.sendMessage("");
+                    buyer.sendMessage("§8┃ §6§lSHOP §8┃ §a§l✓ GEKAUFT!");
+                    buyer.sendMessage("§8┃ §7Item§8: §f" + clicked.getItemMeta().getDisplayName());
+                    buyer.sendMessage("§8┃ §7Preis§8: §e$" + cost);
+                    buyer.sendMessage("");
                     buyer.playSound(buyer.getLocation(), org.bukkit.Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 1f);
                 } else {
-                    buyer.sendMessage(plugin.getConfig().getString("messages.prefix", "") + plugin.getConfig().getString("messages.not-enough-money", ""));
+                    buyer.sendMessage("");
+                    buyer.sendMessage("§8┃ §c§l✖ SHOP §8┃ §cNicht genug Geld!");
+                    buyer.sendMessage("§8┃ §7Benötigt§8: §e$" + cost);
+                    buyer.sendMessage("§8┃ §7Dein Geld§8: §e$" + String.format("%.2f", plugin.getEconomy().getBalance(buyer.getUniqueId())));
+                    buyer.sendMessage("");
+                    buyer.playSound(buyer.getLocation(), org.bukkit.Sound.ENTITY_VILLAGER_NO, 1f, 1f);
+                }
+            }
+            
+            // Kauflogik mit Shards (für Spawner)
+            if (meta.getPersistentDataContainer().has(new NamespacedKey(plugin, "shop_cost_shards"), PersistentDataType.INTEGER)) {
+                int cost = meta.getPersistentDataContainer().get(new NamespacedKey(plugin, "shop_cost_shards"), PersistentDataType.INTEGER);
+                int amount = meta.getPersistentDataContainer().has(new NamespacedKey(plugin, "shop_amount"), PersistentDataType.INTEGER) 
+                    ? meta.getPersistentDataContainer().get(new NamespacedKey(plugin, "shop_amount"), PersistentDataType.INTEGER) 
+                    : 1;
+                String spawnerType = meta.getPersistentDataContainer().get(new NamespacedKey(plugin, "spawner_type"), PersistentDataType.STRING);
+                    
+                if (plugin.getShards().removeShards(buyer.getUniqueId(), cost)) {
+                    // Gib Spawner mit richtigem Typ
+                    if (spawnerType != null && clicked.getType() == Material.SPAWNER) {
+                        try {
+                            org.bukkit.entity.EntityType entityType = org.bukkit.entity.EntityType.valueOf(spawnerType);
+                            ItemStack spawner = plugin.getSpawnerManager().createSpawnerItem(entityType);
+                            buyer.getInventory().addItem(spawner);
+                        } catch (Exception ex) {
+                            ItemStack give = new ItemStack(clicked.getType(), amount);
+                            buyer.getInventory().addItem(give);
+                        }
+                    } else {
+                        ItemStack give = new ItemStack(clicked.getType(), amount);
+                        buyer.getInventory().addItem(give);
+                    }
+                    buyer.sendMessage("");
+                    buyer.sendMessage("§8┃ §d§lSHARD SHOP §8┃ §a§l✓ GEKAUFT!");
+                    buyer.sendMessage("§8┃ §7Item§8: §f" + clicked.getItemMeta().getDisplayName());
+                    buyer.sendMessage("§8┃ §7Preis§8: §d" + cost + " Shards");
+                    buyer.sendMessage("");
+                    buyer.playSound(buyer.getLocation(), org.bukkit.Sound.ENTITY_PLAYER_LEVELUP, 1f, 1.5f);
+                } else {
+                    buyer.sendMessage("");
+                    buyer.sendMessage("§8┃ §c§l✖ SHARD SHOP §8┃ §cNicht genug Shards!");
+                    buyer.sendMessage("§8┃ §7Benötigt§8: §d" + cost + " Shards");
+                    buyer.sendMessage("§8┃ §7Deine Shards§8: §d" + plugin.getShards().getShards(buyer.getUniqueId()));
+                    buyer.sendMessage("");
                     buyer.playSound(buyer.getLocation(), org.bukkit.Sound.ENTITY_VILLAGER_NO, 1f, 1f);
                 }
             }
