@@ -80,9 +80,10 @@ public class InventoryClickListener implements Listener {
         
         if (clicked == null) return;
 
-        // Allgemein: alle Menü-Klicks abbrechen (außer Sell-GUI und AuctionCreate-GUI)
+        // KRITISCH: Blockiere ALLE Shop-GUIs SOFORT und KOMPLETT
         if (title.contains("Slay Shop") || title.contains("SHOP") || title.contains("SCHUL") || title.contains("FOOD") || title.contains("GEAR") || title.contains("NETHER") || title.contains("SHARDS") || title.contains("ᴀᴜᴋᴛɪᴏɴѕʜᴀᴜѕ") || title.contains("AUKTIONSHAUS") || title.contains("Orders") || title.contains("Kiste") || title.contains("DONUT CORE") || title.contains("ᴍᴇɪɴᴇ ᴀᴜᴋᴛɪᴏɴᴇɴ") || title.contains("MEINE AUKTIONEN")) {
             e.setCancelled(true);
+            e.setResult(org.bukkit.event.Event.Result.DENY);
         }
         
         // Sell-GUI: Erlaube Item-Platzierung, aber blockiere Buttons
@@ -537,17 +538,30 @@ public class InventoryClickListener implements Listener {
 
         // Schul Shop Klicks - erweiterte Kauflogik mit Geld
         if (title.contains("SCHUL") || title.contains("SHOP") || title.contains("FOOD") || title.contains("GEAR") || title.contains("NETHER") || title.contains("SHARDS")) {
-            // WICHTIG: Cancelle Event um Items im Shop zu halten
+            // KRITISCH: Cancelle ALLES - keine Ausnahmen!
             e.setCancelled(true);
+            e.setResult(org.bukkit.event.Event.Result.DENY);
             
-            // Blockiere Klicks im eigenen Inventar (verhindert Shift-Click ins Shop-GUI)
+            // Blockiere Klicks im eigenen Inventar KOMPLETT
             if (e.getRawSlot() >= e.getView().getTopInventory().getSize()) {
+                e.setCancelled(true);
+                e.setResult(org.bukkit.event.Event.Result.DENY);
                 return; 
             }
             
-            // Erlaube nur LEFT-Click im Shop-GUI
+            // Blockiere ALLE Click-Typen außer LEFT-Click
             if (e.getClick() != org.bukkit.event.inventory.ClickType.LEFT) {
+                e.setCancelled(true);
+                e.setResult(org.bukkit.event.Event.Result.DENY);
                 return; 
+            }
+            
+            // Blockiere NUMBER_KEY, DROP, HOTBAR Klicks explizit
+            if (e.getClick().name().contains("NUMBER") || e.getClick().name().contains("DROP") || 
+                e.getClick().name().contains("HOTBAR") || e.getClick().name().contains("SWAP")) {
+                e.setCancelled(true);
+                e.setResult(org.bukkit.event.Event.Result.DENY);
+                return;
             }
             
             // Wenn kein Item geklickt wurde

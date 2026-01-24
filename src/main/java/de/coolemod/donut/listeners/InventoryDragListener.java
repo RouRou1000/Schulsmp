@@ -24,14 +24,16 @@ public class InventoryDragListener implements Listener {
         
         String title = e.getView().getTitle();
         
-        // Blockiere Drag in ALLEN GUIs außer normalen Chests
-        if (title.contains("Shop") || 
+        // KRITISCH: Blockiere Drag in ALLEN GUIs KOMPLETT
+        if (title.contains("Shop") || title.contains("SHOP") || title.contains("SCHUL") || 
+            title.contains("FOOD") || title.contains("GEAR") || title.contains("NETHER") || title.contains("SHARDS") ||
             title.contains("ᴀᴜᴋᴛɪᴏɴѕʜᴀᴜѕ") || title.contains("AUKTIONSHAUS") ||
             title.contains("ᴍᴇɪɴᴇ ᴀᴜᴋᴛɪᴏɴᴇɴ") || title.contains("MEINE AUKTIONEN") ||
             title.contains("Orders") || 
             title.contains("Kiste") || 
             title.contains("Öffne:") ||
-            title.contains("DONUT CORE")) {
+            title.contains("DONUT CORE") ||
+            title.contains("Slay")) {
             e.setCancelled(true);
             return;
         }
