@@ -28,7 +28,7 @@ public class ShopGUI {
     }
     
     private void openMainMenu(Player p) {
-        Inventory inv = Bukkit.createInventory(null, 54, toSmallCaps("§6⛃ DONUT SHOP ⛃"));
+        Inventory inv = Bukkit.createInventory(null, 54, toSmallCaps("§6⛃ SCHUL SHOP ⛃"));
         GUIUtils.fillBorders(inv, plugin);
 
         // Spieler-Balance
@@ -96,7 +96,7 @@ public class ShopGUI {
     }
     
     public void openFoodShop(Player p) {
-        Inventory inv = Bukkit.createInventory(null, 54, toSmallCaps("§6⛃ FOOD SHOP ⛃"));
+        Inventory inv = Bukkit.createInventory(null, 54, toSmallCaps("§6⛃ SCHUL FOOD ⛃"));
         GUIUtils.fillBorders(inv, plugin);
         
         // Balance
@@ -159,7 +159,7 @@ public class ShopGUI {
     }
     
     public void openGearShop(Player p) {
-        Inventory inv = Bukkit.createInventory(null, 54, toSmallCaps("§b⛃ GEAR SHOP ⛃"));
+        Inventory inv = Bukkit.createInventory(null, 54, toSmallCaps("§b⛃ SCHUL GEAR ⛃"));
         GUIUtils.fillBorders(inv, plugin);
         
         double balance = plugin.getEconomy().getBalance(p.getUniqueId());
@@ -192,7 +192,7 @@ public class ShopGUI {
     }
     
     public void openNetherShop(Player p) {
-        Inventory inv = Bukkit.createInventory(null, 54, toSmallCaps("§c⛃ NETHER SHOP ⛃"));
+        Inventory inv = Bukkit.createInventory(null, 54, toSmallCaps("§c⛃ SCHUL NETHER ⛃"));
         GUIUtils.fillBorders(inv, plugin);
         
         double balance = plugin.getEconomy().getBalance(p.getUniqueId());
@@ -232,7 +232,7 @@ public class ShopGUI {
     }
     
     public void openShardShop(Player p) {
-        Inventory inv = Bukkit.createInventory(null, 54, toSmallCaps("§d⛃ SHARD SHOP ⛃"));
+        Inventory inv = Bukkit.createInventory(null, 54, toSmallCaps("§d⛃ SCHUL SHARDS ⛃"));
         GUIUtils.fillBorders(inv, plugin);
         
         int shards = plugin.getShards().getShards(p.getUniqueId());

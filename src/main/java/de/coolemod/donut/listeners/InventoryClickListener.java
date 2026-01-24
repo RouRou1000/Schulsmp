@@ -81,7 +81,7 @@ public class InventoryClickListener implements Listener {
         if (clicked == null) return;
 
         // Allgemein: alle Menü-Klicks abbrechen (außer Sell-GUI und AuctionCreate-GUI)
-        if (title.contains("Slay Shop") || title.contains("SHOP") || title.contains("ᴀᴜᴋᴛɪᴏɴѕʜᴀᴜѕ") || title.contains("AUKTIONSHAUS") || title.contains("Orders") || title.contains("Kiste") || title.contains("DONUT CORE") || title.contains("ᴍᴇɪɴᴇ ᴀᴜᴋᴛɪᴏɴᴇɴ") || title.contains("MEINE AUKTIONEN")) {
+        if (title.contains("Slay Shop") || title.contains("SHOP") || title.contains("SCHUL") || title.contains("FOOD") || title.contains("GEAR") || title.contains("NETHER") || title.contains("SHARDS") || title.contains("ᴀᴜᴋᴛɪᴏɴѕʜᴀᴜѕ") || title.contains("AUKTIONSHAUS") || title.contains("Orders") || title.contains("Kiste") || title.contains("DONUT CORE") || title.contains("ᴍᴇɪɴᴇ ᴀᴜᴋᴛɪᴏɴᴇɴ") || title.contains("MEINE AUKTIONEN")) {
             e.setCancelled(true);
         }
         
@@ -535,19 +535,25 @@ public class InventoryClickListener implements Listener {
             return;
         }
 
-        // Donut Shop Klicks - erweiterte Kauflogik mit Geld
-        if (title.contains("DONUT SHOP") || title.contains("SHOP")) {
+        // Schul Shop Klicks - erweiterte Kauflogik mit Geld
+        if (title.contains("SCHUL") || title.contains("SHOP") || title.contains("FOOD") || title.contains("GEAR") || title.contains("NETHER") || title.contains("SHARDS")) {
             e.setCancelled(true);
             
             // WICHTIG: Prüfe ob im oberen Inventar geklickt wurde
             if (e.getRawSlot() >= e.getView().getTopInventory().getSize()) {
-                // Im eigenen Inventar geklickt - erlaube
+                // Im eigenen Inventar geklickt - blockiere Shift-Click komplett
+                if (e.isShiftClick()) {
+                    e.setCancelled(true);
+                    return;
+                }
+                // Normale Klicks im eigenen Inventar erlauben
                 e.setCancelled(false);
                 return;
             }
             
-            // Nur LEFT-Click erlauben im GUI
+            // Im Shop-GUI: Blockiere ALLE Klicks außer LEFT-Click
             if (e.getClick() != org.bukkit.event.inventory.ClickType.LEFT) {
+                e.setCancelled(true);
                 return;
             }
             
