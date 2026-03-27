@@ -1,19 +1,26 @@
-# DonutCore - Konfiguration (Deutsch) - MC 1.21.5 Nerfed Economy
+# SchulCore - Konfiguration (Deutsch) - MC 1.21.5 Nerfed Economy
 settings:
-  shard-per-kill: 8
-  spawner-cost-multiplier: 1.1
+  shard-per-kill: 10
+  spawner-cost-multiplier: 1
   scoreboard-update-ticks: 20
-  default-money: 0.0
-  # Key-Preise mit Geld (Money) - Nerfed
-  key-price:
-    basic: 60
-    rare: 250
-    legendary: 900
-  # Key-Preise mit Shards - Nerfed
-  key-price-shards:
-    basic: 30
-    rare: 140
-    legendary: 450
+  default-money: 2500
+  # Rüstungs-Shop - Preise pro Einzelteil in Shards
+  armor-prices:
+    basic:
+      helmet: 120
+      chestplate: 200
+      leggings: 175
+      boots: 100
+    rare:
+      helmet: 400
+      chestplate: 600
+      leggings: 500
+      boots: 300
+    legendary:
+      helmet: 1000
+      chestplate: 1400
+      leggings: 1200
+      boots: 800
   crate-tiers:
     basic:
       enchant-level: 2
@@ -30,10 +37,44 @@ settings:
       enchant-chance: 1.0
       min-enchants: 4
       max-enchants: 6
+
+# ===========================================
+# SPAWNER SYSTEM - DonutSMP-Style
+# Spawner erzeugen KEINE echten Mobs!
+# Stattdessen generieren sie Drops in einem
+# virtuellen Inventar, das der Spieler abholen kann.
+# ===========================================
+spawner:
+  # Ticks zwischen Drop-Generierung (20 Ticks = 1 Sekunde)
+  # 300 = 15 Sekunden
+  ticks-per-drop: 300
+  # Maximale Stack-Größe pro Spawner
+  max-stack-size: 1000
+  # Basis-Cap für gespeicherte Drops (erhöht sich mit Stack-Größe)
+  base-drop-cap: 1000
+  # Cap pro zusätzlichem Stack (base + stack * cap-per-stack)
+  cap-per-stack: 500
+
 allowed-spawners:
   - ZOMBIE
   - SKELETON
   - CREEPER
+  - SPIDER
+  - CAVE_SPIDER
+  - ENDERMAN
+  - BLAZE
+  - COW
+  - PIG
+  - SHEEP
+  - CHICKEN
+  - IRON_GOLEM
+  - WITCH
+  - SLIME
+  - MAGMA_CUBE
+  - WITHER_SKELETON
+  - PHANTOM
+  - DROWNED
+  - GUARDIAN
 
 # Comprehensive Worth Table for MC 1.21.5 - ALL 1549 Items
 worth:
@@ -502,9 +543,9 @@ worth:
   DRAGON_EGG: 10000000
   DRAGON_HEAD: 200
   DRAGON_WALL_HEAD: 50
-  DRIED_KELP: 1
-  DRIED_KELP_BLOCK: 9
-  DRIPSTONE_BLOCK: 2
+  DRIED_KELP: 50
+  DRIED_KELP_BLOCK: 500
+  DRIPSTONE_BLOCK: 10
   DROPPER: 8
   DROWNED_SPAWN_EGG: 0
   DUNE_ARMOR_TRIM_SMITHING_TEMPLATE: 30
@@ -1586,61 +1627,54 @@ worth:
   ZOMBIE_WALL_HEAD: 50
   ZOMBIFIED_PIGLIN_SPAWN_EGG: 0
 
-# Crates-Konfiguration - ARMOR ONLY (No Weapons/Tools)
+# Crates-Konfiguration - ARMOR SETS (Shop-Style: Festes Set pro Tier)
+# Jede Kiste gibt ein vollständiges Rüstungsset mit festen Enchantments.
+# Pool-Items dienen nur zur Animations-Vorschau.
 crates:
   basic:
     display: "§a✪ Basis-Kiste ✪"
     key: "Basic Key"
     tier: "basic"
-    guaranteed:
-      - "IRON_HELMET:1"
+    guaranteed: []
     animation:
       ticks: 2
       cycles: 30
     pool:
-      - "DIAMOND_HELMET:1:40"
-      - "DIAMOND_CHESTPLATE:1:35"
-      - "DIAMOND_LEGGINGS:1:35"
-      - "DIAMOND_BOOTS:1:40"
-    bundles:
-      - "IRON_INGOT:5;COAL:10"
+      - "IRON_HELMET:1:25"
+      - "IRON_CHESTPLATE:1:25"
+      - "IRON_LEGGINGS:1:25"
+      - "IRON_BOOTS:1:25"
+    bundles: []
 
   rare:
     display: "§5✪ Seltene Kiste ✪"
     key: "Rare Key"
     tier: "rare"
-    guaranteed:
-      - "DIAMOND_HELMET:1"
+    guaranteed: []
     animation:
       ticks: 2
       cycles: 45
     pool:
-      - "DIAMOND_HELMET:1:40"
-      - "DIAMOND_CHESTPLATE:1:30"
-      - "DIAMOND_LEGGINGS:1:30"
-      - "DIAMOND_BOOTS:1:40"
-    bundles:
-      - "DIAMOND:2;EMERALD:3"
+      - "DIAMOND_HELMET:1:25"
+      - "DIAMOND_CHESTPLATE:1:25"
+      - "DIAMOND_LEGGINGS:1:25"
+      - "DIAMOND_BOOTS:1:25"
+    bundles: []
 
   legendary:
     display: "§6✪ Legendäre Kiste ✪"
     key: "Legend Key"
     tier: "legendary"
-    guaranteed:
-      - "NETHERITE_CHESTPLATE:1"
+    guaranteed: []
     animation:
       ticks: 3
       cycles: 80
     pool:
-      - "NETHERITE_HELMET:1:35"
-      - "NETHERITE_CHESTPLATE:1:30"
-      - "NETHERITE_LEGGINGS:1:30"
-      - "NETHERITE_BOOTS:1:35"
-      - "ELYTRA:1:8"
-      - "TOTEM_OF_UNDYING:1:12"
-    bundles:
-      - "DIAMOND:5;EMERALD:8;GOLD_INGOT:10"
-      - "NETHERITE_SCRAP:2;DIAMOND:4"
+      - "NETHERITE_HELMET:1:25"
+      - "NETHERITE_CHESTPLATE:1:25"
+      - "NETHERITE_LEGGINGS:1:25"
+      - "NETHERITE_BOOTS:1:25"
+    bundles: []
 
 # Enchantment-Worth-Multiplikatoren (pro Enchant-Level)
 worth-enchant-multipliers:
@@ -1670,7 +1704,7 @@ worth-named:
   "LEGEND_SWORD": 12000
 
 messages:
-  prefix: "&6&l✯&r &e"
+  prefix: " [§6SCHUL SMP]"
   no-permission: "&cDu hast keine Berechtigung dafür."
   not-enough-money: "&cDu hast nicht genug Geld."
   not-enough-shards: "&cDu hast nicht genug Shards."

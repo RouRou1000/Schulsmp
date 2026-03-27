@@ -3,7 +3,6 @@ main: de.coolemod.schulcore.SchulCorePlugin
 version: 1.0.0
 api-version: 1.21
 author: Coole Mod
-softdepend: [ProtocolLib]
 commands:
   shop:
     description: "Öffnet das Shop-Menü"
@@ -74,20 +73,10 @@ commands:
   shards:
     description: "Debug: Gibt einem Spieler Shards"
     usage: /shards give <spieler> <betrag>
-  packetcheck:
-    description: "Client-Erkennung und Packet-Analyse"
-    usage: /packetcheck <spieler|sort|list>
-    aliases: [pc, ac]
-  rank:
-    description: "Rang-System verwalten"
-    usage: /rank <set|info|list>
-    aliases: [rang]
-  wipe:
-    description: "Wiped alle Daten eines Spielers"
-    usage: /wipe <spieler>
-  unwipe:
-    description: "Stellt gewipte Daten wieder her"
-    usage: /unwipe <spieler>
+  ac:
+    description: "Anti-Cheat Administration"
+    usage: /ac <help|alerts|info|ban|...>
+    aliases: [anticheat]
 permissions:
   schulcore.admin:
     description: "Verwaltet das Plugin"
@@ -95,15 +84,6 @@ permissions:
   schulcore.crate.admin:
     description: "Verwaltung von Kisten"
     default: op
-  schulcore.packetcheck:
-    description: "PacketCheck Administration"
-    default: op
-  schulcore.rank:
-    description: "Rang-System anzeigen"
-    default: op
-  schulcore.rank.set:
-    description: "Ränge setzen"
-    default: op
-  schulcore.wipe:
-    description: "Spieler wipen/unwipen"
+  schulcore.anticheat:
+    description: "Anti-Cheat Administration"
     default: op
