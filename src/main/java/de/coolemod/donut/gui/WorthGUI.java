@@ -18,7 +18,15 @@ import java.util.stream.Collectors;
  */
 public class WorthGUI {
     private final DonutPlugin plugin;
-    private static final int ITEMS_PER_PAGE = 36; // 4 Reihen à 9 Items (Slots 9-44)
+    private static final int ITEMS_PER_PAGE = 28; // 4 Reihen à 7 Items (Spalten 1-7)
+
+    private static final Set<String> UNOBTAINABLE = Set.of(
+        "BARRIER", "STRUCTURE_BLOCK", "STRUCTURE_VOID", "JIGSAW", "LIGHT",
+        "DEBUG_STICK", "KNOWLEDGE_BOOK", "BEDROCK", "PETRIFIED_OAK_SLAB",
+        "REINFORCED_DEEPSLATE", "FROGSPAWN", "FROSTED_ICE", "SPAWNER",
+        "BUDDING_AMETHYST", "END_PORTAL_FRAME", "TRIAL_SPAWNER", "VAULT",
+        "FARMLAND", "PLAYER_HEAD", "PLAYER_WALL_HEAD"
+    );
 
     public WorthGUI(DonutPlugin plugin) {
         this.plugin = plugin;
@@ -45,8 +53,6 @@ public class WorthGUI {
             Map.Entry<Material, Double> entry = sorted.get(i);
             Material mat = entry.getKey();
             double price = entry.getValue();
-
-            if (!mat.isItem()) continue;
 
             int slot = 9 + (i - start); // Slots 9-44
             // Überspringe Border-Slots (Spalte 0 und 8)
@@ -140,8 +146,17 @@ public class WorthGUI {
     private List<Map.Entry<Material, Double>> getSortedEntries() {
         return plugin.getWorthManager().getBaseValues().entrySet().stream()
             .filter(e -> e.getValue() > 0 && e.getKey().isItem())
+            .filter(e -> !isUnobtainable(e.getKey()))
             .sorted(Map.Entry.<Material, Double>comparingByValue().reversed())
             .collect(Collectors.toList());
+    }
+
+    private static boolean isUnobtainable(Material mat) {
+        String name = mat.name();
+        return UNOBTAINABLE.contains(name)
+            || name.contains("SPAWN_EGG")
+            || name.contains("COMMAND_BLOCK")
+            || name.startsWith("INFESTED_");
     }
 
     private String formatPrice(double price) {
