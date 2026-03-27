@@ -136,7 +136,10 @@ worth-enchant-multipliers:
 | `/crate` | Öffnet Kisten-Übersicht | - |
 | `/ah` | Öffnet Auktionshaus | - |
 | `/order` | Zeigt Orders | - |
-| `/crateadmin` | Kisten-Administration | `donut.admin` |
+| `/crateadmin` | Kisten-Administration | `schulcore.admin` |
+| `/wipe <spieler>` | Wiped Inventar, Geld, Shards, Ränge, Homes eines Spielers | `schulcore.admin` |
+| `/unwipe <spieler>` | Stellt gewipte Daten eines Spielers wieder her | `schulcore.admin` |
+| `/ac banwipe <spieler> <grund> <zeit>` | Bannt einen Spieler und wiped gleichzeitig seine Daten | `schulcore.anticheat` |
 
 **💡 Tipp**: Nutze einfach `/menu` für alles!
 

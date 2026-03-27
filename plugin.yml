@@ -75,8 +75,25 @@ commands:
     usage: /shards give <spieler> <betrag>
   ac:
     description: "Anti-Cheat Administration"
-    usage: /ac <help|alerts|info|ban|...>
+    usage: /ac <help|alerts|info|ban|banwipe|unban|...>
     aliases: [anticheat]
+  wipe:
+    description: "Wiped alle Daten eines Spielers (Inventar, Ränge, Geld, etc.)"
+    usage: /wipe <spieler>
+    permission: schulcore.admin
+  unwipe:
+    description: "Stellt die gewipten Daten eines Spielers wieder her"
+    usage: /unwipe <spieler>
+    permission: schulcore.admin
+  rank:
+    description: "Rang-System: Setzt oder zeigt den Rang eines Spielers"
+    usage: /rank set <spieler> <rang> | /rank info <spieler> | /rank list
+    permission: schulcore.admin
+  packetcheck:
+    description: "Anti-Cheat Paket-Check (Alias für /ac)"
+    usage: /packetcheck <spieler>
+    permission: schulcore.anticheat
+    aliases: [packetchecker]
 permissions:
   schulcore.admin:
     description: "Verwaltet das Plugin"
