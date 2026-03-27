@@ -80,6 +80,28 @@ public class InventoryClickListener implements Listener {
 
         if (clicked == null) return;
 
+        // Worth GUI: komplett blockieren + Navigation
+        if (title.contains("ɪᴛᴇᴍ ᴘʀɪᴄᴇs") || title.contains("ITEM PRICES")) {
+            e.setCancelled(true);
+            e.setResult(org.bukkit.event.Event.Result.DENY);
+            if (clicked == null || !clicked.hasItemMeta()) return;
+            // Seiten-Navigation über worth_page PDC
+            NamespacedKey worthPageKey = new NamespacedKey(plugin, "worth_page");
+            if (clicked.getItemMeta().getPersistentDataContainer().has(worthPageKey, PersistentDataType.INTEGER)) {
+                int page = clicked.getItemMeta().getPersistentDataContainer().get(worthPageKey, PersistentDataType.INTEGER);
+                org.bukkit.entity.Player wp = (org.bukkit.entity.Player) e.getWhoClicked();
+                wp.playSound(wp.getLocation(), org.bukkit.Sound.UI_BUTTON_CLICK, 0.5f, 1f);
+                new de.coolemod.donut.gui.WorthGUI(plugin).open(wp, page);
+                return;
+            }
+            // Schließen-Button
+            if (clicked.getType() == Material.BARRIER) {
+                ((org.bukkit.entity.Player) e.getWhoClicked()).closeInventory();
+                return;
+            }
+            return;
+        }
+
         // KRITISCH: Blockiere ALLE Shop-GUIs SOFORT und KOMPLETT
         if (title.contains("Slay Shop") || title.contains("SHOP") || title.contains("SCHUL") || title.contains("FOOD") || title.contains("GEAR") || title.contains("NETHER") || title.contains("SHARDS") || title.contains("ᴀᴜᴋᴛɪᴏɴѕʜᴀᴜѕ") || title.contains("AUKTIONSHAUS") || title.contains("Orders") || title.contains("Kiste") || title.contains("DONUT CORE") || title.contains("ᴍᴇɪɴᴇ ᴀᴜᴋᴛɪᴏɴᴇɴ") || title.contains("MEINE AUKTIONEN")) {
             e.setCancelled(true);
@@ -403,8 +425,7 @@ public class InventoryClickListener implements Listener {
                         return;
                     } else if (action.equals("run_worth")) {
                         org.bukkit.entity.Player p13 = (org.bukkit.entity.Player)e.getWhoClicked();
-                        p13.closeInventory();
-                        p13.performCommand("worth");
+                        new de.coolemod.donut.gui.WorthGUI(plugin).open(p13, 0);
                         return;
                     } else if (action.equals("close_menu")) {
                         org.bukkit.entity.Player p14 = (org.bukkit.entity.Player)e.getWhoClicked();

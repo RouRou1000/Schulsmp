@@ -260,6 +260,8 @@ public class WorthManager {
         return 1.0;
     }
 
+    public Map<Material, Double> getBaseValues() { return baseValues; }
+
     // programmatic registry methods
     public void setBaseWorth(Material m, double value) { baseValues.put(m, value); }
     public void setNamedWorth(String key, double value) { namedValues.put(key, value); }

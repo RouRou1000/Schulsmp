@@ -1,4 +1,4 @@
-# DonutCore - Konfiguration (Deutsch) - MC 1.21.5 Nerfed Economy
+﻿# DonutCore - Konfiguration (Deutsch) - MC 1.21.5 Nerfed Economy
 settings:
   shard-per-kill: 8
   spawner-cost-multiplier: 1.1
@@ -502,7 +502,7 @@ worth:
   DRAGON_EGG: 2150000000
   DRAGON_HEAD: 1000
   DRAGON_WALL_HEAD: 50
-  DRIED_KELP: 1
+  DRIED_KELP: 500
   DRIED_KELP_BLOCK: 250
   DRIPSTONE_BLOCK: 6
   DROPPER: 6
