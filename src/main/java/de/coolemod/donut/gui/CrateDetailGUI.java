@@ -22,11 +22,11 @@ public class CrateDetailGUI {
     public void open(Player p, String crateId) {
         CrateManager.Crate c = plugin.getCrateManager().getCrate(crateId);
         if (c == null) { p.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§c✗ Kiste nicht gefunden."); return; }
-        
+
         // Größeres GUI für bessere Übersicht
         Inventory inv = GUIUtils.createMenu("§5✦ Kiste: §d" + c.display + " §5✦", 6);
         GUIUtils.fillBorders(inv, plugin);
-        
+
         // Tier-Material basierend auf Tier
         Material tierMat = Material.CHEST;
         String tierColor = "§7";
@@ -159,7 +159,7 @@ public class CrateDetailGUI {
         obm.getPersistentDataContainer().set(new org.bukkit.NamespacedKey(plugin, "donut_gui_action"), org.bukkit.persistence.PersistentDataType.STRING, "crate_open:" + c.id);
         openBtn.setItemMeta(obm);
         inv.setItem(48, openBtn);
-        
+
         // Kaufen-Button (NUR SHARDS - Geld entfernt!)
         int keyCostShards = plugin.getConfig().getInt("settings.key-price-shards." + c.id, 50);
         ItemStack buyBtnShards = new ItemStack(Material.AMETHYST_SHARD);

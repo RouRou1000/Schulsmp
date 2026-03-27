@@ -18,23 +18,23 @@ public class HomeCommand implements CommandExecutor, TabCompleter {
     private final DonutPlugin plugin;
     private final HomeManager homeManager;
     private HomeGUI homeGUI;
-    
+
     public HomeCommand(DonutPlugin plugin, HomeManager homeManager) {
         this.plugin = plugin;
         this.homeManager = homeManager;
     }
-    
+
     public void setHomeGUI(HomeGUI homeGUI) {
         this.homeGUI = homeGUI;
     }
-    
+
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player player)) {
             sender.sendMessage("§cDieser Befehl ist nur für Spieler!");
             return true;
         }
-        
+
         // /homes opens GUI
         if (command.getName().equalsIgnoreCase("homes")) {
             if (homeGUI != null) {
@@ -44,14 +44,14 @@ public class HomeCommand implements CommandExecutor, TabCompleter {
             }
             return true;
         }
-        
+
         if (args.length == 0) {
             sendHelp(player);
             return true;
         }
-        
+
         String subCommand = args[0].toLowerCase();
-        
+
         switch (subCommand) {
             case "set", "sethome" -> {
                 if (args.length < 2) {
@@ -94,10 +94,10 @@ public class HomeCommand implements CommandExecutor, TabCompleter {
                 homeManager.teleportHome(player, subCommand);
             }
         }
-        
+
         return true;
     }
-    
+
     private void sendHelp(Player player) {
         player.sendMessage("");
         player.sendMessage("§8┃ §6§lHOME §8┃ §7Verfügbare Befehle:");
@@ -108,13 +108,13 @@ public class HomeCommand implements CommandExecutor, TabCompleter {
         player.sendMessage("§8  ┗ §7Max: §e" + HomeGUI.MAX_HOMES + " Homes");
         player.sendMessage("");
     }
-    
+
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player player)) return null;
-        
+
         List<String> completions = new ArrayList<>();
-        
+
         if (args.length == 1) {
             completions.addAll(Arrays.asList("set", "del", "list"));
             completions.addAll(homeManager.getHomeNames(player));
@@ -122,13 +122,13 @@ public class HomeCommand implements CommandExecutor, TabCompleter {
                 .filter(s -> s.toLowerCase().startsWith(args[0].toLowerCase()))
                 .collect(Collectors.toList());
         }
-        
+
         if (args.length == 2 && (args[0].equalsIgnoreCase("del") || args[0].equalsIgnoreCase("delete") || args[0].equalsIgnoreCase("remove"))) {
             return homeManager.getHomeNames(player).stream()
                 .filter(s -> s.toLowerCase().startsWith(args[1].toLowerCase()))
                 .collect(Collectors.toList());
         }
-        
+
         return completions;
     }
 }

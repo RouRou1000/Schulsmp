@@ -23,10 +23,10 @@ public class GlassPaneProtectionListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = false)
     public void onInventoryClickMonitor(InventoryClickEvent e) {
         if (!(e.getWhoClicked() instanceof Player)) return;
-        
+
         ItemStack clicked = e.getCurrentItem();
         ItemStack cursor = e.getCursor();
-        
+
         // Prüfe geklicktes Item
         if (clicked != null && isGlassPane(clicked)) {
             if (e.getRawSlot() < e.getView().getTopInventory().getSize()) {
@@ -36,7 +36,7 @@ public class GlassPaneProtectionListener implements Listener {
                 }
             }
         }
-        
+
         // Prüfe Cursor
         if (cursor != null && isGlassPane(cursor)) {
             if (!hasActionKey(cursor)) {
@@ -45,12 +45,12 @@ public class GlassPaneProtectionListener implements Listener {
             }
         }
     }
-    
+
     @EventHandler(priority = EventPriority.MONITOR)
     public void onInventoryClose(InventoryCloseEvent e) {
         if (!(e.getPlayer() instanceof Player)) return;
         Player p = (Player) e.getPlayer();
-        
+
         // Entferne Glass Panes ohne PDC aus dem Inventar
         org.bukkit.Bukkit.getScheduler().runTaskLater(plugin, () -> {
             for (int i = 0; i < p.getInventory().getSize(); i++) {
@@ -62,17 +62,17 @@ public class GlassPaneProtectionListener implements Listener {
             }
         }, 1L);
     }
-    
+
     private boolean isGlassPane(ItemStack item) {
         return item.getType().name().contains("STAINED_GLASS_PANE");
     }
-    
+
     private boolean hasActionKey(ItemStack item) {
         if (!item.hasItemMeta()) return false;
         org.bukkit.inventory.meta.ItemMeta meta = item.getItemMeta();
         org.bukkit.NamespacedKey key1 = new org.bukkit.NamespacedKey(plugin, "donut_gui_action");
         org.bukkit.NamespacedKey key2 = new org.bukkit.NamespacedKey(plugin, "ah_action");
-        
+
         return meta.getPersistentDataContainer().has(key1, org.bukkit.persistence.PersistentDataType.STRING) ||
                meta.getPersistentDataContainer().has(key2, org.bukkit.persistence.PersistentDataType.STRING);
     }

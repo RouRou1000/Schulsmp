@@ -28,7 +28,7 @@ public final class DonutPlugin extends JavaPlugin {
     private WorthManager worthManager;
     private AuctionHouseManagerNew auctionManager;  // NEU: Neuer Manager
     private OrdersManager ordersManager;  // OLD
-    
+
     // NEW: Komplett neues Auction House System
     private AuctionHouse auctionHouse;
     // NEW: Komplett neues Order System

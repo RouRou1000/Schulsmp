@@ -25,20 +25,20 @@ public class OrderCommand implements CommandExecutor {
         }
         if (args.length == 3 && args[0].equalsIgnoreCase("create")) {
             int amount; double price;
-            try { amount = Integer.parseInt(args[1]); price = Double.parseDouble(args[2]); } catch (NumberFormatException e) { 
-                p.sendMessage("§8┃ §d§lORDER §8┃ §cUngültige Zahlen!"); 
-                return true; 
+            try { amount = Integer.parseInt(args[1]); price = Double.parseDouble(args[2]); } catch (NumberFormatException e) {
+                p.sendMessage("§8┃ §d§lORDER §8┃ §cUngültige Zahlen!");
+                return true;
             }
             ItemStack inHand = p.getInventory().getItemInMainHand();
-            if (inHand == null || inHand.getType().isAir()) { 
-                p.sendMessage("§8┃ §d§lORDER §8┃ §7Halte ein Item in der Hand!"); 
-                return true; 
+            if (inHand == null || inHand.getType().isAir()) {
+                p.sendMessage("§8┃ §d§lORDER §8┃ §7Halte ein Item in der Hand!");
+                return true;
             }
             ItemStack itemType = inHand.clone(); itemType.setAmount(1);
             String id = plugin.getOrdersManager().createOrder(p.getUniqueId(), itemType, amount, price);
-            if (id == null) { 
-                p.sendMessage("§8┃ §d§lORDER §8┃ §cNicht genug Geld!"); 
-                return true; 
+            if (id == null) {
+                p.sendMessage("§8┃ §d§lORDER §8┃ §cNicht genug Geld!");
+                return true;
             }
             p.sendMessage("§8┃ §d§lORDER §8┃ §aOrder erstellt! §8(§7ID: §f" + id + "§8)");
             return true;

@@ -16,14 +16,14 @@ import java.util.List;
  */
 public class SellGUI {
     private final DonutPlugin plugin;
-    
+
     public SellGUI(DonutPlugin plugin) {
         this.plugin = plugin;
     }
-    
+
     public void open(Player p) {
         Inventory inv = GUIUtils.createMenu("§a§l$ ɪᴛᴇᴍѕ ᴠᴇʀᴋᴀᴜꜰᴇɴ", 6);
-        
+
         // Info-Item
         ItemStack info = new ItemStack(Material.SUNFLOWER);
         ItemMeta im = info.getItemMeta();
@@ -39,7 +39,7 @@ public class SellGUI {
         im.setLore(il);
         info.setItemMeta(im);
         inv.setItem(4, info);
-        
+
         // Verkaufen-Button
         ItemStack sellBtn = new ItemStack(Material.LIME_STAINED_GLASS_PANE);
         ItemMeta sm = sellBtn.getItemMeta();
@@ -54,7 +54,7 @@ public class SellGUI {
         sm.getPersistentDataContainer().set(new org.bukkit.NamespacedKey(plugin, "donut_gui_action"), org.bukkit.persistence.PersistentDataType.STRING, "sell_items");
         sellBtn.setItemMeta(sm);
         inv.setItem(49, sellBtn);
-        
+
         // Schließen-Button
         ItemStack closeBtn = new ItemStack(Material.BARRIER);
         ItemMeta cm = closeBtn.getItemMeta();
@@ -65,7 +65,7 @@ public class SellGUI {
         cm.getPersistentDataContainer().set(new org.bukkit.NamespacedKey(plugin, "donut_gui_action"), org.bukkit.persistence.PersistentDataType.STRING, "sell_close");
         closeBtn.setItemMeta(cm);
         inv.setItem(53, closeBtn);
-        
+
         // Worth-Preview-Button
         ItemStack worthBtn = new ItemStack(Material.GOLD_INGOT);
         ItemMeta wm = worthBtn.getItemMeta();
@@ -81,7 +81,7 @@ public class SellGUI {
         wm.getPersistentDataContainer().set(new org.bukkit.NamespacedKey(plugin, "donut_gui_action"), org.bukkit.persistence.PersistentDataType.STRING, "sell_worth_display");
         worthBtn.setItemMeta(wm);
         inv.setItem(45, worthBtn);
-        
+
         // Borders (außer Slots 10-34 für Items)
         for (int i = 0; i < 54; i++) {
             if (i < 9 || i >= 45 || i % 9 == 0 || i % 9 == 8) {
@@ -90,10 +90,10 @@ public class SellGUI {
                 }
             }
         }
-        
+
         GUIUtils.open(p, inv);
     }
-    
+
     public static double calculateTotalWorth(DonutPlugin plugin, Inventory inv) {
         double total = 0.0;
         for (int i = 10; i <= 43; i++) {
@@ -109,7 +109,7 @@ public class SellGUI {
         }
         return total;
     }
-    
+
     public static void updateWorthDisplay(DonutPlugin plugin, Inventory inv) {
         ItemStack worthBtn = inv.getItem(45);
         if (worthBtn != null && worthBtn.getType() == Material.GOLD_INGOT) {

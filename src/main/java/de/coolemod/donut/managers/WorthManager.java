@@ -36,7 +36,7 @@ public class WorthManager {
     private void load() {
         // Default-Werte für alle wichtigen Items
         loadDefaults();
-        
+
         if (plugin.getConfig().isConfigurationSection("worth")) {
             for (String key : plugin.getConfig().getConfigurationSection("worth").getKeys(false)) {
                 try {
@@ -115,7 +115,7 @@ public class WorthManager {
         baseValues.put(Material.RAW_IRON, 3.0);
         baseValues.put(Material.RAW_GOLD, 6.0);
         baseValues.put(Material.RAW_COPPER, 1.5);
-        
+
         // Blöcke
         baseValues.put(Material.COAL_BLOCK, 9.0);
         baseValues.put(Material.IRON_BLOCK, 45.0);
@@ -123,20 +123,20 @@ public class WorthManager {
         baseValues.put(Material.DIAMOND_BLOCK, 450.0);
         baseValues.put(Material.EMERALD_BLOCK, 675.0);
         baseValues.put(Material.NETHERITE_BLOCK, 1800.0);
-        
+
         // Edelsteine
         baseValues.put(Material.LAPIS_LAZULI, 2.0);
         baseValues.put(Material.REDSTONE, 1.5);
         baseValues.put(Material.QUARTZ, 3.0);
         baseValues.put(Material.AMETHYST_SHARD, 4.0);
-        
+
         // Nether Items
         baseValues.put(Material.NETHER_STAR, 500.0);
         baseValues.put(Material.BLAZE_ROD, 15.0);
         baseValues.put(Material.ENDER_PEARL, 20.0);
         baseValues.put(Material.GHAST_TEAR, 25.0);
         baseValues.put(Material.MAGMA_CREAM, 8.0);
-        
+
         // Mob Drops
         baseValues.put(Material.LEATHER, 2.0);
         baseValues.put(Material.FEATHER, 1.0);
@@ -146,7 +146,7 @@ public class WorthManager {
         baseValues.put(Material.BONE, 1.5);
         baseValues.put(Material.SPIDER_EYE, 2.0);
         baseValues.put(Material.ROTTEN_FLESH, 0.5);
-        
+
         // Holz & Planken
         baseValues.put(Material.OAK_LOG, 0.5);
         baseValues.put(Material.SPRUCE_LOG, 0.5);
@@ -157,7 +157,7 @@ public class WorthManager {
         baseValues.put(Material.MANGROVE_LOG, 0.6);
         baseValues.put(Material.CHERRY_LOG, 0.7);
         baseValues.put(Material.BAMBOO_BLOCK, 0.4);
-        
+
         // Stein & Erze
         baseValues.put(Material.COBBLESTONE, 0.1);
         baseValues.put(Material.STONE, 0.15);
@@ -166,7 +166,7 @@ public class WorthManager {
         baseValues.put(Material.END_STONE, 0.3);
         baseValues.put(Material.OBSIDIAN, 5.0);
         baseValues.put(Material.CRYING_OBSIDIAN, 8.0);
-        
+
         // Nahrung
         baseValues.put(Material.COOKED_BEEF, 3.0);
         baseValues.put(Material.COOKED_PORKCHOP, 3.0);
@@ -175,7 +175,7 @@ public class WorthManager {
         baseValues.put(Material.BREAD, 1.5);
         baseValues.put(Material.GOLDEN_APPLE, 50.0);
         baseValues.put(Material.ENCHANTED_GOLDEN_APPLE, 500.0);
-        
+
         // Spezial Items
         baseValues.put(Material.TOTEM_OF_UNDYING, 300.0);
         baseValues.put(Material.ELYTRA, 1000.0);

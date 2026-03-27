@@ -222,9 +222,9 @@ public class CrateManager {
         if (!crates.containsKey(crateId)) { p.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§cKiste nicht gefunden."); return; }
         Crate c = crates.get(crateId);
         // Prüfe Schlüssel (außer bei Admin-Test)
-        if (!skipKeyCheck && !consumeKey(p, crateId)) { 
-            p.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§cDu hast keinen passenden Schlüssel."); 
-            return; 
+        if (!skipKeyCheck && !consumeKey(p, crateId)) {
+            p.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§cDu hast keinen passenden Schlüssel.");
+            return;
         }
 
         Inventory inv = Bukkit.createInventory(null, 27, "§6Öffne: " + c.display);

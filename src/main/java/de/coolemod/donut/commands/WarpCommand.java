@@ -26,7 +26,7 @@ public class WarpCommand implements CommandExecutor {
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) { sender.sendMessage("§cDieser Befehl ist nur für Spieler!"); return true; }
         Player p = (Player) sender;
-        
+
         if (args.length == 0) {
             p.sendMessage("");
             p.sendMessage("§8┃ §a§lRTP §8┃ §7Random Teleport");
@@ -39,10 +39,10 @@ public class WarpCommand implements CommandExecutor {
             p.sendMessage("");
             return true;
         }
-        
+
         String worldName = args[0];
         World world = Bukkit.getWorld(worldName);
-        
+
         if (world == null) {
             p.sendMessage("§8┃ §a§lRTP §8┃ §cWelt '§f" + worldName + "§c' nicht gefunden!");
             p.sendMessage("§8  ▸ §7Verfügbar:");
@@ -51,39 +51,39 @@ public class WarpCommand implements CommandExecutor {
             }
             return true;
         }
-        
+
         p.sendMessage("§8┃ §a§lRTP §8┃ §7Suche sichere Position...");
-        
+
         // Finde sichere Random-Position
         Location safeLoc = findSafeLocation(world);
         if (safeLoc == null) {
             p.sendMessage("§8┃ §a§lRTP §8┃ §cKeine sichere Position gefunden. Versuche es erneut!");
             return true;
         }
-        
+
         p.teleport(safeLoc);
         p.sendMessage("§8┃ §a§lRTP §8┃ §aTeleportiert nach §e" + world.getName() + "§a!");
         p.sendMessage("§8  ▸ §7Position: §f" + safeLoc.getBlockX() + "§8, §f" + safeLoc.getBlockY() + "§8, §f" + safeLoc.getBlockZ());
-        
+
         // Effekte
         try {
             p.getWorld().spawnParticle(org.bukkit.Particle.PORTAL, p.getLocation().add(0,1,0), 50);
             p.playSound(p.getLocation(), org.bukkit.Sound.ENTITY_ENDERMAN_TELEPORT, 1f, 1f);
         } catch (Throwable ignored) {}
-        
+
         return true;
     }
-    
+
     private Location findSafeLocation(World world) {
         int maxAttempts = 20;
-        
+
         for (int i = 0; i < maxAttempts; i++) {
             int x = random.nextInt(RTP_RADIUS * 2) - RTP_RADIUS;
             int z = random.nextInt(RTP_RADIUS * 2) - RTP_RADIUS;
-            
+
             // Mindestdistanz vom Spawn
             if (Math.abs(x) < RTP_MIN && Math.abs(z) < RTP_MIN) continue;
-            
+
             // Höchsten sicheren Block finden
             int y;
             if (world.getEnvironment() == World.Environment.NETHER) {
@@ -92,24 +92,24 @@ public class WarpCommand implements CommandExecutor {
             } else {
                 y = world.getHighestBlockYAt(x, z) + 1;
             }
-            
+
             if (y < 1 || y > 300) continue;
-            
+
             Location loc = new Location(world, x + 0.5, y, z + 0.5);
-            
+
             // Prüfe ob sicher (kein Lava, kein Wasser, Boden vorhanden)
             if (isSafeLocation(loc)) {
                 return loc;
             }
         }
-        
+
         return null;
     }
-    
+
     private int findNetherSafeY(World world, int x, int z) {
         for (int y = 100; y > 30; y--) {
             Location check = new Location(world, x, y, z);
-            if (check.getBlock().getType().isAir() 
+            if (check.getBlock().getType().isAir()
                 && check.clone().add(0, 1, 0).getBlock().getType().isAir()
                 && check.clone().add(0, -1, 0).getBlock().getType().isSolid()) {
                 return y;
@@ -117,25 +117,25 @@ public class WarpCommand implements CommandExecutor {
         }
         return -1;
     }
-    
+
     private boolean isSafeLocation(Location loc) {
         org.bukkit.block.Block feet = loc.getBlock();
         org.bukkit.block.Block head = loc.clone().add(0, 1, 0).getBlock();
         org.bukkit.block.Block ground = loc.clone().add(0, -1, 0).getBlock();
-        
+
         // Luft für Spieler
         if (!feet.getType().isAir() || !head.getType().isAir()) return false;
-        
+
         // Fester Boden
         if (!ground.getType().isSolid()) return false;
-        
+
         // Kein Lava/Wasser
         String groundName = ground.getType().name();
         if (groundName.contains("LAVA") || groundName.contains("WATER") || groundName.contains("MAGMA")) return false;
-        
+
         return true;
     }
-    
+
     private String getEnvironmentIcon(World.Environment env) {
         switch (env) {
             case NETHER: return "§c🔥";

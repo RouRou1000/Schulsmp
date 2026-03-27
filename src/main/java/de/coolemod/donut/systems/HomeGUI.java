@@ -21,16 +21,16 @@ public class HomeGUI {
     private final HomeManager homeManager;
     private final NamespacedKey actionKey;
     private final NamespacedKey homeNameKey;
-    
+
     public static final int MAX_HOMES = 5;
-    
+
     public HomeGUI(DonutPlugin plugin, HomeManager homeManager) {
         this.plugin = plugin;
         this.homeManager = homeManager;
         this.actionKey = new NamespacedKey(plugin, "home_action");
         this.homeNameKey = new NamespacedKey(plugin, "home_name");
     }
-    
+
     private String toSmallCaps(String text) {
         return text.toUpperCase()
             .replace("A", "ᴀ").replace("B", "ʙ").replace("C", "ᴄ")
@@ -43,35 +43,35 @@ public class HomeGUI {
             .replace("V", "ᴠ").replace("W", "ᴡ").replace("X", "x")
             .replace("Y", "ʏ").replace("Z", "ᴢ");
     }
-    
+
     public Inventory createHomesGUI(Player player) {
         Inventory inv = Bukkit.createInventory(null, 27, "§8● §6§lHomes §8●");
-        
+
         List<String> homeNames = homeManager.getHomeNames(player);
         Map<String, Location> homeLocs = homeManager.getHomesMap(player);
-        
+
         // Fill border with black glass
         ItemStack border = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
         ItemMeta borderMeta = border.getItemMeta();
         borderMeta.setDisplayName("§0");
         borderMeta.getPersistentDataContainer().set(actionKey, PersistentDataType.STRING, "border");
         border.setItemMeta(borderMeta);
-        
+
         for (int i = 0; i < 27; i++) {
             inv.setItem(i, border);
         }
-        
+
         // Show homes in slots 10-14 (middle row)
         int slot = 10;
         for (String homeName : homeNames) {
             if (slot > 14) break;
-            
+
             Location loc = homeLocs.get(homeName);
             ItemStack homeItem = createHomeItem(homeName, loc);
             inv.setItem(slot, homeItem);
             slot++;
         }
-        
+
         // Fill remaining home slots with "create new" if under limit
         while (slot <= 14) {
             if (homeNames.size() < MAX_HOMES) {
@@ -102,7 +102,7 @@ public class HomeGUI {
             }
             slot++;
         }
-        
+
         // Info item (slot 4)
         ItemStack info = new ItemStack(Material.BOOK);
         ItemMeta infoMeta = info.getItemMeta();
@@ -117,7 +117,7 @@ public class HomeGUI {
         infoMeta.getPersistentDataContainer().set(actionKey, PersistentDataType.STRING, "border");
         info.setItemMeta(infoMeta);
         inv.setItem(4, info);
-        
+
         // Close button (slot 22)
         ItemStack close = new ItemStack(Material.BARRIER);
         ItemMeta closeMeta = close.getItemMeta();
@@ -125,15 +125,15 @@ public class HomeGUI {
         closeMeta.getPersistentDataContainer().set(actionKey, PersistentDataType.STRING, "close");
         close.setItemMeta(closeMeta);
         inv.setItem(22, close);
-        
+
         return inv;
     }
-    
+
     private ItemStack createHomeItem(String name, Location loc) {
         ItemStack item = new ItemStack(Material.CYAN_BED);
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName("§b§l" + name.toUpperCase());
-        
+
         List<String> lore = new ArrayList<>();
         lore.add("");
         if (loc != null && loc.getWorld() != null) {
@@ -144,28 +144,28 @@ public class HomeGUI {
         lore.add("§aLinksklick §8→ §7Teleport");
         lore.add("§cRechtsklick §8→ §7Löschen");
         meta.setLore(lore);
-        
+
         meta.getPersistentDataContainer().set(actionKey, PersistentDataType.STRING, "home");
         meta.getPersistentDataContainer().set(homeNameKey, PersistentDataType.STRING, name);
         item.setItemMeta(meta);
-        
+
         return item;
     }
-    
+
     public Inventory createDeleteConfirmGUI(String homeName) {
         Inventory inv = Bukkit.createInventory(null, 27, "§8● §c§lHome Löschen? §8●");
-        
+
         // Fill with black glass
         ItemStack border = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
         ItemMeta borderMeta = border.getItemMeta();
         borderMeta.setDisplayName("§0");
         borderMeta.getPersistentDataContainer().set(actionKey, PersistentDataType.STRING, "border");
         border.setItemMeta(borderMeta);
-        
+
         for (int i = 0; i < 27; i++) {
             inv.setItem(i, border);
         }
-        
+
         // Confirm delete (slot 11)
         ItemStack confirm = new ItemStack(Material.LIME_WOOL);
         ItemMeta confirmMeta = confirm.getItemMeta();
@@ -181,7 +181,7 @@ public class HomeGUI {
         confirmMeta.getPersistentDataContainer().set(homeNameKey, PersistentDataType.STRING, homeName);
         confirm.setItemMeta(confirmMeta);
         inv.setItem(11, confirm);
-        
+
         // Info item (slot 13)
         ItemStack info = new ItemStack(Material.CYAN_BED);
         ItemMeta infoMeta = info.getItemMeta();
@@ -194,7 +194,7 @@ public class HomeGUI {
         infoMeta.getPersistentDataContainer().set(actionKey, PersistentDataType.STRING, "border");
         info.setItemMeta(infoMeta);
         inv.setItem(13, info);
-        
+
         // Cancel (slot 15)
         ItemStack cancel = new ItemStack(Material.RED_WOOL);
         ItemMeta cancelMeta = cancel.getItemMeta();
@@ -208,15 +208,15 @@ public class HomeGUI {
         cancelMeta.getPersistentDataContainer().set(actionKey, PersistentDataType.STRING, "cancel_delete");
         cancel.setItemMeta(cancelMeta);
         inv.setItem(15, cancel);
-        
+
         return inv;
     }
-    
+
     public String getAction(ItemStack item) {
         if (item == null || !item.hasItemMeta()) return null;
         return item.getItemMeta().getPersistentDataContainer().get(actionKey, PersistentDataType.STRING);
     }
-    
+
     public String getHomeName(ItemStack item) {
         if (item == null || !item.hasItemMeta()) return null;
         return item.getItemMeta().getPersistentDataContainer().get(homeNameKey, PersistentDataType.STRING);

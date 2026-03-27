@@ -37,7 +37,7 @@ public class InventoryCloseListener implements Listener {
         //         de.coolemod.donut.gui.AuctionCreateGUI.clearItems(p);
         //     }
         // }
-        
+
         // Bei Sell GUI - Items zurückgeben
         if (title.contains("ɪᴛᴇᴍѕ ᴠᴇʀᴋᴀᴜꜰᴇɴ") || title.contains("ITEMS VERKAUFEN")) {
             returnItemsToPlayer(p, inv, 10, 43);
@@ -54,23 +54,23 @@ public class InventoryCloseListener implements Listener {
             if (item != null && item.getType() != Material.AIR) {
                 // Überspringe GUI-Items (Border, Buttons, etc.)
                 if (item.hasItemMeta() && item.getItemMeta().getPersistentDataContainer().has(
-                        new org.bukkit.NamespacedKey(plugin, "donut_gui_action"), 
+                        new org.bukkit.NamespacedKey(plugin, "donut_gui_action"),
                         org.bukkit.persistence.PersistentDataType.STRING)) {
                     continue;
                 }
-                
+
                 // Überspringe ALLE Glass Panes
                 if (item.getType().name().contains("GLASS_PANE")) {
                     continue;
                 }
-                
+
                 // Überspringe GUI-Elemente
-                if (item.getType() == Material.WRITABLE_BOOK || item.getType() == Material.ARROW || 
-                    item.getType() == Material.GOLD_INGOT || item.getType() == Material.BARRIER || 
+                if (item.getType() == Material.WRITABLE_BOOK || item.getType() == Material.ARROW ||
+                    item.getType() == Material.GOLD_INGOT || item.getType() == Material.BARRIER ||
                     item.getType() == Material.EMERALD) {
                     continue;
                 }
-                
+
                 // Versuche Item ins Inventar zu geben
                 if (p.getInventory().firstEmpty() != -1) {
                     p.getInventory().addItem(item);
@@ -81,7 +81,7 @@ public class InventoryCloseListener implements Listener {
             }
         }
     }
-    
+
     /**
      * Gibt NUR Items aus dem GUI zurück (nicht aus HashMap)
      * Für Auction Create GUI um Duplication zu vermeiden

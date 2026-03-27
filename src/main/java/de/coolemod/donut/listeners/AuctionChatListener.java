@@ -14,12 +14,12 @@ import org.bukkit.event.player.AsyncPlayerChatEvent;
 public class AuctionChatListener implements Listener {
     private final DonutPlugin plugin;
     private final AuctionCreateGUINew createGUI;
-    
+
     public AuctionChatListener(DonutPlugin plugin, AuctionCreateGUINew createGUI) {
         this.plugin = plugin;
         this.createGUI = createGUI;
     }
-    
+
     @EventHandler(priority = EventPriority.LOWEST)
     public void onChat(AsyncPlayerChatEvent e) {
         // DEPRECATED: Now using Sign GUI instead of chat input
@@ -27,36 +27,36 @@ public class AuctionChatListener implements Listener {
         return;
         /*
         Player player = e.getPlayer();
-        
+
         // Check if player is awaiting price input
         if (!createGUI.isAwaitingPriceInput(player.getUniqueId())) {
             return;
         }
-        
+
         // Cancel the chat event
         e.setCancelled(true);
-        
+
         String message = e.getMessage().trim();
-        
+
         try {
             double price = Double.parseDouble(message);
-            
+
             if (price <= 0) {
-                player.sendMessage(plugin.getConfig().getString("messages.prefix", "") + 
+                player.sendMessage(plugin.getConfig().getString("messages.prefix", "") +
                     "§cPreis muss größer als 0 sein!");
                 player.sendMessage("§7Versuche es erneut oder schreibe §cabbrechen§7:");
                 return;
             }
-            
+
             // Process on main thread
             org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
                 createGUI.handlePriceInput(player, price);
             });
-            
+
         } catch (NumberFormatException ex) {
             // Check for cancel
             if (message.equalsIgnoreCase("abbrechen") || message.equalsIgnoreCase("cancel")) {
-                player.sendMessage(plugin.getConfig().getString("messages.prefix", "") + 
+                player.sendMessage(plugin.getConfig().getString("messages.prefix", "") +
                     "§cPreiseingabe abgebrochen.");
                 // Clear awaiting state
                 org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
@@ -64,7 +64,7 @@ public class AuctionChatListener implements Listener {
                 });
                 return;
             }
-            
+
         }
         */
     }

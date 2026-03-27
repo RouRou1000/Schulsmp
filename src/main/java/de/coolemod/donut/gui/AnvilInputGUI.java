@@ -28,13 +28,13 @@ public class AnvilInputGUI implements Listener {
     // OLD AUCTION SYSTEM - Now handled by AuctionEventHandler
     public void openPriceInput(Player p) {
         // Bukkit.getLogger().info("Opening sign input for " + p.getName());
-        // 
+        //
         // try {
         //     // Erstelle temporäres Schild an Spieler-Position
         //     Block block = p.getLocation().add(0, 3, 0).getBlock();
         //     Block originalBlock = block;
         //     Material originalType = block.getType();
-        //     
+        //
         //     // Setze Schild
         //     block.setType(Material.OAK_SIGN);
         //     Sign sign = (Sign) block.getState();
@@ -43,13 +43,13 @@ public class AnvilInputGUI implements Listener {
         //     sign.setLine(2, "Preis eingeben");
         //     sign.setLine(3, "");
         //     sign.update(false, false);
-        //     
+        //
         //     // Markiere Spieler als wartend
         //     awaitingInput.put(p.getUniqueId(), System.currentTimeMillis());
-        //     
+        //
         //     // Öffne Schild für Bearbeitung
         //     p.openSign(sign);
-        //     
+        //
         //     // Entferne Schild nach 10 Sekunden falls nicht bearbeitet
         //     Bukkit.getScheduler().runTaskLater(plugin, () -> {
         //         if (awaitingInput.containsKey(p.getUniqueId())) {
@@ -59,7 +59,7 @@ public class AnvilInputGUI implements Listener {
         //             new AuctionCreateGUI(plugin).open(p);
         //         }
         //     }, 200L);
-        //     
+        //
         //     Bukkit.getLogger().info("Sign opened successfully");
         // } catch (Exception ex) {
         //     Bukkit.getLogger().severe("Error opening sign: " + ex.getMessage());
@@ -68,28 +68,28 @@ public class AnvilInputGUI implements Listener {
         //     new AuctionCreateGUI(plugin).open(p);
         // }
     }
-    
+
     // OLD AUCTION SYSTEM - Now handled by AuctionEventHandler
     @EventHandler
     public void onSignChange(SignChangeEvent e) {
         // Player p = e.getPlayer();
-        // 
+        //
         // if (!awaitingInput.containsKey(p.getUniqueId())) {
         //     return;
         // }
-        // 
+        //
         // e.setCancelled(true);
         // awaitingInput.remove(p.getUniqueId());
-        // 
+        //
         // // Entferne Metadata-Flag
         // p.removeMetadata("ah_setting_price", plugin);
-        // 
+        //
         // // Entferne Schild
         // Block block = e.getBlock();
         // Bukkit.getScheduler().runTask(plugin, () -> {
         //     block.setType(Material.AIR);
         // });
-        // 
+        //
         // // Parse Preis von erster Zeile
         // String input = e.getLine(0);
         // if (input == null || input.trim().isEmpty()) {
@@ -99,7 +99,7 @@ public class AnvilInputGUI implements Listener {
         //     });
         //     return;
         // }
-        // 
+        //
         // try {
         //     double price = Double.parseDouble(input.trim());
         //     if (price <= 0) {
@@ -111,11 +111,10 @@ public class AnvilInputGUI implements Listener {
         // } catch (NumberFormatException ex) {
         //     p.sendMessage("§cNur Zahlen erlaubt!");
         // }
-        // 
+        //
         // // Öffne GUI wieder
         // Bukkit.getScheduler().runTask(plugin, () -> {
         //     new AuctionCreateGUI(plugin).open(p);
         // });
     }
 }
-

@@ -52,29 +52,29 @@ public class SidebarManager {
         obj.setDisplaySlot(DisplaySlot.SIDEBAR);
 
         obj.getScore("§8§m━━━━━━━━━━━━━━").setScore(11);
-        
+
         String name = "§b▸ §f" + p.getName();
         obj.getScore(name).setScore(10);
-        
+
         obj.getScore(" ").setScore(9);
-        
+
         String money = "§6⛃ §7ɢᴇʟᴅ§8: §a$" + "%.2f".formatted(plugin.getEconomy().getBalance(p.getUniqueId()));
         obj.getScore(money).setScore(8);
-        
+
         String shards = "§b❖ §7ѕʜᴀʀᴅѕ§8: §b" + plugin.getShards().getShards(p.getUniqueId());
         obj.getScore(shards).setScore(7);
-        
+
         obj.getScore("  ").setScore(6);
-        
+
         String kills = "§c⚔ §7ᴋɪʟʟѕ§8: §e" + plugin.getStats().getKills(p.getUniqueId());
         obj.getScore(kills).setScore(5);
-        
+
         String deaths = "§4☠ §7ᴅᴇᴀᴛʜѕ§8: §c" + plugin.getStats().getDeaths(p.getUniqueId());
         obj.getScore(deaths).setScore(4);
-        
+
         String kd = "§6★ §7ᴋ/ᴅ§8: §f" + "%.2f".formatted(plugin.getStats().getKD(p.getUniqueId()));
         obj.getScore(kd).setScore(3);
-        
+
         obj.getScore("   ").setScore(2);
         obj.getScore("§8§m━━━━━━━━━━━━━━").setScore(1);
         obj.getScore("§7ᴘʟᴀʏ.ѕᴄʜᴜʟ-ѕᴍᴘ.ᴅᴇ").setScore(0);

@@ -36,7 +36,7 @@ Gib einfach `/rtp` ohne Parameter ein, um alle geladenen Welten zu sehen:
 
 ```
 🌍 world
-🔥 world_nether  
+🔥 world_nether
 ⭐ world_the_end
 ```
 

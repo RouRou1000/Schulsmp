@@ -17,7 +17,7 @@ public class BalanceCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         String prefix = plugin.getConfig().getString("messages.prefix", "");
-        
+
         // /balance <spieler> - Zeige Balance eines anderen Spielers
         if (args.length > 0 && sender.hasPermission("donut.balance.others")) {
             Player target = Bukkit.getPlayer(args[0]);
@@ -36,16 +36,16 @@ public class BalanceCommand implements CommandExecutor {
             sender.sendMessage("");
             return true;
         }
-        
+
         if (!(sender instanceof Player)) { sender.sendMessage("§c✗ Nur Spieler können das nutzen."); return true; }
         Player p = (Player) sender;
-        
+
         double bal = plugin.getEconomy().getBalance(p.getUniqueId());
         int shards = plugin.getShards().getShards(p.getUniqueId());
         int kills = plugin.getStats().getKills(p.getUniqueId());
         int deaths = plugin.getStats().getDeaths(p.getUniqueId());
         double kd = deaths > 0 ? (double) kills / deaths : kills;
-        
+
         p.sendMessage("");
         p.sendMessage(prefix + "§e✦ Dein Kontostand §e✦");
         p.sendMessage("  §7├─ §aGeld: §f$" + "%.2f".formatted(bal));

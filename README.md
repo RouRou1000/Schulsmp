@@ -91,7 +91,7 @@ mvn clean package -DskipTests
 settings:
   shards-per-kill: 3          # Shards pro Kill
   sidebar-update-ticks: 20    # Sidebar Update-Intervall
-  
+
 worlds:
   spawn: world                 # Spawn-Welt
   nether: world_nether        # Nether

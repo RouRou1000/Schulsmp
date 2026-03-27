@@ -12,18 +12,18 @@ import org.bukkit.entity.Player;
  */
 public class MenuCommand implements CommandExecutor {
     private final DonutPlugin plugin;
-    
+
     public MenuCommand(DonutPlugin plugin) {
         this.plugin = plugin;
     }
-    
+
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) {
             sender.sendMessage("Nur Spieler können das Menü öffnen.");
             return true;
         }
-        
+
         Player p = (Player) sender;
         new MainMenuGUI(plugin).open(p);
         return true;

@@ -18,9 +18,9 @@ public class WorthCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length > 0 && args[0].equalsIgnoreCase("reload")) {
-            if (!sender.hasPermission("donut.admin")) { 
-                sender.sendMessage("§8┃ §e§lWORTH §8┃ §cKeine Berechtigung!"); 
-                return true; 
+            if (!sender.hasPermission("donut.admin")) {
+                sender.sendMessage("§8┃ §e§lWORTH §8┃ §cKeine Berechtigung!");
+                return true;
             }
             plugin.getWorthManager().reload();
             sender.sendMessage("§8┃ §e§lWORTH §8┃ §aDaten neu geladen.");
@@ -30,9 +30,9 @@ public class WorthCommand implements CommandExecutor {
         if (!(sender instanceof Player)) { sender.sendMessage("§cDieser Befehl ist nur für Spieler!"); return true; }
         Player p = (Player) sender;
         ItemStack inHand = p.getInventory().getItemInMainHand();
-        if (inHand == null || inHand.getType().isAir()) { 
-            p.sendMessage("§8┃ §e§lWORTH §8┃ §7Halte ein Item in der Hand!"); 
-            return true; 
+        if (inHand == null || inHand.getType().isAir()) {
+            p.sendMessage("§8┃ §e§lWORTH §8┃ §7Halte ein Item in der Hand!");
+            return true;
         }
         double worth = plugin.getWorthManager().getWorth(inHand);
         p.sendMessage("§8┃ §e§lWORTH §8┃ §7Wert: §a" + "%.2f".formatted(worth) + "$ §7pro Stück");

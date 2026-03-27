@@ -16,21 +16,21 @@ import java.util.stream.Collectors;
 public class TpaCommand implements CommandExecutor, TabCompleter {
     private final DonutPlugin plugin;
     private final TpaManager tpaManager;
-    
+
     public TpaCommand(DonutPlugin plugin, TpaManager tpaManager) {
         this.plugin = plugin;
         this.tpaManager = tpaManager;
     }
-    
+
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player player)) {
             sender.sendMessage("§cDieser Befehl ist nur für Spieler!");
             return true;
         }
-        
+
         String cmd = command.getName().toLowerCase();
-        
+
         switch (cmd) {
             case "tpa" -> {
                 if (args.length < 1) {
@@ -63,14 +63,14 @@ public class TpaCommand implements CommandExecutor, TabCompleter {
                 tpaManager.denyTpa(player);
             }
         }
-        
+
         return true;
     }
-    
+
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player player)) return null;
-        
+
         String cmdName = command.getName().toLowerCase();
         if ((cmdName.equalsIgnoreCase("tpa") || cmdName.equalsIgnoreCase("tpahere")) && args.length == 1) {
             return Bukkit.getOnlinePlayers().stream()
@@ -79,7 +79,7 @@ public class TpaCommand implements CommandExecutor, TabCompleter {
                 .filter(name -> name.toLowerCase().startsWith(args[0].toLowerCase()))
                 .collect(Collectors.toList());
         }
-        
+
         return new ArrayList<>();
     }
 }

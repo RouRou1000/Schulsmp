@@ -21,27 +21,27 @@ public class InventoryDragListener implements Listener {
     @EventHandler
     public void onInventoryDrag(InventoryDragEvent e) {
         if (!(e.getWhoClicked() instanceof Player)) return;
-        
+
         String title = e.getView().getTitle();
-        
+
         // KRITISCH: Blockiere Drag in ALLEN GUIs KOMPLETT
-        if (title.contains("Shop") || title.contains("SHOP") || title.contains("SCHUL") || 
+        if (title.contains("Shop") || title.contains("SHOP") || title.contains("SCHUL") ||
             title.contains("FOOD") || title.contains("GEAR") || title.contains("NETHER") || title.contains("SHARDS") ||
             title.contains("ᴀᴜᴋᴛɪᴏɴѕʜᴀᴜѕ") || title.contains("AUKTIONSHAUS") ||
             title.contains("ᴍᴇɪɴᴇ ᴀᴜᴋᴛɪᴏɴᴇɴ") || title.contains("MEINE AUKTIONEN") ||
-            title.contains("Orders") || 
-            title.contains("Kiste") || 
+            title.contains("Orders") ||
+            title.contains("Kiste") ||
             title.contains("Öffne:") ||
             title.contains("DONUT CORE") ||
             title.contains("Slay")) {
             e.setCancelled(true);
             return;
         }
-        
+
         // Spezielle Logik für Sell und AuctionCreate GUIs
         if (title.contains("ɪᴛᴇᴍѕ ᴠᴇʀᴋᴀᴜꜰᴇɴ") || title.contains("ITEMS VERKAUFEN") ||
             title.contains("ᴀᴜᴋᴛɪᴏɴ ᴇʀѕᴛᴇʟʟᴇɴ") || title.contains("AUKTION ERSTELLEN")) {
-            
+
             // Prüfe ob Drag in erlaubte Slots geht
             for (int slot : e.getRawSlots()) {
                 // Top Inventory Slots
@@ -51,7 +51,7 @@ public class InventoryDragListener implements Listener {
                         e.setCancelled(true);
                         return;
                     }
-                    
+
                     // Blockiere Drag auf GUI-Items
                     ItemStack item = e.getView().getTopInventory().getItem(slot);
                     if (item != null && item.hasItemMeta()) {
@@ -61,7 +61,7 @@ public class InventoryDragListener implements Listener {
                             e.setCancelled(true);
                             return;
                         }
-                        if (item.getType() == Material.BLACK_STAINED_GLASS_PANE || 
+                        if (item.getType() == Material.BLACK_STAINED_GLASS_PANE ||
                             item.getType() == Material.GRAY_STAINED_GLASS_PANE) {
                             e.setCancelled(true);
                             return;

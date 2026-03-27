@@ -29,15 +29,15 @@ public class AuctionCommandNew implements CommandExecutor {
             return true;
         }
         Player p = (Player) sender;
-        
+
         String prefix = plugin.getConfig().getString("messages.prefix", "");
-        
+
         // /ah - Browse auctions (main GUI)
         if (args.length == 0) {
             auctionGUI.open(p, 0);
             return true;
         }
-        
+
         // /ah preis <betrag> - Set price for active auction creation
         if (args.length == 2 && args[0].equalsIgnoreCase("preis")) {
             AuctionCreateGUI_V2.Session session = createGUI.getSession(p.getUniqueId());
@@ -45,7 +45,7 @@ public class AuctionCommandNew implements CommandExecutor {
                 p.sendMessage(prefix + "§cKeine aktive Auktions-Erstellung!");
                 return true;
             }
-            
+
             try {
                 double price = Double.parseDouble(args[1]);
                 createGUI.setPrice(p, price);
@@ -54,19 +54,19 @@ public class AuctionCommandNew implements CommandExecutor {
             }
             return true;
         }
-        
+
         // /ah browse - Alternative for browse
         if (args.length == 1 && args[0].equalsIgnoreCase("browse")) {
             auctionGUI.open(p, 0);
             return true;
         }
-        
+
         // /ah meine - Show my auctions
         if (args.length == 1 && (args[0].equalsIgnoreCase("meine") || args[0].equalsIgnoreCase("my"))) {
             auctionGUI.openMyAuctions(p);
             return true;
         }
-        
+
         // Help
         p.sendMessage(prefix + "§7=== §eAuktionshaus Hilfe §7===");
         p.sendMessage("§7/ah §8- §7Öffne Auktionshaus");

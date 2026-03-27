@@ -19,44 +19,44 @@ import org.bukkit.persistence.PersistentDataType;
  */
 public class ShopListener_NEW implements Listener {
     private final DonutPlugin plugin;
-    
+
     public ShopListener_NEW(DonutPlugin plugin) {
         this.plugin = plugin;
     }
-    
+
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onInventoryClick(InventoryClickEvent e) {
         if (!(e.getWhoClicked() instanceof Player)) return;
         if (!(e.getInventory().getHolder() instanceof ShopGUI_NEW)) return;
-        
+
         Player p = (Player) e.getWhoClicked();
-        
+
         // KRITISCH: Blockiere ALLES
         e.setCancelled(true);
-        
+
         // Blockiere Klicks im eigenen Inventar
         if (e.getRawSlot() >= e.getView().getTopInventory().getSize()) {
             return;
         }
-        
+
         // Nur LEFT-Click erlauben
         if (e.getClick() != org.bukkit.event.inventory.ClickType.LEFT) {
             return;
         }
-        
+
         ItemStack clicked = e.getCurrentItem();
         if (clicked == null || !clicked.hasItemMeta()) return;
-        
+
         NamespacedKey actionKey = new NamespacedKey(plugin, "shop_action");
         if (!clicked.getItemMeta().getPersistentDataContainer().has(actionKey, PersistentDataType.STRING)) {
             // Kein Action-Key = Shop-Item zum Kaufen
             handlePurchase(p, e.getView().getTitle(), e.getSlot());
             return;
         }
-        
+
         String action = clicked.getItemMeta().getPersistentDataContainer().get(actionKey, PersistentDataType.STRING);
         ShopGUI_NEW shop = new ShopGUI_NEW(plugin);
-        
+
         switch (action) {
             case "category_food":
                 p.playSound(p.getLocation(), org.bukkit.Sound.UI_BUTTON_CLICK, 0.5f, 1f);
@@ -88,11 +88,11 @@ public class ShopListener_NEW implements Listener {
                 break;
         }
     }
-    
+
     private void handlePurchase(Player p, String title, int slot) {
         ShopGUI_NEW.ShopItem item = ShopGUI_NEW.getShopItem(title, slot);
         if (item == null) return;
-        
+
         if (item.isShard) {
             // Shard-Kauf
             int shards = plugin.getShards().getShards(p.getUniqueId());
@@ -106,7 +106,7 @@ public class ShopListener_NEW implements Listener {
                 p.playSound(p.getLocation(), org.bukkit.Sound.ENTITY_VILLAGER_NO, 1f, 1f);
                 return;
             }
-            
+
             if (plugin.getShards().removeShards(p.getUniqueId(), item.price)) {
                 // Gib Spawner
                 if (item.spawnerType != null && item.material == Material.SPAWNER) {
@@ -122,7 +122,7 @@ public class ShopListener_NEW implements Listener {
                     ItemStack give = new ItemStack(item.material, item.amount);
                     p.getInventory().addItem(give);
                 }
-                
+
                 p.sendMessage("");
                 p.sendMessage("§8┃ §d§lSHARD SHOP §8┃ §a§l✓ GEKAUFT!");
                 p.sendMessage("§8┃ §7Item§8: §f" + item.name + " §8x" + item.amount);
@@ -144,18 +144,18 @@ public class ShopListener_NEW implements Listener {
                 p.playSound(p.getLocation(), org.bukkit.Sound.ENTITY_VILLAGER_NO, 1f, 1f);
                 return;
             }
-            
+
             if (plugin.getEconomy().withdraw(p.getUniqueId(), item.price)) {
                 ItemStack give = new ItemStack(item.material, item.amount);
                 java.util.HashMap<Integer, ItemStack> leftover = p.getInventory().addItem(give);
-                
+
                 if (!leftover.isEmpty()) {
                     for (ItemStack left : leftover.values()) {
                         p.getWorld().dropItemNaturally(p.getLocation(), left);
                     }
                     p.sendMessage("§8┃ §e⚠ Inventar voll! Items gedroppt.");
                 }
-                
+
                 p.sendMessage("");
                 p.sendMessage("§8┃ §6§lSCHUL SHOP §8┃ §a§l✓ GEKAUFT!");
                 p.sendMessage("§8┃ §7Item§8: §f" + item.name + " §8x" + item.amount);
@@ -166,7 +166,7 @@ public class ShopListener_NEW implements Listener {
             }
         }
     }
-    
+
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onInventoryDrag(InventoryDragEvent e) {
         if (!(e.getInventory().getHolder() instanceof ShopGUI_NEW)) return;
