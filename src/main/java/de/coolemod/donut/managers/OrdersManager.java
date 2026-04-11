@@ -93,17 +93,32 @@ public class OrdersManager {
 
     private void load() {
         FileConfiguration cfg = data.getConfig();
-        if (!cfg.contains("orders")) return;
-        for (String id : cfg.getConfigurationSection("orders").getKeys(false)) {
-            String base = "orders." + id;
-            UUID owner = UUID.fromString(cfg.getString(base + ".owner"));
-            int amount = cfg.getInt(base + ".amount");
-            double price = cfg.getDouble(base + ".price");
-            int delivered = cfg.getInt(base + ".delivered");
-            org.bukkit.inventory.ItemStack item = cfg.getItemStack(base + ".item");
-            Order o = new Order(id, owner, item, amount, price);
-            o.delivered = delivered;
-            orders.put(id, o);
+        if (!cfg.isConfigurationSection("orders")) return;
+
+        var ordersSection = cfg.getConfigurationSection("orders");
+        if (ordersSection == null) {
+            return;
+        }
+
+        for (String id : ordersSection.getKeys(false)) {
+            try {
+                String base = "orders." + id;
+                String ownerValue = cfg.getString(base + ".owner");
+                org.bukkit.inventory.ItemStack item = cfg.getItemStack(base + ".item");
+                if (ownerValue == null || item == null) {
+                    continue;
+                }
+
+                UUID owner = UUID.fromString(ownerValue);
+                int amount = cfg.getInt(base + ".amount");
+                double price = cfg.getDouble(base + ".price");
+                int delivered = cfg.getInt(base + ".delivered");
+                Order o = new Order(id, owner, item, amount, price);
+                o.delivered = delivered;
+                orders.put(id, o);
+            } catch (Exception exception) {
+                plugin.getLogger().warning("Überspringe defekten Order-Eintrag: " + id);
+            }
         }
     }
 }

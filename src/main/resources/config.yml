@@ -1,4 +1,4 @@
-﻿# DonutCore - Konfiguration (Deutsch) - MC 1.21.5 Nerfed Economy
+﻿# SchulCore - Konfiguration (Deutsch) - MC 1.21.5 Nerfed Economy
 settings:
   shard-per-kill: 8
   spawner-cost-multiplier: 1.1
@@ -369,7 +369,7 @@ worth:
   CRIMSON_DOOR: 8
   CRIMSON_FENCE: 4
   CRIMSON_FENCE_GATE: 4
-  CRIMSON_FUNGUS: 2
+  CRIMSON_FUNGUS: 12
   CRIMSON_HANGING_SIGN: 9
   CRIMSON_HYPHAE: 8
   CRIMSON_NYLIUM: 1
@@ -503,7 +503,7 @@ worth:
   DRAGON_HEAD: 1000
   DRAGON_WALL_HEAD: 50
   DRIED_KELP: 18
-  DRIED_KELP_BLOCK: 500
+  DRIED_KELP_BLOCK: 300
   DRIPSTONE_BLOCK: 6
   DROPPER: 6
   DROWNED_SPAWN_EGG: 0
@@ -809,7 +809,7 @@ worth:
   LLAMA_SPAWN_EGG: 0
   LODESTONE: 100
   LOOM: 20
-  MACE: 25000
+  MACE: 10000
   MAGENTA_BANNER: 50
   MAGENTA_BED: 45
   MAGENTA_BUNDLE: 5
@@ -1035,7 +1035,7 @@ worth:
   PINK_CONCRETE_POWDER: 4
   PINK_DYE: 1
   PINK_GLAZED_TERRACOTTA: 3
-  PINK_PETALS: 2
+  PINK_PETALS: 10
   PINK_SHULKER_BOX: 75
   PINK_STAINED_GLASS: 6
   PINK_STAINED_GLASS_PANE: 3
@@ -1255,7 +1255,7 @@ worth:
   SCULK_SHRIEKER: 1
   SCULK_VEIN: 4
   SEA_LANTERN: 110
-  SEA_PICKLE: 2
+  SEA_PICKLE: 15
   SEAGRASS: 2
   SENTRY_ARMOR_TRIM_SMITHING_TEMPLATE: 250
   SHAPER_ARMOR_TRIM_SMITHING_TEMPLATE: 250
@@ -1457,7 +1457,7 @@ worth:
   WARPED_DOOR: 8
   WARPED_FENCE: 4
   WARPED_FENCE_GATE: 4
-  WARPED_FUNGUS: 2
+  WARPED_FUNGUS: 12
   WARPED_FUNGUS_ON_A_STICK: 2
   WARPED_HANGING_SIGN: 9
   WARPED_HYPHAE: 8
@@ -1642,49 +1642,84 @@ crates:
       - "DIAMOND:5;EMERALD:8;GOLD_INGOT:10"
       - "NETHERITE_SCRAP:2;DIAMOND:4"
 
-# Enchantment-Worth-Multiplikatoren (pro Enchant-Level)
+# Enchantment-Worth-Multiplikatoren (per enchant level) [Minecraft 1.21.5 IDs - lowercase]
+# Values derived from in-game market prices (price / level = per-level multiplier)
 worth-enchant-multipliers:
-  DAMAGE_ALL: 200
-  DURABILITY: 50
-  ARROW_DAMAGE: 120
-  KNOCKBACK: 80
-  FIRE_ASPECT: 150
-  SHARPNESS: 180
-  PROTECTION: 100
-  EFFICIENCY: 60
-  FORTUNE: 300
-  LOOTING: 250
-  SILK_TOUCH: 500
-  MENDING: 800
-  INFINITY: 400
-  THORNS: 100
-  DEPTH_STRIDER: 75
-  FROST_WALKER: 150
-  SOUL_SPEED: 200
-  SWIFT_SNEAK: 250
+  # === SWORD / AXE ===
+  sharpness: 300         # L1=$300  L5=$1500
+  smite: 50              # L1=$50   L5=$250
+  bane_of_arthropods: 50 # L1=$50   L5=$250
+  knockback: 50          # L1=$50   L2=$100
+  fire_aspect: 50        # L1=$50   L2=$100
+  looting: 50            # L1=$50   L3=$150
+  sweeping_edge: 50      # L1=$50   L3=$150
+  # === TOOLS ===
+  efficiency: 300        # L1=$300  L5=$1500
+  unbreaking: 200        # L1=$200  L3=$600
+  silk_touch: 150        # L1=$150  (max I)
+  fortune: 100           # L1=$100  L3=$300
+  # === BOW ===
+  power: 150             # L1=$150  L5=$750
+  punch: 100             # L1=$100  L2=$200
+  flame: 100             # L1=$100  (max I)
+  infinity: 100          # L1=$100  (max I)
+  # === CROSSBOW ===
+  multishot: 50          # L1=$50   (max I)
+  piercing: 100          # L1=$100  L4=$400
+  quick_charge: 50       # L1=$50   L3=$150
+  # === FISHING ROD ===
+  luck_of_the_sea: 50    # L1=$50   L3=$150
+  lure: 50               # L1=$50   L3=$150
+  # === TRIDENT ===
+  loyalty: 100           # L1=$100  L3=$300
+  channeling: 100        # L1=$100  (max I)
+  impaling: 100          # L1=$100  L5=$500
+  riptide: 100           # L1=$100  L3=$300
+  # === ARMOR ===
+  protection: 200        # L1=$200  L4=$800
+  fire_protection: 100   # L1=$100  L4=$400
+  feather_falling: 100   # L1=$100  L4=$400
+  blast_protection: 200  # L1=$200  L4=$800
+  projectile_protection: 100 # L1=$100  L4=$400
+  respiration: 100       # L1=$100  L3=$300
+  aqua_affinity: 100     # L1=$100  (max I)
+  thorns: 100            # L1=$100  L3=$300
+  depth_strider: 100     # L1=$100  L3=$300
+  frost_walker: 50       # L1=$50   L2=$100
+  soul_speed: 50         # L1=$50   L3=$150
+  swift_sneak: 50        # L1=$50   L3=$150
+  # === GENERAL ===
+  mending: 200           # L1=$200  (max I)
+  # === MACE (1.21+) ===
+  density: 150
+  breach: 200
+  wind_burst: 300
+  # === CURSES ===
+  binding_curse: 0
+  vanishing_curse: 0
 
 # Named-Worth (spezifische Items mit Display-Namen)
 worth-named:
-  "DIAMOND_SWORD|Â§6LegendÃ¤res Schwert": 5000
-  "ENCHANTED_GOLDEN_APPLE|Â§5Glitzernder Apfel": 4000
+  "DIAMOND_SWORD|§6Legendäres Schwert": 5000
+  "ENCHANTED_GOLDEN_APPLE|§5Glitzernder Apfel": 4000
   "LEGEND_SWORD": 12000
 
 messages:
-  prefix: "&6&lâœ¯&r &e"
-  no-permission: "&cDu hast keine Berechtigung dafÃ¼r."
-  not-enough-money: "&cDu hast nicht genug Geld."
-  not-enough-shards: "&cDu hast nicht genug Shards."
-  sold-all: "&a&fArtikel verkauft! Erhalten: &a$%amount%"
-  paid-player: "&aÂ£ &fDu hast &e%player% &f$%amount% bezahlt."
-  received-payment: "&a &fDu hast &a$%amount% &fvon &e%player% &ferhalten."
-  balance: "&eGuthaben: &a$%amount%"
-  shards: "&5Shards: &d%amount%"
-  kills: "&cKills: &f%amount%"
-  crate-opened: "&aâœ” &fKiste geÃ¶ffnet! Erhalten: &e%items%"
-  warp-teleport: "&aâœ” &fTeleportiert zu &e%warp%"
-  auction-listed: "&aâœ” &fItem im Auktionshaus gelistet fÃ¼r &a$%price%"
-  auction-bought: "&aâœ” &fItem gekauft fÃ¼r &a$%price%"
-  auction-expired: "&câœ— &fDeine Auktion ist abgelaufen: &e%item%"
-  order-created: "&aâœ” &fOrder erstellt: &e%amount%x %item% &ffÃ¼r &a$%price%/StÃ¼ck"
-  order-delivered: "&aâœ” &f%amount%x geliefert! Verdient: &a$%earned%"
+  prefix: "§6§l✯§r §e"
+  no-permission: "§cDu hast keine Berechtigung dafür."
+  not-enough-money: "§cDu hast nicht genug Geld."
+  not-enough-shards: "§cDu hast nicht genug Shards."
+  sold-all: "§a§fArtikel verkauft! Erhalten: §a$%amount%"
+  paid-player: "§a✓ §fDu hast §e%player% §f$%amount% bezahlt."
+  received-payment: "§a✓ §fDu hast §a$%amount% §fvon §e%player% §ferhalten."
+  balance: "§eGuthaben: §a$%amount%"
+  shards: "§5Shards: §d%amount%"
+  kills: "§cKills: §f%amount%"
+  crate-opened: "§a✓ §fKiste geöffnet! Erhalten: §e%items%"
+  warp-teleport: "§a✓ §fTeleportiert zu §e%warp%"
+  auction-listed: "§a✓ §fItem im Auktionshaus gelistet für §a$%price%"
+  auction-bought: "§a✓ §fItem gekauft für §a$%price%"
+  auction-expired: "§c✗ §fDeine Auktion ist abgelaufen: §e%item%"
+  order-created: "§a✓ §fOrder erstellt: §e%amount%x %item% §ffür §a$%price%/Stück"
+  order-delivered: "§a✓ §f%amount%x geliefert! Verdient: §a$%earned%"
 data-file: data.yml

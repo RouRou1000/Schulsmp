@@ -1,105 +1,108 @@
 package de.coolemod.donut.listeners;
 
 import de.coolemod.donut.DonutPlugin;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.block.Sign;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
-import org.bukkit.inventory.ItemStack;
+import org.bukkit.event.block.SignChangeEvent;
+import org.bukkit.metadata.FixedMetadataValue;
+import org.bukkit.metadata.MetadataValue;
 
 /**
- * Chat-Listener für Auction/Order-Erstellung via GUI
+ * Sign-basierte Eingabe für Worth-Suche
  */
 public class PlayerChatListener implements Listener {
     private final DonutPlugin plugin;
+
+    private static final String WORTH_SIGN_MODE = "worth_sign_mode";
+    private static final String WORTH_SIGN_BLOCK = "worth_sign_block";
+    private static final String WORTH_SIGN_ORIGINAL = "worth_sign_original";
 
     public PlayerChatListener(DonutPlugin plugin) {
         this.plugin = plugin;
     }
 
+    public static void openWorthSearchSign(DonutPlugin plugin, Player player) {
+        try {
+            cleanupSign(plugin, player);
+
+            org.bukkit.block.Block block = player.getLocation().clone().add(0, 3, 0).getBlock();
+            Material originalType = block.getType();
+
+            player.setMetadata(WORTH_SIGN_MODE, new FixedMetadataValue(plugin, "search"));
+            player.setMetadata(WORTH_SIGN_BLOCK, new FixedMetadataValue(plugin, block.getLocation()));
+            player.setMetadata(WORTH_SIGN_ORIGINAL, new FixedMetadataValue(plugin, originalType.name()));
+
+            block.setType(Material.OAK_SIGN);
+            Sign sign = (Sign) block.getState();
+            sign.setLine(0, "");
+            sign.setLine(1, "^^^^^^^^^^^^^^");
+            sign.setLine(2, "Item-Name");
+            sign.setLine(3, "eingeben");
+            sign.update(false, false);
+
+            player.openSign(sign);
+
+            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                if (player.hasMetadata(WORTH_SIGN_MODE)) {
+                    cleanupSign(plugin, player);
+                }
+            }, 200L);
+
+        } catch (Exception ex) {
+            player.sendMessage("§cFehler beim Öffnen der Eingabe!");
+        }
+    }
+
     @EventHandler
-    public void onChat(AsyncPlayerChatEvent e) {
-        Player p = e.getPlayer();
-        String msg = e.getMessage().trim();
+    public void onSign(SignChangeEvent event) {
+        Player player = event.getPlayer();
+        if (!player.hasMetadata(WORTH_SIGN_MODE)) return;
 
-        // OLD AUCTION SYSTEM - Now handled by AuctionEventHandler
-        // AH Preis-Eingabe
-        // if (p.hasMetadata("ah_price_input")) {
-        //     e.setCancelled(true);
-        //     p.removeMetadata("ah_price_input", plugin);
-        //
-        //     try {
-        //         double price = Double.parseDouble(msg);
-        //         if (price <= 0) {
-        //             p.sendMessage("§cPreis muss positiv sein!");
-        //             return;
-        //         }
-        //
-        //         // Speichere Preis
-        //         de.coolemod.donut.gui.AuctionCreateGUI.setPrice(p, price);
-        //         p.sendMessage("§a✓ Preis gesetzt: §e$" + "%.2f".formatted(price));
-        //
-        //         // Öffne GUI wieder
-        //         org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
-        //             new de.coolemod.donut.gui.AuctionCreateGUI(plugin).open(p);
-        //         });
-        //     } catch (NumberFormatException ex) {
-        //         p.sendMessage("§cNur Zahlen erlaubt!");
-        //     }
-        //     return;
-        // }
+        event.setCancelled(true);
+        cleanupSign(plugin, player);
 
-        // Order erstellen (nur Orders, keine Auktionen mehr via Chat!)
-        if (p.hasMetadata("order_create_pending")) {
-            e.setCancelled(true);
-            p.removeMetadata("order_create_pending", plugin);
+        String input = event.getLine(0);
+        String trimmed = (input == null) ? "" : input.trim();
 
-            // Parse: "order 64 10" oder "64 10"
-            String[] parts = msg.split("\\s+");
-            if (parts.length < 2) {
-                p.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§cFormat: order <Menge> <Preis/Stück>");
-                return;
-            }
-
-            String amountStr = parts.length > 2 ? parts[1] : parts[0];
-            String priceStr = parts.length > 2 ? parts[2] : parts[1];
-
-            try {
-                int amount = Integer.parseInt(amountStr);
-                double pricePerItem = Double.parseDouble(priceStr);
-
-                if (amount <= 0 || pricePerItem <= 0) {
-                    p.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§cMenge und Preis müssen positiv sein!");
-                    return;
-                }
-
-                ItemStack inHand = p.getInventory().getItemInMainHand();
-                if (inHand == null || inHand.getType().isAir()) {
-                    p.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§cHalte ein Item in der Hand!");
-                    return;
-                }
-
-                ItemStack itemType = inHand.clone();
-                itemType.setAmount(1);
-
-                double total = amount * pricePerItem;
-
-                // Create order (sync task)
-                org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
-                    String id = plugin.getOrdersManager().createOrder(p.getUniqueId(), itemType, amount, pricePerItem);
-                    if (id == null) {
-                        p.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§c✗ Nicht genug Geld! Benötigt: §e$" + "%.2f".formatted(total));
-                        p.playSound(p.getLocation(), org.bukkit.Sound.ENTITY_VILLAGER_NO, 1f, 1f);
-                    } else {
-                        p.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§a✓ Order erstellt! §7(§e" + amount + "x §7für §e$" + "%.2f".formatted(pricePerItem) + "§7/Stück, gesamt §e$" + "%.2f".formatted(total) + "§7)");
-                        p.playSound(p.getLocation(), org.bukkit.Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 1f);
-                    }
-                });
-
-            } catch (NumberFormatException ex) {
-                p.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§cUngültige Zahlen! Beispiel: order 64 10");
-            }
+        if (trimmed.isEmpty()) {
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                new de.coolemod.donut.gui.WorthGUI(plugin).open(player, 0);
+                player.sendMessage("§8┃ §e§lWORTH §8┃ §cSuche abgebrochen.");
+            });
             return;
         }
+
+        Bukkit.getScheduler().runTask(plugin, () -> {
+            de.coolemod.donut.gui.WorthGUI.setSearchQuery(player.getUniqueId(), trimmed);
+            new de.coolemod.donut.gui.WorthGUI(plugin).open(player, 0);
+            player.sendMessage("§8┃ §e§lWORTH §8┃ §7Suche: §f\"" + trimmed + "\"");
+        });
+    }
+
+    private static void cleanupSign(DonutPlugin plugin, Player player) {
+        Location location = player.getMetadata(WORTH_SIGN_BLOCK).stream()
+            .map(MetadataValue::value)
+            .filter(Location.class::isInstance)
+            .map(Location.class::cast)
+            .findFirst()
+            .orElse(null);
+        String originalType = player.getMetadata(WORTH_SIGN_ORIGINAL).stream()
+            .map(MetadataValue::asString)
+            .findFirst()
+            .orElse(null);
+        if (location != null && originalType != null) {
+            Material material = Material.matchMaterial(originalType);
+            if (material != null) {
+                location.getBlock().setType(material);
+            }
+        }
+        player.removeMetadata(WORTH_SIGN_MODE, plugin);
+        player.removeMetadata(WORTH_SIGN_BLOCK, plugin);
+        player.removeMetadata(WORTH_SIGN_ORIGINAL, plugin);
     }
 }

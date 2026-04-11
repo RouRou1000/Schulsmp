@@ -117,7 +117,7 @@ public class AuctionHouseManagerNew {
             Player seller = plugin.getServer().getPlayer(auction.seller);
             if (seller != null && seller.isOnline()) {
                 seller.sendMessage(plugin.getConfig().getString("messages.prefix", "") +
-                    "§a✓ Dein Item wurde für §e$" + String.format("%.2f", auction.price) + " §averkauft!");
+                    "§a✓ Dein Item wurde für §e" + de.coolemod.donut.utils.NumberFormatter.formatMoney(auction.price) + " §averkauft!");
             }
 
             // Remove auction
@@ -207,12 +207,21 @@ public class AuctionHouseManagerNew {
 
     private synchronized void load() {
         FileConfiguration cfg = data.getConfig();
-        if (!cfg.contains("auctions")) return;
+        if (!cfg.isConfigurationSection("auctions")) return;
 
-        for (String id : cfg.getConfigurationSection("auctions").getKeys(false)) {
+        var auctionsSection = cfg.getConfigurationSection("auctions");
+        if (auctionsSection == null) {
+            return;
+        }
+
+        for (String id : auctionsSection.getKeys(false)) {
             try {
                 String base = "auctions." + id;
-                UUID seller = UUID.fromString(cfg.getString(base + ".seller"));
+                String sellerValue = cfg.getString(base + ".seller");
+                if (sellerValue == null) {
+                    continue;
+                }
+                UUID seller = UUID.fromString(sellerValue);
                 double price = cfg.getDouble(base + ".price");
                 ItemStack item = cfg.getItemStack(base + ".item");
                 long timestamp = cfg.getLong(base + ".timestamp", System.currentTimeMillis());

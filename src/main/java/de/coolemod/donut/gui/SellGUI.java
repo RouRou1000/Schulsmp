@@ -1,6 +1,7 @@
 package de.coolemod.donut.gui;
 
 import de.coolemod.donut.DonutPlugin;
+import de.coolemod.donut.utils.NumberFormatter;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -104,6 +105,27 @@ public class SellGUI {
             if (is.hasItemMeta() && is.getItemMeta().getPersistentDataContainer().has(new org.bukkit.NamespacedKey(plugin, "donut_gui_action"), org.bukkit.persistence.PersistentDataType.STRING)) {
                 continue;
             }
+            // Shulker Box: Inhalt oder leere Shulker selbst
+            if (is.getType().name().endsWith("SHULKER_BOX")) {
+                double shulkerContent = 0;
+                if (is.getItemMeta() instanceof org.bukkit.inventory.meta.BlockStateMeta blockMeta
+                        && blockMeta.getBlockState() instanceof org.bukkit.block.ShulkerBox box) {
+                    org.bukkit.inventory.Inventory shulkerInv = box.getInventory();
+                    for (int j = 0; j < shulkerInv.getSize(); j++) {
+                        ItemStack si = shulkerInv.getItem(j);
+                        if (si == null || si.getType() == Material.AIR) continue;
+                        double w = plugin.getWorthManager().getWorth(si);
+                        shulkerContent += w * si.getAmount();
+                    }
+                }
+                if (shulkerContent > 0) {
+                    total += shulkerContent;
+                } else {
+                    double shulkerWorth = plugin.getWorthManager().getWorth(is);
+                    total += shulkerWorth * is.getAmount();
+                }
+                continue;
+            }
             double worth = plugin.getWorthManager().getWorth(is);
             total += worth * is.getAmount();
         }
@@ -119,7 +141,7 @@ public class SellGUI {
                 List<String> wl = new ArrayList<>();
                 wl.add("§8────────────────");
                 wl.add("§7Aktueller Wert:");
-                wl.add("§a$" + "%.2f".formatted(total));
+                wl.add(NumberFormatter.formatMoney(total));
                 wl.add("§8────────────────");
                 wl.add("§7Wird automatisch");
                 wl.add("§7aktualisiert");

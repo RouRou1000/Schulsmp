@@ -189,10 +189,10 @@ public class AuctionEventHandlerNew implements Listener {
         });
 
         try {
-            double price = Double.parseDouble(input.trim());
+            double price = de.coolemod.donut.utils.NumberFormatter.parse(input.trim());
 
             if (price <= 0) {
-                player.sendMessage("§cDer Preis muss größer als 0 sein!");
+                player.sendMessage("§cDer Preis muss größer als 0 sein! §7(z.B. 1000, 10k, 1.5m)");
                 org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
                     player.openInventory(session.gui);
                 });

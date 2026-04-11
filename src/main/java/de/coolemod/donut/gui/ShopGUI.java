@@ -1,6 +1,7 @@
 package de.coolemod.donut.gui;
 
 import de.coolemod.donut.DonutPlugin;
+import de.coolemod.donut.utils.NumberFormatter;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -38,7 +39,7 @@ public class ShopGUI {
         bi.setDisplayName("§6§l⛃ §e§lDEIN GUTHABEN");
         bi.setLore(Arrays.asList(
             "§8┃",
-            "§8┃ §7Balance§8: §a$" + String.format("%.2f", balance),
+            "§8┃ §7Balance§8: §a" + NumberFormatter.formatMoney(balance),
             "§8┃",
             "§8▸ §7Kaufe Items mit deinem Geld!"
         ));
@@ -338,7 +339,7 @@ public class ShopGUI {
         bi.setDisplayName("§6§l⛃ §e§lDEIN GUTHABEN");
         bi.setLore(Arrays.asList(
             "§8┃",
-            "§8┃ §7Balance§8: §a$" + String.format("%.2f", balance),
+            "§8┃ §7Balance§8: §a" + NumberFormatter.formatMoney(balance),
             "§8┃"
         ));
         balInfo.setItemMeta(bi);

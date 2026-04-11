@@ -29,7 +29,7 @@ public class OrderCommand implements CommandExecutor {
 
         if (args.length == 0) {
             // Open browse GUI
-            player.openInventory(orderSystem.createBrowseGUI(0));
+            player.openInventory(orderSystem.createBrowseGUI(0, player.getUniqueId()));
             return true;
         }
 

@@ -1,93 +1,189 @@
 package de.coolemod.donut.commands;
 
 import de.coolemod.donut.DonutPlugin;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.World;
+import de.coolemod.donut.gui.RtpGUI;
+import org.bukkit.*;
+import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.scheduler.BukkitRunnable;
 
-import java.util.Random;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * /rtp <weltname> - Random Teleport in eine beliebige Welt
+ * /rtp - Öffnet GUI zur Weltwahl, dann Random Teleport mit Countdown
  */
-public class WarpCommand implements CommandExecutor {
+public class WarpCommand implements CommandExecutor, Listener {
     private final DonutPlugin plugin;
     private final Random random = new Random();
-    private static final int RTP_RADIUS = 5000; // Max Radius für Random TP
-    private static final int RTP_MIN = 100; // Min Distanz vom Spawn
+    private final Map<UUID, Long> cooldowns = new ConcurrentHashMap<>();
+    private final Set<UUID> teleporting = ConcurrentHashMap.newKeySet();
 
-    public WarpCommand(DonutPlugin plugin) { this.plugin = plugin; }
+    private static final int RTP_RADIUS = 5000;
+    private static final int RTP_MIN = 100;
+    private static final int COUNTDOWN_SECONDS = 5;
+    private static final int COOLDOWN_SECONDS = 10;
+
+    public WarpCommand(DonutPlugin plugin) {
+        this.plugin = plugin;
+        Bukkit.getPluginManager().registerEvents(this, plugin);
+    }
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!(sender instanceof Player)) { sender.sendMessage("§cDieser Befehl ist nur für Spieler!"); return true; }
-        Player p = (Player) sender;
-
-        if (args.length == 0) {
-            p.sendMessage("");
-            p.sendMessage("§8┃ §a§lRTP §8┃ §7Random Teleport");
-            p.sendMessage("§8  ▸ §7Verwendung: §e/rtp <welt>");
-            p.sendMessage("§8  ▸ §7Verfügbare Welten:");
-            for (World w : Bukkit.getWorlds()) {
-                String env = getEnvironmentIcon(w.getEnvironment());
-                p.sendMessage("§8    " + env + " §f" + w.getName());
-            }
-            p.sendMessage("");
+        if (!(sender instanceof Player p)) {
+            sender.sendMessage("§cDieser Befehl ist nur für Spieler!");
             return true;
         }
 
-        String worldName = args[0];
-        World world = Bukkit.getWorld(worldName);
-
-        if (world == null) {
-            p.sendMessage("§8┃ §a§lRTP §8┃ §cWelt '§f" + worldName + "§c' nicht gefunden!");
-            p.sendMessage("§8  ▸ §7Verfügbar:");
-            for (World w : Bukkit.getWorlds()) {
-                p.sendMessage("§8    ▸ §f" + w.getName());
-            }
+        // Combat-Check
+        if (plugin.getCombatManager() != null && plugin.getCombatManager().isInCombat(p)) {
+            p.sendMessage("§8[§a§lRTP§8] §cDu bist im Kampf! Warte bis der Combat-Timer abgelaufen ist.");
+            p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
             return true;
         }
 
-        p.sendMessage("§8┃ §a§lRTP §8┃ §7Suche sichere Position...");
-
-        // Finde sichere Random-Position
-        Location safeLoc = findSafeLocation(world);
-        if (safeLoc == null) {
-            p.sendMessage("§8┃ §a§lRTP §8┃ §cKeine sichere Position gefunden. Versuche es erneut!");
+        if (teleporting.contains(p.getUniqueId())) {
+            p.sendMessage("§8[§a§lRTP§8] §cTeleport läuft bereits...");
             return true;
         }
 
-        p.teleport(safeLoc);
-        p.sendMessage("§8┃ §a§lRTP §8┃ §aTeleportiert nach §e" + world.getName() + "§a!");
-        p.sendMessage("§8  ▸ §7Position: §f" + safeLoc.getBlockX() + "§8, §f" + safeLoc.getBlockY() + "§8, §f" + safeLoc.getBlockZ());
-
-        // Effekte
-        try {
-            p.getWorld().spawnParticle(org.bukkit.Particle.PORTAL, p.getLocation().add(0,1,0), 50);
-            p.playSound(p.getLocation(), org.bukkit.Sound.ENTITY_ENDERMAN_TELEPORT, 1f, 1f);
-        } catch (Throwable ignored) {}
-
+        new RtpGUI().open(p);
         return true;
     }
 
-    private Location findSafeLocation(World world) {
-        int maxAttempts = 20;
+    @EventHandler
+    public void onGUIClick(InventoryClickEvent e) {
+        if (!(e.getInventory().getHolder() instanceof RtpGUI)) return;
+        if (!(e.getWhoClicked() instanceof Player p)) return;
+        e.setCancelled(true);
 
-        for (int i = 0; i < maxAttempts; i++) {
+        int slot = e.getRawSlot();
+        if (slot < 0 || slot >= e.getView().getTopInventory().getSize()) return;
+
+        String worldName;
+        if (slot == 11) {
+            worldName = "world";
+        } else if (slot == 13) {
+            worldName = "world_nether";
+        } else if (slot == 15) {
+            p.sendMessage("§8[§a§lRTP§8] §cDas End ist noch nicht freigeschalten!");
+            p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
+            return;
+        } else {
+            return;
+        }
+
+        p.closeInventory();
+        startRtp(p, worldName);
+    }
+
+    private void startRtp(Player p, String worldName) {
+        // Combat-Check
+        if (plugin.getCombatManager() != null && plugin.getCombatManager().isInCombat(p)) {
+            p.sendMessage("§8[§a§lRTP§8] §cDu bist im Kampf! Warte bis der Combat-Timer abgelaufen ist.");
+            p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
+            return;
+        }
+
+        // Cooldown-Check
+        long now = System.currentTimeMillis();
+        Long lastUse = cooldowns.get(p.getUniqueId());
+        if (lastUse != null) {
+            long remaining = COOLDOWN_SECONDS - ((now - lastUse) / 1000);
+            if (remaining > 0) {
+                p.sendMessage("§8[§a§lRTP§8] §cBitte warte noch §e" + remaining + "s§c.");
+                return;
+            }
+        }
+
+        if (teleporting.contains(p.getUniqueId())) {
+            p.sendMessage("§8[§a§lRTP§8] §cTeleport läuft bereits...");
+            return;
+        }
+
+        World world = Bukkit.getWorld(worldName);
+        if (world == null) {
+            p.sendMessage("§8[§a§lRTP§8] §cWelt nicht gefunden!");
+            return;
+        }
+
+        p.sendMessage("§8[§a§lRTP§8] §7Suche sichere Position...");
+        Location safeLoc = findSafeLocation(world);
+        if (safeLoc == null) {
+            p.sendMessage("§8[§a§lRTP§8] §cKeine sichere Position gefunden. Versuche es erneut!");
+            return;
+        }
+
+        teleporting.add(p.getUniqueId());
+        p.sendMessage("§8[§a§lRTP§8] §7Teleport in §e" + COUNTDOWN_SECONDS + " Sekunden§7... Nicht bewegen!");
+
+        new BukkitRunnable() {
+            int count = COUNTDOWN_SECONDS;
+
+            @Override
+            public void run() {
+                if (!p.isOnline() || !teleporting.contains(p.getUniqueId())) {
+                    cancel();
+                    return;
+                }
+
+                if (count <= 0) {
+                    p.teleport(safeLoc);
+                    p.sendMessage("§8[§a§lRTP§8] §aTeleportiert nach §e" + world.getName() + "§a!");
+                    p.sendMessage("§8  ▸ §7Position: §f" + safeLoc.getBlockX() + "§8, §f" + safeLoc.getBlockY() + "§8, §f" + safeLoc.getBlockZ());
+                    p.playSound(p.getLocation(), Sound.ENTITY_ENDERMAN_TELEPORT, 1f, 1f);
+                    p.spawnParticle(Particle.PORTAL, p.getLocation(), 50, 0.5, 1, 0.5);
+                    teleporting.remove(p.getUniqueId());
+                    cooldowns.put(p.getUniqueId(), System.currentTimeMillis());
+                    cancel();
+                    return;
+                }
+
+                String color;
+                if (count >= 4) color = "§a";
+                else if (count >= 2) color = "§e";
+                else color = "§c";
+
+                p.sendTitle(color + "§l" + count, "§7Nicht bewegen!", 0, 25, 5);
+                p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 0.5f, 1f + (0.2f * (COUNTDOWN_SECONDS - count)));
+
+                count--;
+            }
+        }.runTaskTimer(plugin, 0L, 20L);
+    }
+
+    @EventHandler
+    public void onMove(PlayerMoveEvent e) {
+        if (!teleporting.contains(e.getPlayer().getUniqueId())) return;
+
+        Location from = e.getFrom();
+        Location to = e.getTo();
+        if (to == null) return;
+
+        if (from.getBlockX() != to.getBlockX() || from.getBlockY() != to.getBlockY() || from.getBlockZ() != to.getBlockZ()) {
+            teleporting.remove(e.getPlayer().getUniqueId());
+            e.getPlayer().sendMessage("§8[§a§lRTP§8] §cTeleport abgebrochen! Du hast dich bewegt.");
+            e.getPlayer().playSound(e.getPlayer().getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
+            e.getPlayer().sendTitle("§c§lAbgebrochen!", "§7Du hast dich bewegt", 0, 30, 10);
+        }
+    }
+
+    private Location findSafeLocation(World world) {
+        for (int i = 0; i < 20; i++) {
             int x = random.nextInt(RTP_RADIUS * 2) - RTP_RADIUS;
             int z = random.nextInt(RTP_RADIUS * 2) - RTP_RADIUS;
-
-            // Mindestdistanz vom Spawn
             if (Math.abs(x) < RTP_MIN && Math.abs(z) < RTP_MIN) continue;
 
-            // Höchsten sicheren Block finden
             int y;
             if (world.getEnvironment() == World.Environment.NETHER) {
-                // Nether: Suche freien Raum zwischen 32-100
                 y = findNetherSafeY(world, x, z);
             } else {
                 y = world.getHighestBlockYAt(x, z) + 1;
@@ -96,13 +192,8 @@ public class WarpCommand implements CommandExecutor {
             if (y < 1 || y > 300) continue;
 
             Location loc = new Location(world, x + 0.5, y, z + 0.5);
-
-            // Prüfe ob sicher (kein Lava, kein Wasser, Boden vorhanden)
-            if (isSafeLocation(loc)) {
-                return loc;
-            }
+            if (isSafeLocation(loc)) return loc;
         }
-
         return null;
     }
 
@@ -119,28 +210,12 @@ public class WarpCommand implements CommandExecutor {
     }
 
     private boolean isSafeLocation(Location loc) {
-        org.bukkit.block.Block feet = loc.getBlock();
-        org.bukkit.block.Block head = loc.clone().add(0, 1, 0).getBlock();
-        org.bukkit.block.Block ground = loc.clone().add(0, -1, 0).getBlock();
-
-        // Luft für Spieler
+        Block feet = loc.getBlock();
+        Block head = loc.clone().add(0, 1, 0).getBlock();
+        Block ground = loc.clone().add(0, -1, 0).getBlock();
         if (!feet.getType().isAir() || !head.getType().isAir()) return false;
-
-        // Fester Boden
         if (!ground.getType().isSolid()) return false;
-
-        // Kein Lava/Wasser
         String groundName = ground.getType().name();
-        if (groundName.contains("LAVA") || groundName.contains("WATER") || groundName.contains("MAGMA")) return false;
-
-        return true;
-    }
-
-    private String getEnvironmentIcon(World.Environment env) {
-        switch (env) {
-            case NETHER: return "§c🔥";
-            case THE_END: return "§d⭐";
-            default: return "§a🌍";
-        }
+        return !groundName.contains("LAVA") && !groundName.contains("WATER") && !groundName.contains("MAGMA");
     }
 }

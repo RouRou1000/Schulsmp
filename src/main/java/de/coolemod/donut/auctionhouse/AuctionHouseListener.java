@@ -1,6 +1,7 @@
 package de.coolemod.donut.auctionhouse;
 
 import de.coolemod.donut.DonutPlugin;
+import de.coolemod.donut.utils.NumberFormatter;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -42,7 +43,27 @@ public class AuctionHouseListener implements Listener {
         if (slot >= e.getView().getTopInventory().getSize()) {
             // NEW AUCTION GUI: Allow taking items from inventory
             if (title.contains("ɴᴇᴜᴇ ᴀᴜᴋᴛɪᴏɴ")) {
-                e.setCancelled(false);
+                if (e.isShiftClick()) {
+                    e.setCancelled(true);
+
+                    AuctionHouse.CreateSession session = ah.getCreateSession(player.getUniqueId());
+                    ItemStack targetSlot = e.getView().getTopInventory().getItem(4);
+                    if (session == null || clicked == null || clicked.getType().isAir()) {
+                        return;
+                    }
+                    if (targetSlot != null && !targetSlot.getType().isAir()) {
+                        return;
+                    }
+
+                    ItemStack moved = clicked.clone();
+                    e.getView().getTopInventory().setItem(4, moved);
+                    e.getClickedInventory().setItem(e.getSlot(), null);
+                    session.item = moved.clone();
+                    session.priceSet = false;
+                    player.updateInventory();
+                } else {
+                    e.setCancelled(false);
+                }
             } else {
                 e.setCancelled(true);
             }
@@ -174,7 +195,7 @@ public class AuctionHouseListener implements Listener {
                 AuctionHouse.CreateSession confirmSession = ah.getCreateSession(player.getUniqueId());
                 if (confirmSession != null && confirmSession.priceSet && confirmSession.item != null) {
                     String id = ah.createAuction(player.getUniqueId(), confirmSession.item, confirmSession.price);
-                    player.sendMessage("§8┃ §e§lAH §8┃ §aAuktion erstellt für §e$" + String.format("%.2f", confirmSession.price));
+                    player.sendMessage("§8┃ §e§lAH §8┃ §aAuktion erstellt für §e" + NumberFormatter.formatMoney(confirmSession.price));
                     confirmSession.item = null; // Prevent item duplication
                     ah.endCreateSession(player.getUniqueId());
                     player.closeInventory();
@@ -240,15 +261,13 @@ public class AuctionHouseListener implements Listener {
         }
 
         // Remove sign
-        Bukkit.getScheduler().runTask(plugin, () -> {
-            e.getBlock().setType(Material.AIR);
-        });
+        cleanupAhSign(player);
 
         try {
-            double price = Double.parseDouble(input.trim().replace(",", "."));
+            double price = NumberFormatter.parse(input.trim().replace(",", "."));
 
             if (price <= 0) {
-                player.sendMessage("§8┃ §e§lAH §8┃ §cPreis muss größer als 0 sein!");
+                player.sendMessage("§8┃ §e§lAH §8┃ §cPreis muss größer als 0 sein! §7(z.B. 1000, 10k, 1.5m)");
                 Bukkit.getScheduler().runTask(plugin, () -> {
                     player.openInventory(ah.createNewAuctionGUI(player.getUniqueId()));
                 });
@@ -260,7 +279,7 @@ public class AuctionHouseListener implements Listener {
 
             Bukkit.getScheduler().runTask(plugin, () -> {
                 player.openInventory(ah.createNewAuctionGUI(player.getUniqueId()));
-                player.sendMessage("§8┃ §e§lAH §8┃ §7Preis: §a$" + String.format("%.2f", price));
+                player.sendMessage("§8┃ §e§lAH §8┃ §7Preis: §a" + NumberFormatter.formatMoney(price));
             });
 
         } catch (NumberFormatException ex) {
@@ -276,9 +295,7 @@ public class AuctionHouseListener implements Listener {
 
         // Remove metadata and sign
         player.removeMetadata("ah_search_mode", plugin);
-        Bukkit.getScheduler().runTask(plugin, () -> {
-            e.getBlock().setType(Material.AIR);
-        });
+        cleanupAhSign(player);
 
         if (input == null || input.trim().isEmpty()) {
             player.sendMessage("§8┃ §e§lAH §8┃ §7Keine Eingabe.");
@@ -300,10 +317,14 @@ public class AuctionHouseListener implements Listener {
 
     private void openSearchSignGUI(Player player) {
         try {
+            cleanupAhSign(player);
             player.setMetadata("ah_search_mode", new org.bukkit.metadata.FixedMetadataValue(plugin, true));
 
             org.bukkit.block.Block block = player.getLocation().add(0, 3, 0).getBlock();
             Material originalType = block.getType();
+
+            player.setMetadata("ah_sign_block", new org.bukkit.metadata.FixedMetadataValue(plugin, block.getLocation()));
+            player.setMetadata("ah_sign_original", new org.bukkit.metadata.FixedMetadataValue(plugin, originalType.name()));
 
             block.setType(Material.OAK_SIGN);
             org.bukkit.block.Sign sign = (org.bukkit.block.Sign) block.getState();
@@ -316,20 +337,26 @@ public class AuctionHouseListener implements Listener {
             player.openSign(sign);
 
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                block.setType(originalType);
+                cleanupAhSign(player);
                 player.removeMetadata("ah_search_mode", plugin);
             }, 200L);
 
         } catch (Exception ex) {
             player.sendMessage("§8┃ §e§lAH §8┃ §cFehler beim Öffnen der Eingabe!");
+            cleanupAhSign(player);
             player.removeMetadata("ah_search_mode", plugin);
         }
     }
 
     private void openSignGUI(Player player) {
         try {
+            cleanupAhSign(player);
+
             org.bukkit.block.Block block = player.getLocation().add(0, 3, 0).getBlock();
             Material originalType = block.getType();
+
+            player.setMetadata("ah_sign_block", new org.bukkit.metadata.FixedMetadataValue(plugin, block.getLocation()));
+            player.setMetadata("ah_sign_original", new org.bukkit.metadata.FixedMetadataValue(plugin, originalType.name()));
 
             block.setType(Material.OAK_SIGN);
             org.bukkit.block.Sign sign = (org.bukkit.block.Sign) block.getState();
@@ -342,11 +369,33 @@ public class AuctionHouseListener implements Listener {
             player.openSign(sign);
 
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                block.setType(originalType);
+                cleanupAhSign(player);
             }, 200L);
 
         } catch (Exception ex) {
             player.sendMessage("§8┃ §e§lAH §8┃ §cFehler beim Öffnen der Eingabe!");
+            cleanupAhSign(player);
         }
+    }
+
+    private void cleanupAhSign(Player player) {
+        org.bukkit.Location location = player.getMetadata("ah_sign_block").stream()
+            .map(org.bukkit.metadata.MetadataValue::value)
+            .filter(org.bukkit.Location.class::isInstance)
+            .map(org.bukkit.Location.class::cast)
+            .findFirst()
+            .orElse(null);
+        String originalType = player.getMetadata("ah_sign_original").stream()
+            .map(org.bukkit.metadata.MetadataValue::asString)
+            .findFirst()
+            .orElse(null);
+        if (location != null && originalType != null) {
+            Material material = Material.matchMaterial(originalType);
+            if (material != null) {
+                location.getBlock().setType(material);
+            }
+        }
+        player.removeMetadata("ah_sign_block", plugin);
+        player.removeMetadata("ah_sign_original", plugin);
     }
 }

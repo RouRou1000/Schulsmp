@@ -4,6 +4,7 @@ import de.coolemod.donut.DonutPlugin;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Sound;
+import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -165,7 +166,11 @@ public class HomeManager implements Listener {
                 Map<String, Location> playerHomes = new HashMap<>();
 
                 if (homesConfig.isConfigurationSection(uuidStr)) {
-                    for (String homeName : homesConfig.getConfigurationSection(uuidStr).getKeys(false)) {
+                    var playerSection = homesConfig.getConfigurationSection(uuidStr);
+                    if (playerSection == null) {
+                        continue;
+                    }
+                    for (String homeName : playerSection.getKeys(false)) {
                         String path = uuidStr + "." + homeName;
                         String world = homesConfig.getString(path + ".world");
                         double x = homesConfig.getDouble(path + ".x");
@@ -174,8 +179,9 @@ public class HomeManager implements Listener {
                         float yaw = (float) homesConfig.getDouble(path + ".yaw");
                         float pitch = (float) homesConfig.getDouble(path + ".pitch");
 
-                        if (Bukkit.getWorld(world) != null) {
-                            playerHomes.put(homeName, new Location(Bukkit.getWorld(world), x, y, z, yaw, pitch));
+                        World targetWorld = world == null ? null : Bukkit.getWorld(world);
+                        if (targetWorld != null) {
+                            playerHomes.put(homeName, new Location(targetWorld, x, y, z, yaw, pitch));
                         }
                     }
                 }
@@ -195,6 +201,9 @@ public class HomeManager implements Listener {
             for (Map.Entry<String, Location> home : entry.getValue().entrySet()) {
                 String path = uuid + "." + home.getKey();
                 Location loc = home.getValue();
+                if (loc == null || loc.getWorld() == null) {
+                    continue;
+                }
                 homesConfig.set(path + ".world", loc.getWorld().getName());
                 homesConfig.set(path + ".x", loc.getX());
                 homesConfig.set(path + ".y", loc.getY());

@@ -55,14 +55,28 @@ public class PlayerStatsManager {
 
     private void load() {
         FileConfiguration cfg = data.getConfig();
-        if (cfg.contains("stats.kills")) {
-            for (String key : cfg.getConfigurationSection("stats.kills").getKeys(false)) {
-                kills.put(UUID.fromString(key), cfg.getInt("stats.kills." + key));
+        if (cfg.isConfigurationSection("stats.kills")) {
+            var killsSection = cfg.getConfigurationSection("stats.kills");
+            if (killsSection != null) {
+                for (String key : killsSection.getKeys(false)) {
+                    try {
+                        kills.put(UUID.fromString(key), cfg.getInt("stats.kills." + key));
+                    } catch (IllegalArgumentException exception) {
+                        plugin.getLogger().warning("Überspringe ungültigen Kill-Eintrag: " + key);
+                    }
+                }
             }
         }
-        if (cfg.contains("stats.deaths")) {
-            for (String key : cfg.getConfigurationSection("stats.deaths").getKeys(false)) {
-                deaths.put(UUID.fromString(key), cfg.getInt("stats.deaths." + key));
+        if (cfg.isConfigurationSection("stats.deaths")) {
+            var deathsSection = cfg.getConfigurationSection("stats.deaths");
+            if (deathsSection != null) {
+                for (String key : deathsSection.getKeys(false)) {
+                    try {
+                        deaths.put(UUID.fromString(key), cfg.getInt("stats.deaths." + key));
+                    } catch (IllegalArgumentException exception) {
+                        plugin.getLogger().warning("Überspringe ungültigen Death-Eintrag: " + key);
+                    }
+                }
             }
         }
     }

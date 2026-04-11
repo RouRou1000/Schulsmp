@@ -1,6 +1,7 @@
 package de.coolemod.donut.auctionhouse;
 
 import de.coolemod.donut.DonutPlugin;
+import de.coolemod.donut.utils.NumberFormatter;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -92,10 +93,10 @@ public class AuctionHouse {
         auctions.remove(auctionId);
 
         // Notify
-        buyer.sendMessage("§a✓ Gekauft für §e$" + String.format("%.2f", auction.price));
+        buyer.sendMessage("§a✓ Gekauft für §e" + NumberFormatter.formatMoney(auction.price));
         Player seller = Bukkit.getPlayer(auction.seller);
         if (seller != null) {
-            seller.sendMessage("§a✓ Deine Auktion wurde verkauft! +§e$" + String.format("%.2f", auction.price));
+            seller.sendMessage("§a✓ Deine Auktion wurde verkauft! +§e" + NumberFormatter.formatMoney(auction.price));
         }
 
         return true;
@@ -423,7 +424,7 @@ public class AuctionHouse {
             ItemMeta displayMeta = display.getItemMeta();
             List<String> lore = displayMeta.hasLore() ? new ArrayList<>(displayMeta.getLore()) : new ArrayList<>();
             lore.add("§8");
-            lore.add("§7Preis: §e$" + String.format("%.2f", auction.price));
+            lore.add("§7Preis: §e" + NumberFormatter.formatMoney(auction.price));
             lore.add("§8");
             lore.add("§c§l✖ " + toSmallCaps("ABBRECHEN"));
             lore.add("§7Item wird zurückerstattet");
@@ -478,7 +479,7 @@ public class AuctionHouse {
         List<String> priceLore = new ArrayList<>();
         priceLore.add("§8");
         if (session.priceSet) {
-            priceLore.add("§7Aktueller Preis: §e$" + String.format("%.2f", session.price));
+            priceLore.add("§7Aktueller Preis: §e" + NumberFormatter.formatMoney(session.price));
             priceLore.add("§8");
         }
         priceLore.add("§7Öffnet ein Schild zur");
@@ -498,7 +499,7 @@ public class AuctionHouse {
             confirmLore.add("§8");
             confirmLore.add("§7Item: §f" + session.item.getType().name());
             confirmLore.add("§7Menge: §f" + session.item.getAmount());
-            confirmLore.add("§7Preis: §e$" + String.format("%.2f", session.price));
+            confirmLore.add("§7Preis: §e" + NumberFormatter.formatMoney(session.price));
             confirmLore.add("§8");
             confirmLore.add("§a▸ Klicken zum Erstellen");
             confirmMeta.setLore(confirmLore);
@@ -515,7 +516,7 @@ public class AuctionHouse {
         List<String> lore = meta.hasLore() ? new ArrayList<>(meta.getLore()) : new ArrayList<>();
         lore.add("§8");
         lore.add("§8§m                    ");
-        lore.add("§6⛃ §7Preis: §e$" + String.format("%.2f", auction.price));
+        lore.add("§6⛃ §7Preis: §e" + NumberFormatter.formatMoney(auction.price));
         lore.add("§b⚑ §7Verkäufer: §f" + Bukkit.getOfflinePlayer(auction.seller).getName());
         lore.add("§8§m                    ");
         lore.add("§8");

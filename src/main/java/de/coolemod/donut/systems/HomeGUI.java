@@ -5,16 +5,18 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 public class HomeGUI {
     private final DonutPlugin plugin;
@@ -23,6 +25,10 @@ public class HomeGUI {
     private final NamespacedKey homeNameKey;
 
     public static final int MAX_HOMES = 5;
+    public static final String MAIN_TITLE = "§8✦ §6§lHomes §8• §7Übersicht";
+    public static final String DELETE_TITLE = "§8✦ §c§lHome löschen §8• §7Bestätigen";
+
+    private static final int[] HOME_SLOTS = {20, 22, 24, 30, 32};
 
     public HomeGUI(DonutPlugin plugin, HomeManager homeManager) {
         this.plugin = plugin;
@@ -31,185 +37,91 @@ public class HomeGUI {
         this.homeNameKey = new NamespacedKey(plugin, "home_name");
     }
 
-    private String toSmallCaps(String text) {
-        return text.toUpperCase()
-            .replace("A", "ᴀ").replace("B", "ʙ").replace("C", "ᴄ")
-            .replace("D", "ᴅ").replace("E", "ᴇ").replace("F", "ғ")
-            .replace("G", "ɢ").replace("H", "ʜ").replace("I", "ɪ")
-            .replace("J", "ᴊ").replace("K", "ᴋ").replace("L", "ʟ")
-            .replace("M", "ᴍ").replace("N", "ɴ").replace("O", "ᴏ")
-            .replace("P", "ᴘ").replace("Q", "ǫ").replace("R", "ʀ")
-            .replace("S", "s").replace("T", "ᴛ").replace("U", "ᴜ")
-            .replace("V", "ᴠ").replace("W", "ᴡ").replace("X", "x")
-            .replace("Y", "ʏ").replace("Z", "ᴢ");
-    }
-
     public Inventory createHomesGUI(Player player) {
-        Inventory inv = Bukkit.createInventory(null, 27, "§8● §6§lHomes §8●");
+        HomesViewHolder holder = new HomesViewHolder();
+        Inventory inv = Bukkit.createInventory(holder, 54, MAIN_TITLE);
+        holder.inventory = inv;
 
-        List<String> homeNames = homeManager.getHomeNames(player);
+        List<String> homeNames = homeManager.getHomeNames(player).stream()
+            .sorted(String.CASE_INSENSITIVE_ORDER)
+            .toList();
         Map<String, Location> homeLocs = homeManager.getHomesMap(player);
 
-        // Fill border with black glass
-        ItemStack border = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
-        ItemMeta borderMeta = border.getItemMeta();
-        borderMeta.setDisplayName("§0");
-        borderMeta.getPersistentDataContainer().set(actionKey, PersistentDataType.STRING, "border");
-        border.setItemMeta(borderMeta);
+        fillMainLayout(inv);
+        inv.setItem(4, createHeaderItem(homeNames.size()));
+        inv.setItem(13, createProfileItem(player, homeNames.size()));
+        inv.setItem(37, createCapacityItem(homeNames.size()));
+        inv.setItem(40, createCreateItem(homeNames.size()));
+        inv.setItem(43, createGuideItem());
+        inv.setItem(49, createCloseItem());
 
-        for (int i = 0; i < 27; i++) {
-            inv.setItem(i, border);
-        }
-
-        // Show homes in slots 10-14 (middle row)
-        int slot = 10;
-        for (String homeName : homeNames) {
-            if (slot > 14) break;
-
-            Location loc = homeLocs.get(homeName);
-            ItemStack homeItem = createHomeItem(homeName, loc);
-            inv.setItem(slot, homeItem);
-            slot++;
-        }
-
-        // Fill remaining home slots with "create new" if under limit
-        while (slot <= 14) {
-            if (homeNames.size() < MAX_HOMES) {
-                ItemStack create = new ItemStack(Material.LIME_STAINED_GLASS_PANE);
-                ItemMeta createMeta = create.getItemMeta();
-                createMeta.setDisplayName("§a§l+ §fNeues Home");
-                List<String> lore = new ArrayList<>();
-                lore.add("");
-                lore.add("§8▸ §7Homes: §a" + homeNames.size() + "§7/§f" + MAX_HOMES);
-                lore.add("");
-                lore.add("§aKlicken zum Erstellen");
-                createMeta.setLore(lore);
-                createMeta.getPersistentDataContainer().set(actionKey, PersistentDataType.STRING, "create");
-                create.setItemMeta(createMeta);
-                inv.setItem(slot, create);
+        for (int i = 0; i < HOME_SLOTS.length; i++) {
+            if (i < homeNames.size()) {
+                String homeName = homeNames.get(i);
+                inv.setItem(HOME_SLOTS[i], createHomeItem(homeName, homeLocs.get(homeName), i + 1));
             } else {
-                ItemStack full = new ItemStack(Material.RED_STAINED_GLASS_PANE);
-                ItemMeta fullMeta = full.getItemMeta();
-                fullMeta.setDisplayName("§c§l✖ §fMaximum");
-                List<String> lore = new ArrayList<>();
-                lore.add("");
-                lore.add("§8▸ §7Alle §c" + MAX_HOMES + " §7Slots belegt");
-                lore.add("§8▸ §7Lösche ein Home");
-                fullMeta.setLore(lore);
-                fullMeta.getPersistentDataContainer().set(actionKey, PersistentDataType.STRING, "border");
-                full.setItemMeta(fullMeta);
-                inv.setItem(slot, full);
+                inv.setItem(HOME_SLOTS[i], createEmptySlotItem(i + 1, homeNames.size() < MAX_HOMES));
             }
-            slot++;
         }
-
-        // Info item (slot 4)
-        ItemStack info = new ItemStack(Material.BOOK);
-        ItemMeta infoMeta = info.getItemMeta();
-        infoMeta.setDisplayName("§6§lInfo");
-        List<String> infoLore = new ArrayList<>();
-        infoLore.add("");
-        infoLore.add("§8▸ §7Homes: §a" + homeNames.size() + "§7/§f" + MAX_HOMES);
-        infoLore.add("");
-        infoLore.add("§e⚡ §7Linksklick = Teleport");
-        infoLore.add("§c✖ §7Rechtsklick = Löschen");
-        infoMeta.setLore(infoLore);
-        infoMeta.getPersistentDataContainer().set(actionKey, PersistentDataType.STRING, "border");
-        info.setItemMeta(infoMeta);
-        inv.setItem(4, info);
-
-        // Close button (slot 22)
-        ItemStack close = new ItemStack(Material.BARRIER);
-        ItemMeta closeMeta = close.getItemMeta();
-        closeMeta.setDisplayName("§c§lSchließen");
-        closeMeta.getPersistentDataContainer().set(actionKey, PersistentDataType.STRING, "close");
-        close.setItemMeta(closeMeta);
-        inv.setItem(22, close);
 
         return inv;
-    }
-
-    private ItemStack createHomeItem(String name, Location loc) {
-        ItemStack item = new ItemStack(Material.CYAN_BED);
-        ItemMeta meta = item.getItemMeta();
-        meta.setDisplayName("§b§l" + name.toUpperCase());
-
-        List<String> lore = new ArrayList<>();
-        lore.add("");
-        if (loc != null && loc.getWorld() != null) {
-            lore.add("§8▸ §7Welt: §f" + loc.getWorld().getName());
-            lore.add("§8▸ §7X: §a" + (int)loc.getX() + " §7Y: §e" + (int)loc.getY() + " §7Z: §a" + (int)loc.getZ());
-        }
-        lore.add("");
-        lore.add("§aLinksklick §8→ §7Teleport");
-        lore.add("§cRechtsklick §8→ §7Löschen");
-        meta.setLore(lore);
-
-        meta.getPersistentDataContainer().set(actionKey, PersistentDataType.STRING, "home");
-        meta.getPersistentDataContainer().set(homeNameKey, PersistentDataType.STRING, name);
-        item.setItemMeta(meta);
-
-        return item;
     }
 
     public Inventory createDeleteConfirmGUI(String homeName) {
-        Inventory inv = Bukkit.createInventory(null, 27, "§8● §c§lHome Löschen? §8●");
+        DeleteViewHolder holder = new DeleteViewHolder();
+        Inventory inv = Bukkit.createInventory(holder, 27, DELETE_TITLE);
+        holder.inventory = inv;
 
-        // Fill with black glass
-        ItemStack border = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
-        ItemMeta borderMeta = border.getItemMeta();
-        borderMeta.setDisplayName("§0");
-        borderMeta.getPersistentDataContainer().set(actionKey, PersistentDataType.STRING, "border");
-        border.setItemMeta(borderMeta);
-
-        for (int i = 0; i < 27; i++) {
-            inv.setItem(i, border);
+        ItemStack dark = createStaticItem(Material.BLACK_STAINED_GLASS_PANE, "§0");
+        ItemStack accent = createStaticItem(Material.GRAY_STAINED_GLASS_PANE, "§8");
+        for (int i = 0; i < inv.getSize(); i++) {
+            inv.setItem(i, dark);
+        }
+        int[] accentSlots = {10, 12, 14, 16};
+        for (int slot : accentSlots) {
+            inv.setItem(slot, accent);
         }
 
-        // Confirm delete (slot 11)
-        ItemStack confirm = new ItemStack(Material.LIME_WOOL);
-        ItemMeta confirmMeta = confirm.getItemMeta();
-        confirmMeta.setDisplayName("§a§lJa, Löschen");
-        List<String> confirmLore = new ArrayList<>();
-        confirmLore.add("");
-        confirmLore.add("§8▸ §7Home §f" + homeName + " §7wird");
-        confirmLore.add("§7unwiderruflich gelöscht!");
-        confirmLore.add("§8");
-        confirmLore.add("§a▸ Klicken zum Bestätigen");
-        confirmMeta.setLore(confirmLore);
-        confirmMeta.getPersistentDataContainer().set(actionKey, PersistentDataType.STRING, "confirm_delete");
-        confirmMeta.getPersistentDataContainer().set(homeNameKey, PersistentDataType.STRING, homeName);
-        confirm.setItemMeta(confirmMeta);
-        inv.setItem(11, confirm);
+        inv.setItem(11, createActionItem(Material.LIME_WOOL, "§a§lJa, löschen",
+            List.of(
+                "",
+                "§7Löscht das Home §f" + homeName + "§7 endgültig.",
+                "",
+                "§aKlicken zum Bestätigen"
+            ),
+            "confirm_delete",
+            homeName
+        ));
 
-        // Info item (slot 13)
-        ItemStack info = new ItemStack(Material.CYAN_BED);
-        ItemMeta infoMeta = info.getItemMeta();
-        infoMeta.setDisplayName("§c§l🏠 §f" + homeName.toUpperCase());
-        List<String> infoLore = new ArrayList<>();
-        infoLore.add("");
-        infoLore.add("§8▸ §7Dieses Home wird");
-        infoLore.add("§7  unwiderruflich gelöscht!");
-        infoMeta.setLore(infoLore);
-        infoMeta.getPersistentDataContainer().set(actionKey, PersistentDataType.STRING, "border");
-        info.setItemMeta(infoMeta);
-        inv.setItem(13, info);
+        inv.setItem(13, createActionItem(Material.RECOVERY_COMPASS, "§c§l⌂ §f" + homeName.toUpperCase(),
+            List.of(
+                "",
+                "§7Diese Aktion kann nicht rückgängig",
+                "§7gemacht werden.",
+                "",
+                "§8Nur fortfahren, wenn du sicher bist."
+            ),
+            "border",
+            homeName
+        ));
 
-        // Cancel (slot 15)
-        ItemStack cancel = new ItemStack(Material.RED_WOOL);
-        ItemMeta cancelMeta = cancel.getItemMeta();
-        cancelMeta.setDisplayName("§c§lAbbrechen");
-        List<String> cancelLore = new ArrayList<>();
-        cancelLore.add("");
-        cancelLore.add("§8▸ §7Zurück zur Home-Übersicht");
-        cancelLore.add("");
-        cancelLore.add("§c✖ §7Klicken zum Abbrechen");
-        cancelMeta.setLore(cancelLore);
-        cancelMeta.getPersistentDataContainer().set(actionKey, PersistentDataType.STRING, "cancel_delete");
-        cancel.setItemMeta(cancelMeta);
-        inv.setItem(15, cancel);
+        inv.setItem(15, createActionItem(Material.RED_WOOL, "§c§lAbbrechen",
+            List.of(
+                "",
+                "§7Zurück zur Homes-Übersicht.",
+                "",
+                "§cKlicken zum Zurückkehren"
+            ),
+            "cancel_delete",
+            homeName
+        ));
 
         return inv;
+    }
+
+    public boolean isHomeInventory(Inventory inventory) {
+        InventoryHolder holder = inventory.getHolder();
+        return holder instanceof HomesViewHolder || holder instanceof DeleteViewHolder;
     }
 
     public String getAction(ItemStack item) {
@@ -220,5 +132,224 @@ public class HomeGUI {
     public String getHomeName(ItemStack item) {
         if (item == null || !item.hasItemMeta()) return null;
         return item.getItemMeta().getPersistentDataContainer().get(homeNameKey, PersistentDataType.STRING);
+    }
+
+    private void fillMainLayout(Inventory inv) {
+        ItemStack dark = createStaticItem(Material.BLACK_STAINED_GLASS_PANE, "§0");
+        ItemStack soft = createStaticItem(Material.GRAY_STAINED_GLASS_PANE, "§8");
+        ItemStack accent = createStaticItem(Material.ORANGE_STAINED_GLASS_PANE, "§6");
+
+        for (int slot = 0; slot < inv.getSize(); slot++) {
+            inv.setItem(slot, dark);
+        }
+
+        int[] softSlots = {10, 11, 12, 14, 15, 16, 28, 29, 33, 34, 38, 39, 41, 42};
+        for (int slot : softSlots) {
+            inv.setItem(slot, soft);
+        }
+
+        int[] accentSlots = {3, 5, 19, 21, 23, 25, 31};
+        for (int slot : accentSlots) {
+            inv.setItem(slot, accent);
+        }
+    }
+
+    private ItemStack createHeaderItem(int homeCount) {
+        return createActionItem(Material.RECOVERY_COMPASS, "§6§lHOME TERMINAL",
+            List.of(
+                "",
+                "§7Verwalte deine Homes in einer",
+                "§7zentralen Übersicht.",
+                "",
+                "§8• §7Belegt: §6" + homeCount + "§7/§f" + MAX_HOMES,
+                "§8• §7Linksklick auf ein Home §8→ §fTeleport",
+                "§8• §7Rechtsklick auf ein Home §8→ §fLöschen"
+            ),
+            "border",
+            null
+        );
+    }
+
+    private ItemStack createProfileItem(Player player, int homeCount) {
+        ItemStack item = new ItemStack(Material.PLAYER_HEAD);
+        ItemMeta meta = item.getItemMeta();
+        if (meta instanceof SkullMeta skullMeta) {
+            skullMeta.setOwningPlayer(player);
+            meta = skullMeta;
+        }
+        if (meta == null) {
+            return item;
+        }
+
+        meta.setDisplayName("§f§l" + player.getName());
+        List<String> lore = new ArrayList<>();
+        lore.add("");
+        lore.add("§8• §7Homes gespeichert: §6" + homeCount);
+        lore.add("§8• §7Freie Slots: §a" + Math.max(0, MAX_HOMES - homeCount));
+        lore.add("");
+        lore.add("§7Nutze §e/homes§7 oder §e/home list");
+        lore.add("§7für diese Übersicht.");
+        meta.setLore(lore);
+        meta.getPersistentDataContainer().set(actionKey, PersistentDataType.STRING, "border");
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    private ItemStack createCapacityItem(int homeCount) {
+        return createActionItem(Material.BOOK, "§e§lKapazität",
+            List.of(
+                "",
+                "§8• §7Aktuell belegt: §6" + homeCount + "§7/§f" + MAX_HOMES,
+                "§8• §7Verfügbar: §a" + Math.max(0, MAX_HOMES - homeCount) + " Slots",
+                "",
+                homeCount >= MAX_HOMES
+                    ? "§cLösche ein Home, um ein neues anzulegen."
+                    : "§aDu kannst noch weitere Homes erstellen."
+            ),
+            "border",
+            null
+        );
+    }
+
+    private ItemStack createCreateItem(int homeCount) {
+        boolean hasSpace = homeCount < MAX_HOMES;
+        Material material = hasSpace ? Material.LIME_DYE : Material.RED_DYE;
+        List<String> lore = new ArrayList<>();
+        lore.add("");
+        lore.add("§8• §7Homes: §6" + homeCount + "§7/§f" + MAX_HOMES);
+        lore.add("");
+        if (hasSpace) {
+            lore.add("§7Lege einen neuen Homepunkt an");
+            lore.add("§7und benenne ihn direkt per Schild.");
+            lore.add("");
+            lore.add("§aKlicken zum Erstellen");
+        } else {
+            lore.add("§cDu hast das Maximum erreicht.");
+            lore.add("§7Lösche zuerst einen bestehenden Homepunkt.");
+        }
+        return createActionItem(material, hasSpace ? "§a§lNeues Home" : "§c§lKein Slot frei", lore, hasSpace ? "create" : "border", null);
+    }
+
+    private ItemStack createGuideItem() {
+        return createActionItem(Material.NAME_TAG, "§b§lSteuerung",
+            List.of(
+                "",
+                "§aLinksklick §8→ §7Teleportieren",
+                "§cRechtsklick §8→ §7Löschen",
+                "§e/home set <name> §8→ §7Schnell setzen",
+                "§e/home del <name> §8→ §7Direkt löschen"
+            ),
+            "border",
+            null
+        );
+    }
+
+    private ItemStack createCloseItem() {
+        return createActionItem(Material.BARRIER, "§c§lSchließen",
+            List.of("", "§7Schließt diese Übersicht."),
+            "close",
+            null
+        );
+    }
+
+    private ItemStack createHomeItem(String name, Location loc, int index) {
+        ItemStack item = new ItemStack(getHomeMaterial(loc));
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) {
+            return item;
+        }
+
+        meta.setDisplayName("§6§l⌂ §f" + name.toUpperCase());
+        List<String> lore = new ArrayList<>();
+        lore.add("");
+        lore.add("§8• §7Slot: §6#" + index);
+        if (loc != null && loc.getWorld() != null) {
+            lore.add("§8• §7Welt: §f" + formatWorldName(loc.getWorld()));
+            lore.add("§8• §7Position: §f" + loc.getBlockX() + "§8, §f" + loc.getBlockY() + "§8, §f" + loc.getBlockZ());
+        }
+        lore.add("");
+        lore.add("§aLinksklick §8→ §7Teleportieren");
+        lore.add("§cRechtsklick §8→ §7Löschen");
+        meta.setLore(lore);
+        meta.getPersistentDataContainer().set(actionKey, PersistentDataType.STRING, "home");
+        meta.getPersistentDataContainer().set(homeNameKey, PersistentDataType.STRING, name);
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    private ItemStack createEmptySlotItem(int index, boolean creatable) {
+        Material material = creatable ? Material.GRAY_STAINED_GLASS_PANE : Material.RED_STAINED_GLASS_PANE;
+        List<String> lore = new ArrayList<>();
+        lore.add("");
+        lore.add("§8• §7Slot: §6#" + index);
+        lore.add(creatable ? "§7Dieser Platz ist noch frei." : "§7Zurzeit kann kein weiterer Homepunkt angelegt werden.");
+        lore.add("");
+        lore.add(creatable ? "§7Nutze unten §aNeues Home§7 zum Erstellen." : "§cLösche ein bestehendes Home, um Platz zu schaffen.");
+        return createActionItem(material, creatable ? "§7Freier Slot" : "§cSlot gesperrt", lore, "border", null);
+    }
+
+    private ItemStack createStaticItem(Material material, String displayName) {
+        ItemStack item = new ItemStack(material);
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) {
+            return item;
+        }
+        meta.setDisplayName(displayName);
+        meta.getPersistentDataContainer().set(actionKey, PersistentDataType.STRING, "border");
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    private ItemStack createActionItem(Material material, String displayName, List<String> lore, String action, String homeName) {
+        ItemStack item = new ItemStack(material);
+        ItemMeta meta = item.getItemMeta();
+        if (meta == null) {
+            return item;
+        }
+        meta.setDisplayName(displayName);
+        meta.setLore(lore);
+        meta.getPersistentDataContainer().set(actionKey, PersistentDataType.STRING, action);
+        if (homeName != null) {
+            meta.getPersistentDataContainer().set(homeNameKey, PersistentDataType.STRING, homeName);
+        }
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    private Material getHomeMaterial(Location location) {
+        if (location == null || location.getWorld() == null) {
+            return Material.RECOVERY_COMPASS;
+        }
+        return switch (location.getWorld().getEnvironment()) {
+            case NETHER -> Material.NETHERRACK;
+            case THE_END -> Material.END_STONE;
+            default -> Material.GRASS_BLOCK;
+        };
+    }
+
+    private String formatWorldName(World world) {
+        return switch (world.getEnvironment()) {
+            case NETHER -> "Nether";
+            case THE_END -> "End";
+            default -> "Overworld";
+        };
+    }
+
+    private static final class HomesViewHolder implements InventoryHolder {
+        private Inventory inventory;
+
+        @Override
+        public Inventory getInventory() {
+            return inventory;
+        }
+    }
+
+    private static final class DeleteViewHolder implements InventoryHolder {
+        private Inventory inventory;
+
+        @Override
+        public Inventory getInventory() {
+            return inventory;
+        }
     }
 }

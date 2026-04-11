@@ -23,12 +23,12 @@ public class CrateCommand implements CommandExecutor {
             return true;
         }
         if (args.length == 1 && args[0].equalsIgnoreCase("reload")) {
-            if (!sender.hasPermission("donut.admin")) { sender.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§cKeine Berechtigung."); return true; }
+            if (!sender.hasPermission("donut.crate.admin")) { sender.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§cKeine Berechtigung."); return true; }
             plugin.getCrateManager().reload();
             sender.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§aCrates neu geladen.");
             return true;
         }
-        if (!sender.hasPermission("donut.admin")) { sender.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§cKeine Berechtigung."); return true; }
+        if (!sender.hasPermission("donut.crate.admin")) { sender.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§cKeine Berechtigung."); return true; }
         if (args.length != 4 || !args[0].equalsIgnoreCase("give")) { sender.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§eUsage: /crate give <player> <crateId> <amount>"); return true; }
         Player target = Bukkit.getPlayer(args[1]);
         if (target == null) { sender.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§cSpieler nicht online."); return true; }

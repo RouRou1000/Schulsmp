@@ -55,9 +55,20 @@ public class EconomyManager {
 
     private void load() {
         FileConfiguration cfg = data.getConfig();
-        if (cfg.contains("money")) {
-            for (String key : cfg.getConfigurationSection("money").getKeys(false)) {
+        if (!cfg.isConfigurationSection("money")) {
+            return;
+        }
+
+        var moneySection = cfg.getConfigurationSection("money");
+        if (moneySection == null) {
+            return;
+        }
+
+        for (String key : moneySection.getKeys(false)) {
+            try {
                 balances.put(UUID.fromString(key), cfg.getDouble("money." + key));
+            } catch (IllegalArgumentException exception) {
+                plugin.getLogger().warning("Überspringe ungültigen Money-Eintrag: " + key);
             }
         }
     }

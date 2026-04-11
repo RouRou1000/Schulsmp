@@ -1,6 +1,7 @@
 package de.coolemod.donut.listeners;
 
 import de.coolemod.donut.DonutPlugin;
+import de.coolemod.donut.utils.NumberFormatter;
 // import de.coolemod.donut.gui.AuctionGUI; // OLD - Now using AuctionEventHandler
 import de.coolemod.donut.gui.OrdersGUI;
 import de.coolemod.donut.gui.SlayShopGUI;
@@ -85,25 +86,78 @@ public class InventoryClickListener implements Listener {
             e.setCancelled(true);
             e.setResult(org.bukkit.event.Event.Result.DENY);
             if (clicked == null || !clicked.hasItemMeta()) return;
+            org.bukkit.entity.Player wp = (org.bukkit.entity.Player) e.getWhoClicked();
             // Seiten-Navigation über worth_page PDC
             NamespacedKey worthPageKey = new NamespacedKey(plugin, "worth_page");
             if (clicked.getItemMeta().getPersistentDataContainer().has(worthPageKey, PersistentDataType.INTEGER)) {
                 int page = clicked.getItemMeta().getPersistentDataContainer().get(worthPageKey, PersistentDataType.INTEGER);
-                org.bukkit.entity.Player wp = (org.bukkit.entity.Player) e.getWhoClicked();
                 wp.playSound(wp.getLocation(), org.bukkit.Sound.UI_BUTTON_CLICK, 0.5f, 1f);
                 new de.coolemod.donut.gui.WorthGUI(plugin).open(wp, page);
                 return;
             }
+            // Verzauberungs-Tab Button
+            NamespacedKey tabKeyW = new NamespacedKey(plugin, "worth_tab");
+            if (clicked.getItemMeta().getPersistentDataContainer().has(tabKeyW, PersistentDataType.STRING)) {
+                String tab = clicked.getItemMeta().getPersistentDataContainer().get(tabKeyW, PersistentDataType.STRING);
+                if ("enchants".equals(tab)) {
+                    wp.playSound(wp.getLocation(), org.bukkit.Sound.UI_BUTTON_CLICK, 0.5f, 1f);
+                    new de.coolemod.donut.gui.WorthGUI(plugin).openEnchants(wp, 0);
+                }
+                return;
+            }
+            if (clicked.getType() == Material.COMPASS) {
+                if (e.isRightClick() && de.coolemod.donut.gui.WorthGUI.getSearchQuery(wp.getUniqueId()) != null) {
+                    de.coolemod.donut.gui.WorthGUI.clearSearchQuery(wp.getUniqueId());
+                    wp.playSound(wp.getLocation(), org.bukkit.Sound.UI_BUTTON_CLICK, 0.5f, 1f);
+                    new de.coolemod.donut.gui.WorthGUI(plugin).open(wp, 0);
+                    wp.sendMessage("§8┃ §e§lWORTH §8┃ §7Suche gelöscht.");
+                } else {
+                    wp.closeInventory();
+                    PlayerChatListener.openWorthSearchSign(plugin, wp);
+                }
+                return;
+            }
             // Schließen-Button
             if (clicked.getType() == Material.BARRIER) {
-                ((org.bukkit.entity.Player) e.getWhoClicked()).closeInventory();
+                wp.closeInventory();
+                return;
+            }
+            return;
+        }
+
+        // Enchant Worth GUI: komplett blockieren + Navigation
+        if (title.contains("ᴇɴᴄʜᴀɴᴛ ᴘʀɪᴄᴇs")) {
+            e.setCancelled(true);
+            e.setResult(org.bukkit.event.Event.Result.DENY);
+            if (clicked == null || !clicked.hasItemMeta()) return;
+            org.bukkit.entity.Player wp = (org.bukkit.entity.Player) e.getWhoClicked();
+            // Seiten-Navigation
+            NamespacedKey enchPageKey = new NamespacedKey(plugin, "worth_page");
+            if (clicked.getItemMeta().getPersistentDataContainer().has(enchPageKey, PersistentDataType.INTEGER)) {
+                int page = clicked.getItemMeta().getPersistentDataContainer().get(enchPageKey, PersistentDataType.INTEGER);
+                wp.playSound(wp.getLocation(), org.bukkit.Sound.UI_BUTTON_CLICK, 0.5f, 1f);
+                new de.coolemod.donut.gui.WorthGUI(plugin).openEnchants(wp, page);
+                return;
+            }
+            // Zurück zu Items
+            NamespacedKey tabKey = new NamespacedKey(plugin, "worth_tab");
+            if (clicked.getItemMeta().getPersistentDataContainer().has(tabKey, PersistentDataType.STRING)) {
+                String tab = clicked.getItemMeta().getPersistentDataContainer().get(tabKey, PersistentDataType.STRING);
+                if ("items".equals(tab)) {
+                    wp.playSound(wp.getLocation(), org.bukkit.Sound.UI_BUTTON_CLICK, 0.5f, 1f);
+                    new de.coolemod.donut.gui.WorthGUI(plugin).open(wp, 0);
+                }
+                return;
+            }
+            if (clicked.getType() == Material.BARRIER) {
+                wp.closeInventory();
                 return;
             }
             return;
         }
 
         // KRITISCH: Blockiere ALLE Shop-GUIs SOFORT und KOMPLETT
-        if (title.contains("Slay Shop") || title.contains("SHOP") || title.contains("SCHUL") || title.contains("FOOD") || title.contains("GEAR") || title.contains("NETHER") || title.contains("SHARDS") || title.contains("ᴀᴜᴋᴛɪᴏɴѕʜᴀᴜѕ") || title.contains("AUKTIONSHAUS") || title.contains("Orders") || title.contains("Kiste") || title.contains("DONUT CORE") || title.contains("ᴍᴇɪɴᴇ ᴀᴜᴋᴛɪᴏɴᴇɴ") || title.contains("MEINE AUKTIONEN")) {
+        if (title.contains("Slay Shop") || title.contains("SHOP") || title.contains("SCHUL") || title.contains("FOOD") || title.contains("GEAR") || title.contains("NETHER") || title.contains("SHARDS") || title.contains("ᴀᴜᴋᴛɪᴏɴѕʜᴀᴜѕ") || title.contains("AUKTIONSHAUS") || title.contains("Orders") || title.contains("Kiste") || title.contains("DONUT CORE") || title.contains("ᴍᴇɪɴᴇ ᴀᴜᴋᴛɪᴏɴᴇɴ") || title.contains("MEINE AUKTIONEN") || title.contains("Hilfe") || title.contains("SELL MULTI")) {
             e.setCancelled(true);
             e.setResult(org.bukkit.event.Event.Result.DENY);
         }
@@ -383,7 +437,7 @@ public class InventoryClickListener implements Listener {
                     } else if (action.startsWith("crate_test:")) {
                         String id = action.split(":" , 2)[1];
                         org.bukkit.entity.Player p5 = (org.bukkit.entity.Player)e.getWhoClicked();
-                        if (!p5.hasPermission("donut.admin")) { p5.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§c✗ Keine Berechtigung."); return; }
+                        if (!p5.hasPermission("donut.crate.admin")) { p5.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§c✗ Keine Berechtigung."); return; }
                         // Admin test: skip key check
                         plugin.getCrateManager().openCrateAnimated(p5, id, true);
                         p5.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§a✓ Admin-Test: Kiste geöffnet.");
@@ -408,7 +462,7 @@ public class InventoryClickListener implements Listener {
                         return;
                     } else if (action.equals("open_orders")) {
                         org.bukkit.entity.Player p10 = (org.bukkit.entity.Player)e.getWhoClicked();
-                        new de.coolemod.donut.gui.OrdersGUI(plugin).open(p10);
+                        p10.openInventory(plugin.getOrderSystem().createBrowseGUI(0, p10.getUniqueId()));
                         return;
                     } else if (action.equals("open_crates")) {
                         org.bukkit.entity.Player p11 = (org.bukkit.entity.Player)e.getWhoClicked();
@@ -435,7 +489,7 @@ public class InventoryClickListener implements Listener {
                         org.bukkit.entity.Player p15 = (org.bukkit.entity.Player)e.getWhoClicked();
                         org.bukkit.inventory.Inventory sellInv = e.getView().getTopInventory();
 
-                        // Sammle alle Items aus den Sell-Slots
+                        // Sammle alle Items aus den Sell-Slots (inkl. Shulker-Inhalt)
                         double total = 0.0;
                         int itemsSold = 0;
                         java.util.List<ItemStack> itemsToSell = new java.util.ArrayList<>();
@@ -445,6 +499,39 @@ public class InventoryClickListener implements Listener {
                             ItemStack sellItem = sellInv.getItem(i);
                             if (sellItem == null || sellItem.getType() == Material.AIR) continue;
                             if (sellItem.hasItemMeta() && sellItem.getItemMeta().getPersistentDataContainer().has(new NamespacedKey(plugin, "donut_gui_action"), PersistentDataType.STRING)) {
+                                continue;
+                            }
+                            // Shulker Box: verkaufe Inhalt, oder leere Shulker als Item
+                            if (sellItem.getType().name().endsWith("SHULKER_BOX")) {
+                                boolean hadContent = false;
+                                if (sellItem.getItemMeta() instanceof org.bukkit.inventory.meta.BlockStateMeta blockMeta
+                                        && blockMeta.getBlockState() instanceof org.bukkit.block.ShulkerBox box) {
+                                    org.bukkit.inventory.Inventory shulkerInv = box.getInventory();
+                                    for (int j = 0; j < shulkerInv.getSize(); j++) {
+                                        ItemStack si = shulkerInv.getItem(j);
+                                        if (si == null || si.getType() == Material.AIR) continue;
+                                        double w = plugin.getWorthManager().getWorth(si);
+                                        if (w > 0) {
+                                            total += w * si.getAmount();
+                                            itemsSold += si.getAmount();
+                                            itemsToSell.add(si.clone());
+                                            shulkerInv.setItem(j, null);
+                                            hadContent = true;
+                                        }
+                                    }
+                                    if (hadContent) {
+                                        blockMeta.setBlockState(box);
+                                        sellItem.setItemMeta(blockMeta);
+                                        continue;
+                                    }
+                                }
+                                // Leere Shulker: als Item verkaufen
+                                double shulkerWorth = plugin.getWorthManager().getWorth(sellItem);
+                                if (shulkerWorth > 0) {
+                                    total += shulkerWorth * sellItem.getAmount();
+                                    itemsSold += sellItem.getAmount();
+                                    itemsToSell.add(sellItem);
+                                }
                                 continue;
                             }
                             double worth = plugin.getWorthManager().getWorth(sellItem);
@@ -461,12 +548,26 @@ public class InventoryClickListener implements Listener {
                             return;
                         }
 
-                        // Entferne Items
+                        // Entferne verkaufte Items (inkl. leere Shulkers)
                         for (int i = 10; i <= 43; i++) {
                             if (i % 9 == 0 || i % 9 == 8) continue;
                             ItemStack sellItem2 = sellInv.getItem(i);
                             if (sellItem2 == null) continue;
                             if (sellItem2.hasItemMeta() && sellItem2.getItemMeta().getPersistentDataContainer().has(new NamespacedKey(plugin, "donut_gui_action"), PersistentDataType.STRING)) {
+                                continue;
+                            }
+                            if (sellItem2.getType().name().endsWith("SHULKER_BOX")) {
+                                // Nur leere Shulkers entfernen (die mit Inhalt bleiben)
+                                if (sellItem2.getItemMeta() instanceof org.bukkit.inventory.meta.BlockStateMeta bm
+                                        && bm.getBlockState() instanceof org.bukkit.block.ShulkerBox sb) {
+                                    boolean hasItems = false;
+                                    for (ItemStack si : sb.getInventory().getContents()) {
+                                        if (si != null && !si.getType().isAir()) { hasItems = true; break; }
+                                    }
+                                    if (!hasItems && plugin.getWorthManager().getWorth(sellItem2) > 0) {
+                                        sellInv.setItem(i, null);
+                                    }
+                                }
                                 continue;
                             }
                             double worth = plugin.getWorthManager().getWorth(sellItem2);
@@ -475,10 +576,16 @@ public class InventoryClickListener implements Listener {
                             }
                         }
 
+                        // Sell Multiplier
+                        double bonus = plugin.getSellMultiplier().trackSaleBatch(p15, itemsToSell,
+                                item -> plugin.getWorthManager().getWorth(item));
+                        double finalTotal = total + bonus;
+
                         // Geld geben
-                        plugin.getEconomy().deposit(p15.getUniqueId(), total);
-                        p15.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§a✓ §e" + itemsSold + " Items §afür §e$" + "%.2f".formatted(total) + " §averkauft!");
-                        p15.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§7Neuer Kontostand: §a$" + "%.2f".formatted(plugin.getEconomy().getBalance(p15.getUniqueId())));
+                        plugin.getEconomy().deposit(p15.getUniqueId(), finalTotal);
+                        p15.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§a✓ §e" + itemsSold + " Items §afür §e" + NumberFormatter.formatMoney(finalTotal) + " §averkauft!"
+                                + (bonus > 0 ? " §8(§7+" + NumberFormatter.formatMoney(bonus) + " Bonus§8)" : ""));
+                        p15.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§7Neuer Kontostand: §a" + NumberFormatter.formatMoney(plugin.getEconomy().getBalance(p15.getUniqueId())));
                         p15.playSound(p15.getLocation(), org.bukkit.Sound.ENTITY_PLAYER_LEVELUP, 0.5f, 1.5f);
 
                         // Update Worth Display
@@ -668,15 +775,15 @@ public class InventoryClickListener implements Listener {
                     buyer.sendMessage("§8┃ §6§lSCHUL SHOP §8┃ §a§l✓ GEKAUFT!");
                     buyer.sendMessage("§8┃ §7Item§8: §f" + clicked.getType().name() + " §8x" + amount);
                     buyer.sendMessage("§8┃ §7Preis§8: §e$" + cost);
-                    buyer.sendMessage("§8┃ §7Neuer Kontostand§8: §a$" + String.format("%.2f", plugin.getEconomy().getBalance(buyer.getUniqueId())));
+                    buyer.sendMessage("§8┃ §7Neuer Kontostand§8: §a" + NumberFormatter.formatMoney(plugin.getEconomy().getBalance(buyer.getUniqueId())));
                     buyer.sendMessage("");
                     buyer.playSound(buyer.getLocation(), org.bukkit.Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 1f);
                 } else {
                     buyer.sendMessage("");
                     buyer.sendMessage("§8┃ §c§l✖ SCHUL SHOP §8┃ §cNicht genug Geld!");
                     buyer.sendMessage("§8┃ §7Benötigt§8: §e$" + cost);
-                    buyer.sendMessage("§8┃ §7Dein Geld§8: §e$" + String.format("%.2f", balance));
-                    buyer.sendMessage("§8┃ §7Fehlt§8: §c$" + String.format("%.2f", cost - balance));
+                    buyer.sendMessage("§8┃ §7Dein Geld§8: §e" + NumberFormatter.formatMoney(balance));
+                    buyer.sendMessage("§8┃ §7Fehlt§8: §c" + NumberFormatter.formatMoney(cost - balance));
                     buyer.sendMessage("");
                     buyer.playSound(buyer.getLocation(), org.bukkit.Sound.ENTITY_VILLAGER_NO, 1f, 1f);
                 }
@@ -692,15 +799,26 @@ public class InventoryClickListener implements Listener {
                 String spawnerType = meta.getPersistentDataContainer().get(new NamespacedKey(plugin, "spawner_type"), PersistentDataType.STRING);
 
                 if (plugin.getShards().removeShards(buyer.getUniqueId(), cost)) {
-                    // Gib Spawner mit richtigem Typ
+                    // Gib Spawner mit richtigem Typ (neues SpawnerType System)
                     if (spawnerType != null && clicked.getType() == Material.SPAWNER) {
-                        try {
-                            org.bukkit.entity.EntityType entityType = org.bukkit.entity.EntityType.valueOf(spawnerType);
-                            ItemStack spawner = plugin.getSpawnerManager().createSpawnerItem(entityType);
+                        de.coolemod.donut.systems.SpawnerType type = de.coolemod.donut.systems.SpawnerType.fromName(spawnerType);
+                        if (type != null) {
+                            ItemStack spawner = plugin.getSpawnerManager().createSpawnerItem(type);
                             buyer.getInventory().addItem(spawner);
-                        } catch (Exception ex) {
-                            ItemStack give = new ItemStack(clicked.getType(), amount);
-                            buyer.getInventory().addItem(give);
+                        } else {
+                            // Fallback: EntityType
+                            try {
+                                org.bukkit.entity.EntityType entityType = org.bukkit.entity.EntityType.valueOf(spawnerType);
+                                ItemStack spawner = plugin.getSpawnerManager().createSpawnerItem(entityType);
+                                if (spawner != null) buyer.getInventory().addItem(spawner);
+                                else {
+                                    ItemStack give = new ItemStack(clicked.getType(), amount);
+                                    buyer.getInventory().addItem(give);
+                                }
+                            } catch (Exception ex) {
+                                ItemStack give = new ItemStack(clicked.getType(), amount);
+                                buyer.getInventory().addItem(give);
+                            }
                         }
                     } else {
                         ItemStack give = new ItemStack(clicked.getType(), amount);
@@ -828,7 +946,7 @@ public class InventoryClickListener implements Listener {
                     }
                 }
                 plugin.getOrdersManager().deliverToOrder(id, player.getUniqueId(), deliverAmount);
-                player.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§a✓ " + deliverAmount + " Items geliefert! Verdient: §a$" + "%.2f".formatted(deliverAmount * order.pricePerItem));
+                player.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§a✓ " + deliverAmount + " Items geliefert! Verdient: §a" + NumberFormatter.formatMoney(deliverAmount * order.pricePerItem));
                 player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 1f);
                 player.closeInventory();
                 return;

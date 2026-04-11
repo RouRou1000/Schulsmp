@@ -1,0 +1,135 @@
+####################################################################################################
+# LuckPerms Konfiguration für Schul-SMP
+# Angepasst für das DonutCore Plugin
+####################################################################################################
+
+server: global
+
+use-server-uuid-cache: false
+
+# Speicher-Methode: YAML für einfache Bearbeitung der Gruppen-Dateien
+# Gruppen werden in plugins/LuckPerms/yaml-storage/groups/ gespeichert
+storage-method: yaml
+
+data:
+  address: localhost
+  database: luckperms
+  username: root
+  password: ''
+  pool-settings:
+    maximum-pool-size: 10
+    minimum-idle: 10
+    maximum-lifetime: 1800000
+    keepalive-time: 0
+    connection-timeout: 5000
+    properties:
+      useUnicode: true
+      characterEncoding: utf8
+  table-prefix: 'luckperms_'
+  mongodb-collection-prefix: ''
+  mongodb-connection-uri: ''
+
+split-storage:
+  enabled: false
+  methods:
+    user: yaml
+    group: yaml
+    track: yaml
+    uuid: yaml
+    log: yaml
+
+sync-minutes: -1
+
+watch-files: true
+
+messaging-service: auto
+
+auto-push-updates: true
+
+push-log-entries: true
+
+broadcast-received-log-entries: true
+
+redis:
+  enabled: false
+  address: localhost
+  password: ''
+
+nats:
+  enabled: false
+  address: localhost
+
+rabbitmq:
+  enabled: false
+  address: localhost
+  vhost: '/'
+  username: 'guest'
+  password: 'guest'
+
+temporary-add-behaviour: deny
+
+primary-group-calculation: parents-by-weight
+
+argument-based-command-permissions: false
+
+require-sender-group-membership-to-modify: false
+
+log-notify: true
+
+log-notify-filtered-descriptions: []
+
+auto-install-translations: true
+
+# Prefix/Suffix Stacking - zeigt den höchsten Rang-Prefix
+meta-formatting:
+  prefix:
+    format:
+      - "highest"
+    duplicates: first-only
+    start-spacer: ""
+    middle-spacer: " "
+    end-spacer: ""
+  suffix:
+    format:
+      - "highest"
+    duplicates: first-only
+    start-spacer: ""
+    middle-spacer: " "
+    end-spacer: ""
+
+inheritance-traversal-algorithm: depth-first-pre-order
+
+post-traversal-inheritance-sort: false
+
+context-satisfy-mode: at-least-one-value-per-key
+
+disabled-contexts: []
+
+include-global: true
+include-global-world: true
+apply-global-groups: true
+apply-global-world-groups: true
+
+meta-value-selection-default: inheritance
+meta-value-selection: {}
+
+apply-wildcards: true
+apply-sponge-implicit-wildcards: false
+apply-default-negated-permissions-before-wildcards: false
+apply-regex: true
+apply-shorthand: true
+apply-bukkit-child-permissions: true
+apply-bukkit-default-permissions: true
+apply-bukkit-attachment-permissions: true
+
+disabled-context-calculators: []
+
+world-rewrite: {}
+
+# Gruppen-Gewichte: Bestimmt die Rangordnung in Tab-Liste usw.
+group-weight:
+  owner: 100
+  admin: 90
+  mod: 80
+  builder: 70
+  spieler: 0

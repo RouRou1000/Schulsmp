@@ -47,7 +47,8 @@ public class AuctionCommandNew implements CommandExecutor {
             }
 
             try {
-                double price = Double.parseDouble(args[1]);
+                double price = de.coolemod.donut.utils.NumberFormatter.parse(args[1]);
+                if (price <= 0) throw new NumberFormatException();
                 createGUI.setPrice(p, price);
             } catch (NumberFormatException e) {
                 p.sendMessage(prefix + "§cUngültiger Preis!");

@@ -1,6 +1,7 @@
 package de.coolemod.donut.commands;
 
 import de.coolemod.donut.DonutPlugin;
+import de.coolemod.donut.utils.NumberFormatter;
 import de.coolemod.donut.gui.WorthGUI;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -9,9 +10,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 /**
- * /worth - öffnet Preis-GUI oder zeigt Wert des gehaltenen Items
+ * /worth - öffnet Preis-GUI
  * /worth reload - (admin) neu laden
- * /worth hand - zeigt Wert des Items in der Hand
  */
 public class WorthCommand implements CommandExecutor {
     private final DonutPlugin plugin;
@@ -20,7 +20,7 @@ public class WorthCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length > 0 && args[0].equalsIgnoreCase("reload")) {
-            if (!sender.hasPermission("donut.admin")) {
+            if (!sender.hasPermission("donut.worth.admin")) {
                 sender.sendMessage("§8┃ §e§lWORTH §8┃ §cKeine Berechtigung!");
                 return true;
             }
@@ -31,18 +31,6 @@ public class WorthCommand implements CommandExecutor {
 
         if (!(sender instanceof Player)) { sender.sendMessage("§cDieser Befehl ist nur für Spieler!"); return true; }
         Player p = (Player) sender;
-
-        // /worth hand - zeigt Wert des Items in der Hand
-        if (args.length > 0 && args[0].equalsIgnoreCase("hand")) {
-            ItemStack inHand = p.getInventory().getItemInMainHand();
-            if (inHand == null || inHand.getType().isAir()) {
-                p.sendMessage("§8┃ §e§lWORTH §8┃ §7Halte ein Item in der Hand!");
-                return true;
-            }
-            double worth = plugin.getWorthManager().getWorth(inHand);
-            p.sendMessage("§8┃ §e§lWORTH §8┃ §7Wert: §a" + "%.2f".formatted(worth) + "$ §7pro Stück");
-            return true;
-        }
 
         // /worth - öffnet die Preis-GUI
         new WorthGUI(plugin).open(p, 0);

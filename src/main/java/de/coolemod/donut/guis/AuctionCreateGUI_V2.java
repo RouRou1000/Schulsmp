@@ -104,7 +104,7 @@ public class AuctionCreateGUI_V2 {
             lore.add("");
             lore.add("§7Zu verkaufendes Item");
             if (session.priceLocked) {
-                lore.add("§a§l✓ Preis gesetzt: §e$" + String.format("%.2f", session.price));
+                lore.add("§a§l✓ Preis gesetzt: §e" + de.coolemod.donut.utils.NumberFormatter.formatMoney(session.price));
             }
             meta.setLore(lore);
             display.setItemMeta(meta);
@@ -156,7 +156,7 @@ public class AuctionCreateGUI_V2 {
             List<String> confirmLore = new ArrayList<>();
             confirmLore.add("");
             confirmLore.add("§7Item: §f" + session.storedItem.getType().name());
-            confirmLore.add("§7Preis: §e$" + String.format("%.2f", session.price));
+            confirmLore.add("§7Preis: §e" + de.coolemod.donut.utils.NumberFormatter.formatMoney(session.price));
             confirmLore.add("");
             confirmLore.add("§eKlicken zum Bestätigen");
             confirmMeta.setLore(confirmLore);
@@ -209,7 +209,7 @@ public class AuctionCreateGUI_V2 {
                 // Erstelle Auktion
                 String auctionId = manager.listItem(player.getUniqueId(), session.storedItem, session.price);
                 if (auctionId != null) {
-                    player.sendMessage("§a✓ Auktion erstellt für §e$" + String.format("%.2f", session.price));
+                    player.sendMessage("§a✓ Auktion erstellt für §e" + de.coolemod.donut.utils.NumberFormatter.formatMoney(session.price));
                     session.storedItem = null; // Verhindere Dupe
                     player.closeInventory();
                     sessions.remove(player.getUniqueId());
@@ -314,7 +314,7 @@ public class AuctionCreateGUI_V2 {
         refreshGUI(session);
 
         player.openInventory(session.gui);
-        player.sendMessage("§a✓ Preis gesetzt: §e$" + String.format("%.2f", price));
+        player.sendMessage("§a✓ Preis gesetzt: §e" + de.coolemod.donut.utils.NumberFormatter.formatMoney(price));
         player.sendMessage("§7Klicke §a✓ Auktion erstellen §7zum Bestätigen!");
     }
 

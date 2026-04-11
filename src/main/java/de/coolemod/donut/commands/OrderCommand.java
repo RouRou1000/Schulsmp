@@ -1,6 +1,7 @@
 package de.coolemod.donut.commands;
 
 import de.coolemod.donut.DonutPlugin;
+import de.coolemod.donut.utils.NumberFormatter;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -25,8 +26,12 @@ public class OrderCommand implements CommandExecutor {
         }
         if (args.length == 3 && args[0].equalsIgnoreCase("create")) {
             int amount; double price;
-            try { amount = Integer.parseInt(args[1]); price = Double.parseDouble(args[2]); } catch (NumberFormatException e) {
-                p.sendMessage("§8┃ §d§lORDER §8┃ §cUngültige Zahlen!");
+            try {
+                amount = (int) NumberFormatter.parse(args[1]);
+                price = NumberFormatter.parse(args[2]);
+                if (amount <= 0 || price < 0) throw new NumberFormatException();
+            } catch (NumberFormatException e) {
+                p.sendMessage("§8┃ §d§lORDER §8┃ §cUngültige Zahlen! §7(z.B. 10k, 1.5m)");
                 return true;
             }
             ItemStack inHand = p.getInventory().getItemInMainHand();

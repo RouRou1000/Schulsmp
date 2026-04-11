@@ -1,6 +1,7 @@
 package de.coolemod.donut.commands;
 
 import de.coolemod.donut.DonutPlugin;
+import de.coolemod.donut.utils.NumberFormatter;
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.command.Command;
@@ -47,11 +48,9 @@ public class PayCommand implements CommandExecutor {
             return true;
         }
 
-        double amount;
-        try {
-            amount = Double.parseDouble(args[1]);
-        } catch (NumberFormatException e) {
-            p.sendMessage(prefix + "§c✗ Ungültiger Betrag: §f" + args[1]);
+        double amount = NumberFormatter.parse(args[1]);
+        if (amount < 0) {
+            p.sendMessage(prefix + "§c✗ Ungültiger Betrag: §f" + args[1] + " §7(z.B. 100, 10k, 1.5m)");
             p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
             return true;
         }
@@ -70,7 +69,7 @@ public class PayCommand implements CommandExecutor {
 
         double balance = plugin.getEconomy().getBalance(p.getUniqueId());
         if (balance < amount) {
-            p.sendMessage(prefix + "§c✗ Nicht genug Geld! Du hast §a$" + "%.2f".formatted(balance));
+            p.sendMessage(prefix + "§c✗ Nicht genug Geld! Du hast §a" + NumberFormatter.formatMoney(balance));
             p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
             return true;
         }
@@ -80,19 +79,19 @@ public class PayCommand implements CommandExecutor {
         plugin.getEconomy().deposit(target.getUniqueId(), amount);
 
         // Feedback
-        String amountStr = "%.2f".formatted(amount);
+        String amountStr = NumberFormatter.formatMoney(amount);
         p.sendMessage("");
         p.sendMessage(prefix + "§a✓ Transaktion erfolgreich!");
-        p.sendMessage("  §7Gesendet: §a$" + amountStr + " §7an §f" + target.getName());
-        p.sendMessage("  §7Neuer Kontostand: §a$" + "%.2f".formatted(plugin.getEconomy().getBalance(p.getUniqueId())));
+        p.sendMessage("  §7Gesendet: §a" + amountStr + " §7an §f" + target.getName());
+        p.sendMessage("  §7Neuer Kontostand: §a" + NumberFormatter.formatMoney(plugin.getEconomy().getBalance(p.getUniqueId())));
         p.sendMessage("");
         p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 1f);
 
         target.sendMessage("");
         target.sendMessage(prefix + "§a✓ Geld erhalten!");
         target.sendMessage("  §7Von: §f" + p.getName());
-        target.sendMessage("  §7Betrag: §a$" + amountStr);
-        target.sendMessage("  §7Neuer Kontostand: §a$" + "%.2f".formatted(plugin.getEconomy().getBalance(target.getUniqueId())));
+        target.sendMessage("  §7Betrag: §a" + amountStr);
+        target.sendMessage("  §7Neuer Kontostand: §a" + NumberFormatter.formatMoney(plugin.getEconomy().getBalance(target.getUniqueId())));
         target.sendMessage("");
         target.playSound(target.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.5f, 1.5f);
 

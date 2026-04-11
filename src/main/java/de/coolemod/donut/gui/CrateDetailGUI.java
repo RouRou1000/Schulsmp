@@ -167,8 +167,8 @@ public class CrateDetailGUI {
         bsm.setDisplayName("§d§l♦ KEY KAUFEN");
         List<String> bsl = new ArrayList<>();
         bsl.add("§8────────────────");
-        bsl.add("§7Preis: §d" + keyCostShards + " Shards");
-        bsl.add("§7Deine Shards: §d" + plugin.getShards().getShards(p.getUniqueId()));
+        bsl.add("§7Preis: §d" + de.coolemod.donut.utils.NumberFormatter.formatInt(keyCostShards) + " Shards");
+        bsl.add("§7Deine Shards: §d" + de.coolemod.donut.utils.NumberFormatter.formatInt(plugin.getShards().getShards(p.getUniqueId())));
         bsl.add("§8────────────────");
         bsl.add("§e⬅ Linksklick zum Kaufen!");
         bsm.setLore(bsl);
@@ -177,7 +177,7 @@ public class CrateDetailGUI {
         inv.setItem(49, buyBtnShards);
 
         // Admin Test Button
-        if (p.hasPermission("donut.admin")) {
+        if (p.hasPermission("donut.crate.admin")) {
             ItemStack testBtn = new ItemStack(Material.COMMAND_BLOCK);
             ItemMeta tbm = testBtn.getItemMeta();
             tbm.setDisplayName("§c§l⚙ ADMIN TEST");

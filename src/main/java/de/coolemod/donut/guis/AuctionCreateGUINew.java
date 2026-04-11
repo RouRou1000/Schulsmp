@@ -129,7 +129,7 @@ public class AuctionCreateGUINew {
 
         List<String> lore = new ArrayList<>();
         if (currentPrice > 0) {
-            lore.add("§7Aktuell: §e$" + String.format("%.2f", currentPrice));
+            lore.add("§7Aktuell: §e" + de.coolemod.donut.utils.NumberFormatter.formatMoney(currentPrice));
         } else {
             lore.add("§7Kein Preis gesetzt!");
         }
@@ -316,7 +316,7 @@ public class AuctionCreateGUINew {
                 lore.add("");
                 if (session.state == CreationState.PRICE_SET) {
                     lore.add("§a§l✓ Gesperrt");
-                    lore.add("§7Preis: §e$" + String.format("%.2f", session.price));
+                    lore.add("§7Preis: §e" + de.coolemod.donut.utils.NumberFormatter.formatMoney(session.price));
                     lore.add("");
                     lore.add("§cKann nicht mehr entfernt werden");
                 } else {
@@ -422,7 +422,7 @@ public class AuctionCreateGUINew {
                     String auctionId = manager.listItem(player.getUniqueId(), session.item, session.price);
                     if (auctionId != null) {
                         player.sendMessage(plugin.getConfig().getString("messages.prefix", "") +
-                            "§a✓ Auktion erstellt für §e$" + String.format("%.2f", session.price));
+                            "§a✓ Auktion erstellt für §e" + de.coolemod.donut.utils.NumberFormatter.formatMoney(session.price));
                         // Clear item from session to prevent duplication
                         session.item = null;
                         player.closeInventory();
@@ -479,7 +479,7 @@ public class AuctionCreateGUINew {
 
         // Reopen GUI
         player.openInventory(session.gui);
-        player.sendMessage("§a✓ Preis festgelegt: §e$" + String.format("%.2f", price));
+        player.sendMessage("§a✓ Preis festgelegt: §e" + de.coolemod.donut.utils.NumberFormatter.formatMoney(price));
         player.sendMessage("§7Item ist jetzt gesperrt. Klicke §a✓ Fertig §7zum Bestätigen.");
     }
 

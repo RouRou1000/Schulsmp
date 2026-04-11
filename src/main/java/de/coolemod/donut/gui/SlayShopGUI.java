@@ -27,7 +27,7 @@ public class SlayShopGUI {
         ItemStack info = new ItemStack(Material.PLAYER_HEAD);
         ItemMeta im = info.getItemMeta();
         im.setDisplayName("§e" + p.getName());
-        im.setLore(Arrays.asList("§7Deine Shards: §a" + shards, "§7Deine Kills: §c" + kills));
+        im.setLore(Arrays.asList("§7Deine Shards: §a" + de.coolemod.donut.utils.NumberFormatter.formatInt(shards), "§7Deine Kills: §c" + de.coolemod.donut.utils.NumberFormatter.formatInt(kills)));
         info.setItemMeta(im);
         inv.setItem(4, info);
 

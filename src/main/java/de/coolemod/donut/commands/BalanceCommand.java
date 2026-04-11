@@ -1,6 +1,7 @@
 package de.coolemod.donut.commands;
 
 import de.coolemod.donut.DonutPlugin;
+import de.coolemod.donut.utils.NumberFormatter;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -30,8 +31,8 @@ public class BalanceCommand implements CommandExecutor {
             int kills = plugin.getStats().getKills(target.getUniqueId());
             sender.sendMessage("");
             sender.sendMessage(prefix + "§e✦ Kontostand von §f" + target.getName() + " §e✦");
-            sender.sendMessage("  §7├─ §aGeld: §f$" + "%.2f".formatted(bal));
-            sender.sendMessage("  §7├─ §dShards: §f" + shards);
+            sender.sendMessage("  §7├─ §aGeld: §f" + NumberFormatter.formatMoney(bal));
+            sender.sendMessage("  §7├─ §dShards: §f" + NumberFormatter.formatInt(shards));
             sender.sendMessage("  §7└─ §cKills: §f" + kills);
             sender.sendMessage("");
             return true;
@@ -48,8 +49,8 @@ public class BalanceCommand implements CommandExecutor {
 
         p.sendMessage("");
         p.sendMessage(prefix + "§e✦ Dein Kontostand §e✦");
-        p.sendMessage("  §7├─ §aGeld: §f$" + "%.2f".formatted(bal));
-        p.sendMessage("  §7├─ §dShards: §f" + shards);
+        p.sendMessage("  §7├─ §aGeld: §f" + NumberFormatter.formatMoney(bal));
+        p.sendMessage("  §7├─ §dShards: §f" + NumberFormatter.formatInt(shards));
         p.sendMessage("  §7├─ §cKills: §f" + kills + " §8| §7Deaths: §f" + deaths);
         p.sendMessage("  §7└─ §6K/D: §f" + "%.2f".formatted(kd));
         p.sendMessage("");

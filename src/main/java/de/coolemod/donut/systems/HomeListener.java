@@ -11,10 +11,9 @@ import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
+import org.bukkit.metadata.MetadataValue;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.Optional;
 
 public class HomeListener implements Listener {
     private final DonutPlugin plugin;
@@ -31,11 +30,10 @@ public class HomeListener implements Listener {
     @EventHandler
     public void onInventoryClick(InventoryClickEvent e) {
         if (!(e.getWhoClicked() instanceof Player player)) return;
-
-        String title = e.getView().getTitle();
-        if (!title.contains("ᴅᴇɪɴᴇ ʜᴏᴍᴇs") && !title.contains("ʜᴏᴍᴇ ʟᴏsᴄʜᴇɴ")) return;
+        if (!homeGUI.isHomeInventory(e.getView().getTopInventory())) return;
 
         e.setCancelled(true);
+        if (e.getRawSlot() >= e.getView().getTopInventory().getSize()) return;
 
         ItemStack clicked = e.getCurrentItem();
         if (clicked == null) return;
@@ -48,21 +46,21 @@ public class HomeListener implements Listener {
         switch (action) {
             case "home" -> {
                 if (e.isLeftClick()) {
-                    // Teleport to home
                     player.closeInventory();
                     homeManager.teleportHome(player, homeName);
                 } else if (e.isRightClick()) {
-                    // Open delete confirmation
                     player.openInventory(homeGUI.createDeleteConfirmGUI(homeName));
                     player.playSound(player.getLocation(), Sound.UI_BUTTON_CLICK, 0.5f, 1f);
                 }
             }
             case "create" -> {
                 player.closeInventory();
+                player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_CHIME, 0.7f, 1.2f);
                 openHomeNameSignGUI(player);
             }
             case "confirm_delete" -> {
                 homeManager.deleteHome(player, homeName);
+                player.playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 0.7f, 0.9f);
                 player.closeInventory();
                 Bukkit.getScheduler().runTaskLater(plugin, () -> {
                     player.openInventory(homeGUI.createHomesGUI(player));
@@ -102,12 +100,8 @@ public class HomeListener implements Listener {
             // Fallback cleanup after 200 ticks
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
                 if (player.hasMetadata("home_sign_block")) {
-                    org.bukkit.Location loc = (org.bukkit.Location) player.getMetadata("home_sign_block").get(0).value();
-                    String origType = player.getMetadata("home_sign_original").get(0).asString();
-                    loc.getBlock().setType(Material.valueOf(origType));
+                    cleanupSign(player);
                     player.removeMetadata("home_create_mode", plugin);
-                    player.removeMetadata("home_sign_block", plugin);
-                    player.removeMetadata("home_sign_original", plugin);
                 }
             }, 200L);
 
@@ -120,13 +114,16 @@ public class HomeListener implements Listener {
     }
 
     private void cleanupSign(Player player) {
-        if (player.hasMetadata("home_sign_block")) {
-            org.bukkit.Location loc = (org.bukkit.Location) player.getMetadata("home_sign_block").get(0).value();
-            String origType = player.getMetadata("home_sign_original").get(0).asString();
-            loc.getBlock().setType(Material.valueOf(origType));
-            player.removeMetadata("home_sign_block", plugin);
-            player.removeMetadata("home_sign_original", plugin);
+        org.bukkit.Location loc = getMetadataLocation(player, "home_sign_block");
+        String origType = getMetadataString(player, "home_sign_original");
+        if (loc != null && origType != null) {
+            Material material = Material.matchMaterial(origType);
+            if (material != null) {
+                loc.getBlock().setType(material);
+            }
         }
+        player.removeMetadata("home_sign_block", plugin);
+        player.removeMetadata("home_sign_original", plugin);
     }
 
     @EventHandler
@@ -140,7 +137,7 @@ public class HomeListener implements Listener {
         // Immediately cleanup the sign
         cleanupSign(player);
 
-        String homeName = e.getLine(0).trim();
+        String homeName = Optional.ofNullable(e.getLine(0)).orElse("").trim();
 
         if (homeName.isEmpty()) {
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
@@ -190,5 +187,21 @@ public class HomeListener implements Listener {
             homeManager.setHome(player, homeName);
             player.openInventory(homeGUI.createHomesGUI(player));
         }, 2L);
+    }
+
+    private org.bukkit.Location getMetadataLocation(Player player, String key) {
+        return player.getMetadata(key).stream()
+            .map(MetadataValue::value)
+            .filter(org.bukkit.Location.class::isInstance)
+            .map(org.bukkit.Location.class::cast)
+            .findFirst()
+            .orElse(null);
+    }
+
+    private String getMetadataString(Player player, String key) {
+        return player.getMetadata(key).stream()
+            .map(MetadataValue::asString)
+            .findFirst()
+            .orElse(null);
     }
 }

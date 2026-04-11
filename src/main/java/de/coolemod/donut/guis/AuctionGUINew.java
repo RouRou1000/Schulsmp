@@ -78,7 +78,7 @@ public class AuctionGUINew {
 
         List<String> lore = meta.hasLore() ? new ArrayList<>(meta.getLore()) : new ArrayList<>();
         lore.add("");
-        lore.add("§7Preis: §e$" + String.format("%.2f", auction.price));
+        lore.add("§7Preis: §e" + de.coolemod.donut.utils.NumberFormatter.formatMoney(auction.price));
         lore.add("§7Verkäufer: §f" + plugin.getServer().getOfflinePlayer(auction.seller).getName());
         lore.add("");
         lore.add("§a§lKlicken zum Kaufen");
@@ -240,7 +240,7 @@ public class AuctionGUINew {
 
             List<String> lore = meta.hasLore() ? new ArrayList<>(meta.getLore()) : new ArrayList<>();
             lore.add("");
-            lore.add("§7Preis: §e$" + String.format("%.2f", auction.price));
+            lore.add("§7Preis: §e" + de.coolemod.donut.utils.NumberFormatter.formatMoney(auction.price));
             lore.add("");
             lore.add("§c§lKlicken zum Zurückziehen");
 

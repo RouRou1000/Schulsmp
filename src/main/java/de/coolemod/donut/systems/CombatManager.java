@@ -71,25 +71,12 @@ public class CombatManager implements Listener {
                 for (Player player : Bukkit.getOnlinePlayers()) {
                     if (isInCombat(player)) {
                         int remaining = getRemainingCombatTime(player);
-                        String bar = createProgressBar(remaining, COMBAT_DURATION);
                         String color = remaining <= 5 ? "§a" : remaining <= 15 ? "§e" : "§c";
                         player.spigot().sendMessage(ChatMessageType.ACTION_BAR,
-                            new TextComponent("§c§l⚔ KAMPF §8" + bar + " " + color + remaining + "s"));
+                            new TextComponent("§c§l⚔ KAMPF " + color + remaining + "s"));
                     }
                 }
             }
         }.runTaskTimer(plugin, 0L, 10L);
-    }
-
-    private String createProgressBar(int current, int max) {
-        int bars = 20;
-        int filled = (int) ((double) current / max * bars);
-        StringBuilder sb = new StringBuilder("§8[");
-        for (int i = 0; i < bars; i++) {
-            if (i < filled) sb.append("§c█");
-            else sb.append("§7░");
-        }
-        sb.append("§8]");
-        return sb.toString();
     }
 }

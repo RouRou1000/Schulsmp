@@ -1,6 +1,7 @@
 package de.coolemod.donut.gui;
 
 import de.coolemod.donut.DonutPlugin;
+import de.coolemod.donut.utils.NumberFormatter;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
@@ -30,8 +31,8 @@ public class MainMenuGUI {
         pim.setDisplayName("§6§l" + p.getName());
         List<String> pil = new ArrayList<>();
         pil.add("§8────────────────");
-        pil.add("§7Geld: §a$" + "%.2f".formatted(plugin.getEconomy().getBalance(p.getUniqueId())));
-        pil.add("§7Shards: §d" + plugin.getShards().getShards(p.getUniqueId()));
+        pil.add("§7Geld: §a" + NumberFormatter.formatMoney(plugin.getEconomy().getBalance(p.getUniqueId())));
+        pil.add("§7Shards: §d" + NumberFormatter.formatInt(plugin.getShards().getShards(p.getUniqueId())));
         pil.add("§7Kills: §c" + plugin.getStats().getKills(p.getUniqueId()));
         pil.add("§7Deaths: §7" + plugin.getStats().getDeaths(p.getUniqueId()));
         pil.add("§8────────────────");
@@ -133,8 +134,8 @@ public class MainMenuGUI {
         bm.setDisplayName("§e§l💰 KONTOSTAND");
         List<String> bl = new ArrayList<>();
         bl.add("§8────────────────");
-        bl.add("§7Dein Geld: §a$" + "%.2f".formatted(plugin.getEconomy().getBalance(p.getUniqueId())));
-        bl.add("§7Deine Shards: §d" + plugin.getShards().getShards(p.getUniqueId()));
+        bl.add("§7Dein Geld: §a" + NumberFormatter.formatMoney(plugin.getEconomy().getBalance(p.getUniqueId())));
+        bl.add("§7Deine Shards: §d" + NumberFormatter.formatInt(plugin.getShards().getShards(p.getUniqueId())));
         bl.add("§8────────────────");
         bm.setLore(bl);
         bal.setItemMeta(bm);

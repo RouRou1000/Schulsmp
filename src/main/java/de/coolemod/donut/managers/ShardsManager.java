@@ -49,9 +49,20 @@ public class ShardsManager {
 
     private void load() {
         FileConfiguration cfg = data.getConfig();
-        if (cfg.contains("shards")) {
-            for (String key : cfg.getConfigurationSection("shards").getKeys(false)) {
+        if (!cfg.isConfigurationSection("shards")) {
+            return;
+        }
+
+        var shardsSection = cfg.getConfigurationSection("shards");
+        if (shardsSection == null) {
+            return;
+        }
+
+        for (String key : shardsSection.getKeys(false)) {
+            try {
                 shards.put(UUID.fromString(key), cfg.getInt("shards." + key));
+            } catch (IllegalArgumentException exception) {
+                plugin.getLogger().warning("Überspringe ungültigen Shards-Eintrag: " + key);
             }
         }
     }

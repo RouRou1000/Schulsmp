@@ -23,7 +23,7 @@ public class PlayerDeathListener implements Listener {
             plugin.getStats().addKill(killer.getUniqueId());
             int shards = plugin.getConfig().getInt("settings.shard-per-kill", 10);
             plugin.getShards().addShards(killer.getUniqueId(), shards);
-            killer.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§aDu hast " + shards + " Shards für den Kill erhalten.");
+            killer.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§aDu hast " + de.coolemod.donut.utils.NumberFormatter.formatInt(shards) + " Shards für den Kill erhalten.");
         }
     }
 }

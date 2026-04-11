@@ -1,14 +1,11 @@
-name: DonutCore
+name: SchulCore
 main: de.coolemod.donut.DonutPlugin
-version: 1.0.0
+version: 1.0.1-debug
 api-version: 1.21
 author: Coole Mod
 commands:
   shop:
     description: "Öffnet das Shop-Menü"
-    usage: /<command>
-  slayshop:
-    description: "Öffnet den Slay Shop (PvP-Shop)"
     usage: /<command>
   sell:
     description: "Verkauft Items aus dem Inventar"
@@ -36,13 +33,23 @@ commands:
     description: "Administrative Kisten-Kommandos"
     usage: /crateadmin <list|create|delete|addpool>
   rtp:
-    description: "Random Teleport in eine Welt"
-    usage: /rtp <weltname>
-    aliases: [randomtp, randomteleport]
-  menu:
-    description: "Öffnet das Hauptmenü"
+    description: "Random Teleport"
+    usage: /rtp
+  help:
+    description: "Zeigt die Hilfe-GUI mit allen Commands"
     usage: /<command>
-    aliases: [hub, main]
+    aliases: [hilfe]
+  tutorial:
+    description: "Öffnet das Tutorial-Buch"
+    usage: /tutorial
+  msg:
+    description: "Sende eine private Nachricht"
+    usage: /msg <spieler> <nachricht>
+    aliases: [tell, w, whisper]
+  r:
+    description: "Antworte auf die letzte private Nachricht"
+    usage: /r <nachricht>
+    aliases: [reply]
   home:
     description: "Home Teleport System"
     usage: /home <name> | /home set <name> | /home del <name> | /home list
@@ -64,10 +71,76 @@ commands:
     description: "Lehne eine TPA-Anfrage ab"
     usage: /<command>
     aliases: [tpadeny]
+  money:
+    description: "Verwalte Geld eines Spielers (Admin)"
+    usage: /money [set|add|remove] <spieler> [betrag]
+  shards:
+    description: "Verwalte Shards eines Spielers (Admin)"
+    usage: /shards [set|add|remove] <spieler> [menge]
+  ac:
+    description: "Anti-Cheat / PacketCheck System"
+    usage: /ac <spieler|bann|unban|sort|list|help>
+    aliases: [packetcheck]
+  spawn:
+    description: "Teleportiere dich zum Spawn"
+    usage: /spawn
+  wipe:
+    description: "Wipe einen Spieler (Backup + Reset)"
+    usage: /wipe <spieler>
+  unwipe:
+    description: "Stelle Spieler-Daten wieder her"
+    usage: /unwipe <spieler>
+  rank:
+    description: "Verwalte Ränge (LuckPerms)"
+    usage: /rank <set|info|list> [spieler] [rang]
+  sellmulti:
+    description: "Zeigt deine Sell-Multiplikatoren und Fortschritt"
+    usage: /sellmulti
+    aliases: [smulti, multi]
+  clan:
+    description: "Verwalte deinen Clan"
+    usage: /clan [create|invite|accept|chat|home|sethome|leave|disband]
+    aliases: [clans]
+  c:
+    description: "Sende eine Nachricht in den Clan-Chat"
+    usage: /c <nachricht>
+softdepend: [ProtocolLib, LuckPerms]
 permissions:
+  donut.clan:
+    description: "Clan-System nutzen"
+    default: true
   donut.admin:
-    description: "Verwaltet das Plugin"
+    description: "Vollzugriff auf alle Admin-Befehle"
     default: op
+    children:
+      donut.ac: true
+      donut.money: true
+      donut.shards: true
+      donut.wipe: true
+      donut.crate.admin: true
+      donut.worth.admin: true
+      donut.balance.others: true
+  donut.ac:
+    description: "AntiCheat / Bann / Unban Befehle (/ac)"
+    default: false
+  donut.rank.admin:
+    description: "Rang-Verwaltung (/rank)"
+    default: false
+  donut.money:
+    description: "Geld-Verwaltung (/money)"
+    default: false
+  donut.shards:
+    description: "Shards-Verwaltung (/shards)"
+    default: false
+  donut.wipe:
+    description: "Spieler wipen/unwipen (/wipe, /unwipe)"
+    default: false
   donut.crate.admin:
-    description: "Verwaltung von Kisten"
-    default: op
+    description: "Kisten-Verwaltung (/crate admin, /crateadmin)"
+    default: false
+  donut.worth.admin:
+    description: "Worth-Daten neu laden (/worth reload)"
+    default: false
+  donut.balance.others:
+    description: "Kontostand anderer Spieler sehen"
+    default: false

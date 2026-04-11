@@ -3,6 +3,7 @@ package de.coolemod.donut.managers;
 import de.coolemod.donut.DonutPlugin;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.Registry;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -16,6 +17,7 @@ import java.util.Optional;
  * Verbesserter WorthManager: unterstützt Material-Grundwerte, Namens-spezifische Werte und Enchant-Multiplikatoren.
  */
 public class WorthManager {
+    private static final String APRIL_2026_WORTH_PATCH_KEY = "worth-patches.april-2026-balance";
     private final DonutPlugin plugin;
     private final Map<Material, Double> baseValues = new HashMap<>();
     private final Map<String, Double> namedValues = new HashMap<>(); // key: MATERIAL|DisplayName
@@ -36,6 +38,7 @@ public class WorthManager {
     private void load() {
         // Default-Werte für alle wichtigen Items
         loadDefaults();
+        applyWorthConfigPatch();
 
         if (plugin.getConfig().isConfigurationSection("worth")) {
             for (String key : plugin.getConfig().getConfigurationSection("worth").getKeys(false)) {
@@ -57,7 +60,7 @@ public class WorthManager {
         if (plugin.getConfig().isConfigurationSection("worth-enchant-multipliers")) {
             for (String key : plugin.getConfig().getConfigurationSection("worth-enchant-multipliers").getKeys(false)) {
                 try {
-                    Enchantment e = Enchantment.getByName(key);
+                    Enchantment e = Registry.ENCHANTMENT.get(NamespacedKey.minecraft(key.toLowerCase()));
                     if (e != null) {
                         double v = plugin.getConfig().getDouble("worth-enchant-multipliers." + key, 0.0);
                         enchantMultipliers.put(e, v);
@@ -179,11 +182,60 @@ public class WorthManager {
         // Spezial Items
         baseValues.put(Material.TOTEM_OF_UNDYING, 300.0);
         baseValues.put(Material.ELYTRA, 1000.0);
-        baseValues.put(Material.TRIDENT, 200.0);
+        baseValues.put(Material.TRIDENT, 10_000.0);
+        baseValues.put(Material.MACE, 10_000.0);
         baseValues.put(Material.SHULKER_BOX, 150.0);
         baseValues.put(Material.BEACON, 2000.0);
         baseValues.put(Material.DRAGON_HEAD, 500.0);
         baseValues.put(Material.DRAGON_EGG, 5000.0);
+
+        // Gewünschte Balance-Anpassungen
+        baseValues.put(Material.DRIED_KELP_BLOCK, 300.0);
+        baseValues.put(Material.CRIMSON_FUNGUS, 12.0);
+        baseValues.put(Material.WARPED_FUNGUS, 12.0);
+        baseValues.put(Material.SEA_PICKLE, 15.0);
+        baseValues.put(Material.PINK_PETALS, 10.0);
+    }
+
+    private void applyWorthConfigPatch() {
+        boolean changed = false;
+
+        changed |= ensureWorthValueIfMissing(Material.TRIDENT, 10_000.0);
+        changed |= ensureWorthValueIfMissing(Material.MACE, 10_000.0);
+
+        if (!plugin.getConfig().getBoolean(APRIL_2026_WORTH_PATCH_KEY, false)) {
+            changed |= setWorthValue(Material.DRIED_KELP_BLOCK, 300.0);
+            changed |= setWorthValue(Material.CRIMSON_FUNGUS, 12.0);
+            changed |= setWorthValue(Material.WARPED_FUNGUS, 12.0);
+            changed |= setWorthValue(Material.SEA_PICKLE, 15.0);
+            changed |= setWorthValue(Material.PINK_PETALS, 10.0);
+            plugin.getConfig().set(APRIL_2026_WORTH_PATCH_KEY, true);
+            changed = true;
+        }
+
+        if (changed) {
+            plugin.saveConfig();
+        }
+    }
+
+    private boolean ensureWorthValueIfMissing(Material material, double value) {
+        String path = "worth." + material.name();
+        if (plugin.getConfig().isSet(path)) {
+            return false;
+        }
+
+        plugin.getConfig().set(path, value);
+        return true;
+    }
+
+    private boolean setWorthValue(Material material, double value) {
+        String path = "worth." + material.name();
+        if (Double.compare(plugin.getConfig().getDouble(path, Double.NaN), value) == 0) {
+            return false;
+        }
+
+        plugin.getConfig().set(path, value);
+        return true;
     }
 
     /**
@@ -261,6 +313,8 @@ public class WorthManager {
     }
 
     public Map<Material, Double> getBaseValues() { return baseValues; }
+
+    public Map<Enchantment, Double> getEnchantMultipliers() { return enchantMultipliers; }
 
     // programmatic registry methods
     public void setBaseWorth(Material m, double value) { baseValues.put(m, value); }

@@ -19,7 +19,7 @@ public class CrateAdminCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!sender.hasPermission("donut.admin")) { sender.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§cKeine Berechtigung."); return true; }
+        if (!sender.hasPermission("donut.crate.admin")) { sender.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§cKeine Berechtigung."); return true; }
         if (args.length == 0) { sender.sendMessage("Usage: /crateadmin <list|create|delete|addpool|addguaranteed|addbundle|settier|test|info>"); return true; }
         switch (args[0].toLowerCase()) {
             case "list":
