@@ -406,15 +406,21 @@ public class OrderListener implements Listener {
             org.bukkit.block.Block block = player.getLocation().add(0, 3, 0).getBlock();
             Material originalType = block.getType();
             
-            block.setType(Material.OAK_SIGN);
+            block.setType(Material.OAK_SIGN, false);
             org.bukkit.block.Sign sign = (org.bukkit.block.Sign) block.getState();
-            sign.setLine(0, "");
-            sign.setLine(1, "^^^^^^^^^^^^^^");
-            sign.setLine(2, "Menge eingeben");
-            sign.setLine(3, "");
-            sign.update(false, false);
+            sign.setWaxed(false);
+            org.bukkit.block.sign.SignSide front = sign.getSide(org.bukkit.block.sign.Side.FRONT);
+            front.setLine(0, "");
+            front.setLine(1, "^^^^^^^^^^^^^^");
+            front.setLine(2, "Menge eingeben");
+            front.setLine(3, "");
+            sign.update(true, false);
             
-            player.openSign(sign);
+            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                if (block.getType() == Material.OAK_SIGN) {
+                    player.openSign((org.bukkit.block.Sign) block.getState(), org.bukkit.block.sign.Side.FRONT);
+                }
+            }, 3L);
             
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
                 block.setType(originalType);
@@ -459,15 +465,21 @@ public class OrderListener implements Listener {
             org.bukkit.block.Block block = player.getLocation().add(0, 3, 0).getBlock();
             Material originalType = block.getType();
             
-            block.setType(Material.OAK_SIGN);
+            block.setType(Material.OAK_SIGN, false);
             org.bukkit.block.Sign sign = (org.bukkit.block.Sign) block.getState();
-            sign.setLine(0, "");
-            sign.setLine(1, "^^^^^^^^^^^^^^");
-            sign.setLine(2, "Preis/Stück");
-            sign.setLine(3, "");
-            sign.update(false, false);
+            sign.setWaxed(false);
+            org.bukkit.block.sign.SignSide front = sign.getSide(org.bukkit.block.sign.Side.FRONT);
+            front.setLine(0, "");
+            front.setLine(1, "^^^^^^^^^^^^^^");
+            front.setLine(2, "Preis/Stück");
+            front.setLine(3, "");
+            sign.update(true, false);
             
-            player.openSign(sign);
+            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                if (block.getType() == Material.OAK_SIGN) {
+                    player.openSign((org.bukkit.block.Sign) block.getState(), org.bukkit.block.sign.Side.FRONT);
+                }
+            }, 3L);
             
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
                 block.setType(originalType);

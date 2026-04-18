@@ -271,7 +271,7 @@ public class AuctionCreateGUI_V2 {
             org.bukkit.block.Block block = player.getLocation().add(0, 3, 0).getBlock();
             Material originalType = block.getType();
             
-            block.setType(Material.OAK_SIGN);
+            block.setType(Material.OAK_SIGN, false);
             org.bukkit.block.Sign sign = (org.bukkit.block.Sign) block.getState();
             sign.setWaxed(false);
             org.bukkit.block.sign.SignSide front = sign.getSide(org.bukkit.block.sign.Side.FRONT);
@@ -282,7 +282,9 @@ public class AuctionCreateGUI_V2 {
             sign.update(true, false);
             
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                player.openSign(sign, org.bukkit.block.sign.Side.FRONT);
+                if (block.getType() == Material.OAK_SIGN) {
+                    player.openSign((org.bukkit.block.Sign) block.getState(), org.bukkit.block.sign.Side.FRONT);
+                }
             }, 3L);
             
             Bukkit.getScheduler().runTaskLater(plugin, () -> {

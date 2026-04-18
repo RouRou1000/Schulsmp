@@ -172,6 +172,12 @@ public class AuctionEventHandlerNew implements Listener {
         AuctionCreateGUINew.CreateSession session = createGUI.getSession(player.getUniqueId());
         if (session == null) return;
 
+        // Remove sign sofort
+        Block block = e.getBlock();
+        org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
+            block.setType(Material.AIR);
+        });
+
         // Parse price from first line
         String input = e.getLine(0);
         if (input == null || input.trim().isEmpty()) {
@@ -181,12 +187,6 @@ public class AuctionEventHandlerNew implements Listener {
             });
             return;
         }
-
-        // Remove sign
-        Block block = e.getBlock();
-        org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
-            block.setType(Material.AIR);
-        });
 
         try {
             double price = de.coolemod.donut.utils.NumberFormatter.parse(input.trim());

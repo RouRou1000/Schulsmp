@@ -785,7 +785,7 @@ public class OrderListener implements Listener {
             player.setMetadata(ORDER_SIGN_BLOCK, new org.bukkit.metadata.FixedMetadataValue(plugin, block.getLocation()));
             player.setMetadata(ORDER_SIGN_ORIGINAL, new org.bukkit.metadata.FixedMetadataValue(plugin, originalType.name()));
 
-            block.setType(Material.OAK_SIGN);
+            block.setType(Material.OAK_SIGN, false);
             Sign sign = (Sign) block.getState();
             sign.setWaxed(false);
             org.bukkit.block.sign.SignSide front = sign.getSide(org.bukkit.block.sign.Side.FRONT);
@@ -796,7 +796,9 @@ public class OrderListener implements Listener {
             sign.update(true, false);
 
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                player.openSign(sign, org.bukkit.block.sign.Side.FRONT);
+                if (block.getType() == Material.OAK_SIGN) {
+                    player.openSign((Sign) block.getState(), org.bukkit.block.sign.Side.FRONT);
+                }
             }, 3L);
 
             Bukkit.getScheduler().runTaskLater(plugin, () -> {

@@ -500,7 +500,7 @@ public class AuctionCreateGUINew {
             Material originalType = block.getType();
             
             // Set sign
-            block.setType(Material.OAK_SIGN);
+            block.setType(Material.OAK_SIGN, false);
             org.bukkit.block.Sign sign = (org.bukkit.block.Sign) block.getState();
             sign.setWaxed(false);
             org.bukkit.block.sign.SignSide front = sign.getSide(org.bukkit.block.sign.Side.FRONT);
@@ -512,7 +512,9 @@ public class AuctionCreateGUINew {
             
             // Open sign for editing (3 tick delay for client to receive block change)
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                player.openSign(sign, org.bukkit.block.sign.Side.FRONT);
+                if (block.getType() == Material.OAK_SIGN) {
+                    player.openSign((org.bukkit.block.Sign) block.getState(), org.bukkit.block.sign.Side.FRONT);
+                }
             }, 3L);
             
             // Remove sign after 10 seconds if not edited

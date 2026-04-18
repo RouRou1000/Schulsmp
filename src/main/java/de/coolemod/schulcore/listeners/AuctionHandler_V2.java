@@ -182,6 +182,11 @@ public class AuctionHandler_V2 implements Listener {
         if (session == null) return;
         
         String input = e.getLine(0);
+        // Entferne Sign sofort
+        org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
+            e.getBlock().setType(Material.AIR);
+        });
+
         if (input == null || input.trim().isEmpty()) {
             player.sendMessage("§cKeine Eingabe!");
             org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
@@ -189,11 +194,6 @@ public class AuctionHandler_V2 implements Listener {
             });
             return;
         }
-        
-        // Entferne Sign
-        org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
-            e.getBlock().setType(Material.AIR);
-        });
         
         try {
             double price = Double.parseDouble(input.trim());

@@ -252,6 +252,7 @@ public class AuctionHouseListener implements Listener {
 
     private void handlePriceSign(SignChangeEvent e, Player player, AuctionHouse.CreateSession session) {
         String input = e.getLine(0);
+        cleanupAhSign(player);
         if (input == null || input.trim().isEmpty()) {
             player.sendMessage("§8┃ §e§lAH §8┃ §7Keine Eingabe.");
             Bukkit.getScheduler().runTask(plugin, () -> {
@@ -259,9 +260,6 @@ public class AuctionHouseListener implements Listener {
             });
             return;
         }
-
-        // Remove sign
-        cleanupAhSign(player);
 
         try {
             double price = NumberFormatter.parse(input.trim().replace(",", "."));
@@ -326,7 +324,7 @@ public class AuctionHouseListener implements Listener {
             player.setMetadata("ah_sign_block", new org.bukkit.metadata.FixedMetadataValue(plugin, block.getLocation()));
             player.setMetadata("ah_sign_original", new org.bukkit.metadata.FixedMetadataValue(plugin, originalType.name()));
 
-            block.setType(Material.OAK_SIGN);
+            block.setType(Material.OAK_SIGN, false);
             org.bukkit.block.Sign sign = (org.bukkit.block.Sign) block.getState();
             sign.setWaxed(false);
             org.bukkit.block.sign.SignSide front = sign.getSide(org.bukkit.block.sign.Side.FRONT);
@@ -337,7 +335,9 @@ public class AuctionHouseListener implements Listener {
             sign.update(true, false);
 
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                player.openSign(sign, org.bukkit.block.sign.Side.FRONT);
+                if (block.getType() == Material.OAK_SIGN) {
+                    player.openSign((org.bukkit.block.Sign) block.getState(), org.bukkit.block.sign.Side.FRONT);
+                }
             }, 3L);
 
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
@@ -362,7 +362,7 @@ public class AuctionHouseListener implements Listener {
             player.setMetadata("ah_sign_block", new org.bukkit.metadata.FixedMetadataValue(plugin, block.getLocation()));
             player.setMetadata("ah_sign_original", new org.bukkit.metadata.FixedMetadataValue(plugin, originalType.name()));
 
-            block.setType(Material.OAK_SIGN);
+            block.setType(Material.OAK_SIGN, false);
             org.bukkit.block.Sign sign = (org.bukkit.block.Sign) block.getState();
             sign.setWaxed(false);
             org.bukkit.block.sign.SignSide front = sign.getSide(org.bukkit.block.sign.Side.FRONT);
@@ -373,7 +373,9 @@ public class AuctionHouseListener implements Listener {
             sign.update(true, false);
 
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                player.openSign(sign, org.bukkit.block.sign.Side.FRONT);
+                if (block.getType() == Material.OAK_SIGN) {
+                    player.openSign((org.bukkit.block.Sign) block.getState(), org.bukkit.block.sign.Side.FRONT);
+                }
             }, 3L);
 
             Bukkit.getScheduler().runTaskLater(plugin, () -> {

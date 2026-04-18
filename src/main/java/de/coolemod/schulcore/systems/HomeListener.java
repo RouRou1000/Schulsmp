@@ -87,15 +87,21 @@ public class HomeListener implements Listener {
             player.setMetadata("home_sign_block", new FixedMetadataValue(plugin, block.getLocation()));
             player.setMetadata("home_sign_original", new FixedMetadataValue(plugin, originalType.name()));
             
-            block.setType(Material.OAK_SIGN);
+            block.setType(Material.OAK_SIGN, false);
             org.bukkit.block.Sign sign = (org.bukkit.block.Sign) block.getState();
-            sign.setLine(0, "");
-            sign.setLine(1, "^^^^^^^^^^^^^^");
-            sign.setLine(2, "Home Name");
-            sign.setLine(3, "eingeben");
-            sign.update(false, false);
+            sign.setWaxed(false);
+            org.bukkit.block.sign.SignSide front = sign.getSide(org.bukkit.block.sign.Side.FRONT);
+            front.setLine(0, "");
+            front.setLine(1, "^^^^^^^^^^^^^^");
+            front.setLine(2, "Home Name");
+            front.setLine(3, "eingeben");
+            sign.update(true, false);
             
-            player.openSign(sign);
+            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                if (block.getType() == Material.OAK_SIGN) {
+                    player.openSign((org.bukkit.block.Sign) block.getState(), org.bukkit.block.sign.Side.FRONT);
+                }
+            }, 3L);
             
             // Fallback cleanup after 200 ticks
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
