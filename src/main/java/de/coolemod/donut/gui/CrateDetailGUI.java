@@ -23,8 +23,7 @@ public class CrateDetailGUI {
         CrateManager.Crate c = plugin.getCrateManager().getCrate(crateId);
         if (c == null) { p.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§c✗ Kiste nicht gefunden."); return; }
 
-        // Größeres GUI für bessere Übersicht
-        Inventory inv = GUIUtils.createMenu("§5✦ Kiste: §d" + c.display + " §5✦", 6);
+        Inventory inv = GUIUtils.createMenu("§0✦ " + c.display + " §0✦", 6);
         GUIUtils.fillBorders(inv, plugin);
 
         // Tier-Material basierend auf Tier
@@ -38,7 +37,6 @@ public class CrateDetailGUI {
             }
         }
 
-        // Zeige Kisten-Info oben mittig
         ItemStack crateInfo = new ItemStack(tierMat);
         ItemMeta cm = crateInfo.getItemMeta();
         cm.setDisplayName(tierColor + "✦ " + c.display + " ✦");
@@ -49,118 +47,67 @@ public class CrateDetailGUI {
         infoLore.add("§7Schlüssel: §f" + c.keyName);
         int keyCount = plugin.getCrateManager().getKeyCount(p.getUniqueId(), c.id);
         infoLore.add("§7Deine Keys: " + (keyCount > 0 ? "§a" + keyCount : "§c0"));
-        double enchChance = c.tier == null ? 0.0 : plugin.getConfig().getDouble("settings.crate-tiers." + c.tier + ".enchant-chance", 0.0);
-        infoLore.add("§7Verzauberungschance: §d" + (int)(enchChance * 100) + "%");
+        infoLore.add("§7Drop: §f1 Ausrüstungsteil deiner Wahl");
+        infoLore.add("§7Öffnen: §eMit Auswahl-GUI");
         infoLore.add("§8────────────────");
         cm.setLore(infoLore);
         cm.getPersistentDataContainer().set(new org.bukkit.NamespacedKey(plugin, "donut_crate_id"), org.bukkit.persistence.PersistentDataType.STRING, c.id);
         crateInfo.setItemMeta(cm);
         inv.setItem(4, crateInfo);
 
-        // Garantierte Items Header
-        ItemStack gHead = new ItemStack(Material.NETHER_STAR);
-        ItemMeta ghm = gHead.getItemMeta();
-        ghm.setDisplayName("§a✓ Garantierte Items");
-        List<String> ghLore = new ArrayList<>();
-        ghLore.add("§7Du erhältst diese Items");
-        ghLore.add("§7bei jedem Öffnen!");
-        ghm.setLore(ghLore);
-        gHead.setItemMeta(ghm);
-        inv.setItem(9, gHead);
+        ItemStack previewHeader = new ItemStack(Material.NETHER_STAR);
+        ItemMeta previewMeta = previewHeader.getItemMeta();
+        previewMeta.setDisplayName("§e§lMögliche Teile");
+        List<String> previewLore = new ArrayList<>();
+        previewLore.add("§8────────────────");
+        previewLore.addAll(plugin.getCrateManager().getTierDescription(c.id));
+        previewLore.add("§8────────────────");
+        previewMeta.setLore(previewLore);
+        previewHeader.setItemMeta(previewMeta);
+        inv.setItem(13, previewHeader);
 
-        // Garantierte Artikel (Zeile 2, Slots 10-17)
-        int gslot = 10;
-        for (int i = 0; i < c.guaranteed.size() && gslot < 17; i++) {
-            ItemStack g = c.guaranteed.get(i).item.clone();
-            ItemMeta gm = g.getItemMeta();
-            if (gm != null) {
-                List<String> lore = gm.hasLore() ? new ArrayList<>(gm.getLore()) : new ArrayList<>();
-                lore.addFirst("§a✓ §7GARANTIERT");
-                lore.add(1, "§8────────────────");
-                gm.setLore(lore);
-                g.setItemMeta(gm);
+        List<ItemStack> previews = plugin.getCrateManager().getPreviewItems(c.id);
+        int[] previewSlots = new int[]{19, 20, 21, 22, 23, 24, 25};
+        for (int i = 0; i < Math.min(previews.size(), previewSlots.length); i++) {
+            ItemStack preview = previews.get(i).clone();
+            ItemMeta previewItemMeta = preview.getItemMeta();
+            if (previewItemMeta != null) {
+                List<String> lore = previewItemMeta.hasLore() ? new ArrayList<>(previewItemMeta.getLore()) : new ArrayList<>();
+                lore.add(0, "§8────────────────");
+                lore.add("§7Dieses Teil kann direkt droppen.");
+                previewItemMeta.setLore(lore);
+                preview.setItemMeta(previewItemMeta);
             }
-            inv.setItem(gslot++, g);
-        }
-        if (c.guaranteed.isEmpty()) {
-            ItemStack noG = new ItemStack(Material.BARRIER);
-            ItemMeta ngm = noG.getItemMeta();
-            ngm.setDisplayName("§7Keine garantierten Items");
-            noG.setItemMeta(ngm);
-            inv.setItem(10, noG);
+            inv.setItem(previewSlots[i], preview);
         }
 
-        // Pool Header
-        ItemStack pHead = new ItemStack(Material.CHEST_MINECART);
-        ItemMeta phm = pHead.getItemMeta();
-        phm.setDisplayName("§e♦ Mögliche Belohnungen");
-        List<String> phLore = new ArrayList<>();
-        phLore.add("§7Gewichtet zufällige Items");
-        phLore.add("§7aus dem Pool.");
-        phm.setLore(phLore);
-        pHead.setItemMeta(phm);
-        inv.setItem(18, pHead);
+        ItemStack openInfo = new ItemStack(Material.EXPERIENCE_BOTTLE);
+        ItemMeta openInfoMeta = openInfo.getItemMeta();
+        openInfoMeta.setDisplayName("§b§lÖffnungsmodus");
+        openInfoMeta.setLore(List.of(
+            "§8────────────────",
+            "§7Beim Öffnen kannst du",
+            "§fdein Gear selbst wählen§7!",
+            "§8────────────────"
+        ));
+        openInfo.setItemMeta(openInfoMeta);
+        inv.setItem(31, openInfo);
 
-        // Pool Items (Zeile 3-4, Slots 19-26 und 28-35)
-        int pslot = 19;
-        int poolCount = 0;
-        for (int i = 0; i < c.pool.size() && poolCount < 14; i++) {
-            CrateManager.PoolEntry pe = c.pool.get(i);
-            ItemStack it = pe.item.clone();
-            ItemMeta itm = it.getItemMeta();
-            if (itm != null) {
-                List<String> lore = itm.hasLore() ? new ArrayList<>(itm.getLore()) : new ArrayList<>();
-                lore.addFirst("§e♦ §7Chance: §e" + pe.weight);
-                lore.add(1, "§8────────────────");
-                itm.setLore(lore);
-                it.setItemMeta(itm);
-            }
-            // Skip borders
-            if (pslot == 27) pslot = 28;
-            if (pslot == 36) break;
-            inv.setItem(pslot++, it);
-            poolCount++;
-        }
-
-        // Bundle-Vorschau (falls vorhanden)
-        if (!c.bundles.isEmpty()) {
-            ItemStack bundleInfo = new ItemStack(Material.BUNDLE);
-            ItemMeta bim = bundleInfo.getItemMeta();
-            bim.setDisplayName("§b✿ Bundle-Belohnungen");
-            List<String> blore = new ArrayList<>();
-            blore.add("§8────────────────");
-            blore.add("§7Mögliche Bündel:");
-            int shown = 0;
-            for (List<ItemStack> bundle : c.bundles) {
-                if (shown >= 3) { blore.add("§7... und mehr"); break; }
-                StringBuilder sb = new StringBuilder("§e• ");
-                for (ItemStack bi : bundle) sb.append(bi.getAmount()).append("x ").append(bi.getType().name().toLowerCase().replace("_", " ")).append(", ");
-                if (sb.length() > 4) blore.add(sb.substring(0, sb.length() - 2));
-                shown++;
-            }
-            blore.add("§8────────────────");
-            bim.setLore(blore);
-            bundleInfo.setItemMeta(bim);
-            inv.setItem(17, bundleInfo);
-        }
-
-        // Untere Buttons
-        // Öffnen-Button
         ItemStack openBtn = new ItemStack(Material.LIME_STAINED_GLASS_PANE);
         ItemMeta obm = openBtn.getItemMeta();
-        obm.setDisplayName("§a§l▶ ÖFFNEN");
+        obm.setDisplayName("§a§l▶ ÖFFNEN & WÄHLEN");
         List<String> obl = new ArrayList<>();
         obl.add("§8────────────────");
         obl.add("§7Keys benötigt: §e1");
         obl.add("§7Deine Keys: " + (keyCount > 0 ? "§a" + keyCount : "§c0"));
+        obl.add("§7Reward: §fWähle dein Teil");
         obl.add("§8────────────────");
-        obl.add(keyCount > 0 ? "§a✓ Klicke zum Öffnen!" : "§c✗ Du brauchst einen Key!");
+        obl.add(keyCount > 0 ? "§a✓ Klicke zum Auswählen!" : "§c✗ Du brauchst einen Key!");
         obm.setLore(obl);
         obm.getPersistentDataContainer().set(new org.bukkit.NamespacedKey(plugin, "donut_gui_action"), org.bukkit.persistence.PersistentDataType.STRING, "crate_open:" + c.id);
         openBtn.setItemMeta(obm);
         inv.setItem(48, openBtn);
 
-        // Kaufen-Button (NUR SHARDS - Geld entfernt!)
         int keyCostShards = plugin.getConfig().getInt("settings.key-price-shards." + c.id, 50);
         ItemStack buyBtnShards = new ItemStack(Material.AMETHYST_SHARD);
         ItemMeta bsm = buyBtnShards.getItemMeta();

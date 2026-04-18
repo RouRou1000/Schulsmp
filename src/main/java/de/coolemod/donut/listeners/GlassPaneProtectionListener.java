@@ -24,6 +24,9 @@ public class GlassPaneProtectionListener implements Listener {
     public void onInventoryClickMonitor(InventoryClickEvent e) {
         if (!(e.getWhoClicked() instanceof Player)) return;
 
+        String title = e.getView().getTitle();
+        if (!isCustomGUI(title)) return;
+
         ItemStack clicked = e.getCurrentItem();
         ItemStack cursor = e.getCursor();
 
@@ -49,6 +52,10 @@ public class GlassPaneProtectionListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR)
     public void onInventoryClose(InventoryCloseEvent e) {
         if (!(e.getPlayer() instanceof Player)) return;
+
+        String title = e.getView().getTitle();
+        if (!isCustomGUI(title)) return;
+
         Player p = (Player) e.getPlayer();
 
         // Entferne Glass Panes ohne PDC aus dem Inventar
@@ -65,6 +72,10 @@ public class GlassPaneProtectionListener implements Listener {
 
     private boolean isGlassPane(ItemStack item) {
         return item.getType().name().contains("STAINED_GLASS_PANE");
+    }
+
+    private boolean isCustomGUI(String title) {
+        return title != null && (title.contains("§") || title.contains("✦") || title.contains("ᴏ") || title.contains("ᴀ"));
     }
 
     private boolean hasActionKey(ItemStack item) {

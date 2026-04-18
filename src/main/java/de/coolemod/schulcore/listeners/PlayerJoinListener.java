@@ -56,10 +56,16 @@ public class PlayerJoinListener implements Listener {
 
     @EventHandler
     public void onRespawn(PlayerRespawnEvent e) {
-        // Kein Bett/Anker → zum Hauptwelt-Spawn
-        if (!e.isBedSpawn() && !e.isAnchorSpawn()) {
-            Location spawn = Bukkit.getWorlds().get(0).getSpawnLocation().add(0.5, 0, 0.5);
-            e.setRespawnLocation(spawn);
+        // Prüfe ob Spieler einen Respawn-Punkt hat (Bett/Anker/Befehl)
+        org.bukkit.Location playerRespawn = e.getPlayer().getRespawnLocation();
+        if (e.isBedSpawn() || e.isAnchorSpawn() || playerRespawn != null) {
+            if (!e.isBedSpawn() && !e.isAnchorSpawn() && playerRespawn != null) {
+                e.setRespawnLocation(playerRespawn);
+            }
+            return;
         }
+        // Kein Respawn-Punkt → zum Hauptwelt-Spawn
+        Location spawn = Bukkit.getWorlds().get(0).getSpawnLocation().add(0.5, 0, 0.5);
+        e.setRespawnLocation(spawn);
     }
 }

@@ -91,11 +91,18 @@ public class PlayerJoinListener implements Listener {
 
     @EventHandler
     public void onRespawn(PlayerRespawnEvent e) {
-        if (!e.isBedSpawn() && !e.isAnchorSpawn()) {
-            World spawn = Bukkit.getWorld("world");
-            if (spawn != null) {
-                e.setRespawnLocation(spawn.getSpawnLocation().add(0.5, 0, 0.5));
+        // Prüfe ob Spieler einen Respawn-Punkt hat (Bett/Anker/Befehl)
+        Location playerRespawn = e.getPlayer().getRespawnLocation();
+        if (e.isBedSpawn() || e.isAnchorSpawn() || playerRespawn != null) {
+            // Spieler hat einen Respawn-Punkt → nicht überschreiben
+            if (!e.isBedSpawn() && !e.isAnchorSpawn() && playerRespawn != null) {
+                e.setRespawnLocation(playerRespawn);
             }
+            return;
+        }
+        World spawn = Bukkit.getWorld("world");
+        if (spawn != null) {
+            e.setRespawnLocation(spawn.getSpawnLocation().add(0.5, 0, 0.5));
         }
     }
 
@@ -108,6 +115,21 @@ public class PlayerJoinListener implements Listener {
             : "§7" + p.getName();
         formatted = formatted.replace("%", "%%");
         e.setFormat(formatted + "§8: §f%2$s");
+
+        // Spieler mit aktivem Clan-Chat erhalten keine Global-Chat Nachrichten
+        var clanMgr = plugin.getClanManager();
+        if (clanMgr != null) {
+            e.getRecipients().removeIf(r -> !r.getUniqueId().equals(p.getUniqueId())
+                    && clanMgr.isClanChatEnabled(r.getUniqueId()));
+        }
+
+        // Spieler die globalen Chat deaktiviert haben, erhalten keine Nachrichten
+        var settingsMgr = plugin.getSettingsManager();
+        if (settingsMgr != null) {
+            e.getRecipients().removeIf(r -> !r.getUniqueId().equals(p.getUniqueId())
+                    && !settingsMgr.getSetting(r.getUniqueId(),
+                        de.coolemod.donut.managers.SettingsManager.Setting.GLOBAL_CHAT));
+        }
     }
 
     private void sendFakeOpLevel(Player p) {

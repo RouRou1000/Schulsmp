@@ -198,6 +198,127 @@ public class OrderListener implements Listener {
                 }, 2L);
                 break;
 
+            case "my_order_open": {
+                String detailId = orderSystem.getOrderId(clicked);
+                if (detailId != null) {
+                    player.closeInventory();
+                    Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                        player.openInventory(orderSystem.createOrderDetailGUI(player.getUniqueId(), detailId));
+                    }, 2L);
+                }
+                break;
+            }
+
+            case "order_detail_back": {
+                String detailId = orderSystem.getOrderId(clicked);
+                player.closeInventory();
+                Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                    if (detailId != null && orderSystem.getOrder(detailId) != null) {
+                        player.openInventory(orderSystem.createOrderDetailGUI(player.getUniqueId(), detailId));
+                    } else {
+                        player.openInventory(orderSystem.createMyOrdersGUI(player.getUniqueId()));
+                    }
+                }, 2L);
+                break;
+            }
+
+            case "order_collect": {
+                String collectId = orderSystem.getOrderId(clicked);
+                if (collectId != null) {
+                    int collected = orderSystem.collectOrderItems(player, collectId);
+                    if (collected > 0) {
+                        player.sendMessage("§a✓ Du hast §f" + collected + "x §aItem(s) aus der Order abgeholt.");
+                        player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_ITEM_PICKUP, 1f, 1.1f);
+                    } else {
+                        player.sendMessage("§cFür diese Order gibt es aktuell nichts abzuholen.");
+                    }
+                    player.closeInventory();
+                    Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                        if (orderSystem.getOrder(collectId) != null) {
+                            player.openInventory(orderSystem.createOrderDetailGUI(player.getUniqueId(), collectId));
+                        } else {
+                            player.openInventory(orderSystem.createMyOrdersGUI(player.getUniqueId()));
+                        }
+                    }, 2L);
+                }
+                break;
+            }
+
+            case "open_collect": {
+                player.closeInventory();
+                Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                    player.openInventory(orderSystem.createCollectGUI(player.getUniqueId()));
+                }, 2L);
+                break;
+            }
+
+            case "collect_single": {
+                String singleId = orderSystem.getOrderId(clicked);
+                if (singleId != null) {
+                    int collected = orderSystem.collectOrderItems(player, singleId);
+                    if (collected > 0) {
+                        player.sendMessage("§a✓ Du hast §f" + collected + "x §aItem(s) abgeholt.");
+                        player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_ITEM_PICKUP, 1f, 1.1f);
+                    } else {
+                        player.sendMessage("§cFür diese Order gibt es aktuell nichts abzuholen.");
+                    }
+                    player.closeInventory();
+                    Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                        player.openInventory(orderSystem.createCollectGUI(player.getUniqueId()));
+                    }, 2L);
+                }
+                break;
+            }
+
+            case "collect_all": {
+                int totalCollected = orderSystem.collectAllOrderItems(player);
+                if (totalCollected > 0) {
+                    player.sendMessage("§a✓ Du hast §f" + totalCollected + "x §aItem(s) aus allen Orders abgeholt.");
+                    player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_ITEM_PICKUP, 1f, 1.1f);
+                } else {
+                    player.sendMessage("§cEs gibt aktuell nichts abzuholen.");
+                }
+                player.closeInventory();
+                Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                    player.openInventory(orderSystem.createCollectGUI(player.getUniqueId()));
+                }, 2L);
+                break;
+            }
+
+            case "collect_back": {
+                player.closeInventory();
+                Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                    player.openInventory(orderSystem.createMyOrdersGUI(player.getUniqueId()));
+                }, 2L);
+                break;
+            }
+
+            case "order_cancel_prompt": {
+                String promptOrderId = orderSystem.getOrderId(clicked);
+                if (promptOrderId != null) {
+                    player.closeInventory();
+                    Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                        player.openInventory(orderSystem.createOrderCancelConfirmGUI(player.getUniqueId(), promptOrderId));
+                    }, 2L);
+                }
+                break;
+            }
+
+            case "order_cancel_confirm": {
+                String confirmOrderId = orderSystem.getOrderId(clicked);
+                if (confirmOrderId != null && orderSystem.cancelOrder(player, confirmOrderId)) {
+                    player.closeInventory();
+                    Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                        if (orderSystem.getOrder(confirmOrderId) != null) {
+                            player.openInventory(orderSystem.createOrderDetailGUI(player.getUniqueId(), confirmOrderId));
+                        } else {
+                            player.openInventory(orderSystem.createMyOrdersGUI(player.getUniqueId()));
+                        }
+                    }, 2L);
+                }
+                break;
+            }
+
             case "back":
                 orderSystem.endCreateSession(player.getUniqueId());
                 player.closeInventory();

@@ -72,6 +72,7 @@ public class PlacedSpawner {
 
     public List<ItemStack> collectDrops() {
         List<ItemStack> result = new ArrayList<>(storedDrops);
+        result.sort((a, b) -> a.getType().name().compareTo(b.getType().name()));
         storedDrops.clear();
         return result;
     }
@@ -81,6 +82,7 @@ public class PlacedSpawner {
     public List<ItemStack> getStoredDrops() {
         List<ItemStack> result = new ArrayList<>();
         for (ItemStack item : storedDrops) result.add(item.clone());
+        result.sort((a, b) -> a.getType().name().compareTo(b.getType().name()));
         return result;
     }
 

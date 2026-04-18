@@ -28,6 +28,7 @@ public class CommandVisibilityListener implements Listener {
         "rtp",
         "help", "hilfe",
         "tutorial",
+        "settings", "einstellungen", "optionen",
         "msg", "tell", "w", "whisper",
         "r", "reply",
         "home", "homes", "sethome", "delhome",
@@ -102,7 +103,7 @@ public class CommandVisibilityListener implements Listener {
         if (player.hasPermission("donut.money")) {
             allowed.add("money");
         }
-        if (player.hasPermission("donut.shards")) {
+        if (player.hasPermission("donut.shards.use") || player.hasPermission("donut.shards")) {
             allowed.add("shards");
         }
         if (player.hasPermission("donut.ac")) {

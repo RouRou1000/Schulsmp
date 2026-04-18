@@ -21,7 +21,7 @@ public class CrateGUI {
     public void open(Player p) {
         List<String> ids = new ArrayList<>(plugin.getCrateManager().getCrateIds());
         int rows = Math.min(6, Math.max(3, (ids.size() + 8) / 9 + 1));
-        Inventory inv = GUIUtils.createMenu("§6✦ §lKisten §6✦", rows);
+        Inventory inv = GUIUtils.createMenu("§0✦ §6§lKISTENKAMMER §0✦", rows);
         GUIUtils.fillBorders(inv, plugin);
 
         int slot = 10; // Start nach erstem Rand
@@ -34,15 +34,15 @@ public class CrateGUI {
             ItemMeta m = it.getItemMeta();
             m.setDisplayName(c.display);
             List<String> lore = new ArrayList<>();
-            lore.add("§8──────────────");
+            lore.add("§8────────────────");
             lore.add("§7ID: §f" + c.id);
             lore.add("§7Tier: " + getTierColor(c.tier) + (c.tier == null ? "Standard" : c.tier));
             int keys = countKeys(p, c.id);
             lore.add("§7Deine Schlüssel: " + (keys > 0 ? "§a" : "§c") + keys);
-            lore.add("§7Pool: §e" + c.pool.size() + " Items");
-            lore.add("§7Garantiert: §e" + c.guaranteed.size() + " Items");
-            lore.add("§8──────────────");
-            lore.add("§e➤ Klicke für Details");
+            lore.add("§8");
+            lore.addAll(plugin.getCrateManager().getTierDescription(c.id));
+            lore.add("§8────────────────");
+            lore.add("§e▸ Klicken für Vorschau & Öffnen");
             m.setLore(lore);
             m.getPersistentDataContainer().set(new org.bukkit.NamespacedKey(plugin, "donut_crate_id"), org.bukkit.persistence.PersistentDataType.STRING, c.id);
             it.setItemMeta(m);
@@ -52,11 +52,13 @@ public class CrateGUI {
         // Info-Item
         ItemStack info = new ItemStack(Material.BOOK);
         ItemMeta im = info.getItemMeta();
-        im.setDisplayName("§e§lInfo");
+        im.setDisplayName("§6§lKisten-Info");
         List<String> il = new ArrayList<>();
-        il.add("§7Klicke auf eine Kiste");
-        il.add("§7um Details zu sehen.");
-        il.add("§7Öffne mit §6/crate give§7 oder kaufe Schlüssel.");
+        il.add("§8────────────────");
+        il.add("§7Jede Kiste gibt §fgenau ein §7Ausrüstungsteil.");
+        il.add("§7Die Enchants sind §ffest pro Tier§7.");
+        il.add("§7Schlüssel kaufst du direkt in der Detailansicht.");
+        il.add("§8────────────────");
         im.setLore(il);
         info.setItemMeta(im);
         inv.setItem(inv.getSize() - 5, info);
@@ -67,9 +69,9 @@ public class CrateGUI {
     private Material getMaterialForTier(String tier) {
         if (tier == null) return Material.CHEST;
         switch (tier.toLowerCase()) {
-            case "basic": return Material.CHEST;
-            case "rare": return Material.ENDER_CHEST;
-            case "legendary": return Material.TRAPPED_CHEST;
+            case "basic": return Material.DIAMOND_HELMET;
+            case "rare": return Material.DIAMOND_CHESTPLATE;
+            case "legendary": return Material.NETHERITE_CHESTPLATE;
             default: return Material.CHEST;
         }
     }

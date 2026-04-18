@@ -125,6 +125,16 @@ public class InventoryClickListener implements Listener {
             return;
         }
 
+        // Settings GUI: komplett blockieren + Toggle
+        if (de.coolemod.donut.gui.SettingsGUI.isSettingsGUI(title)) {
+            e.setCancelled(true);
+            e.setResult(org.bukkit.event.Event.Result.DENY);
+            if (clicked == null || !clicked.hasItemMeta()) return;
+            org.bukkit.entity.Player sp = (org.bukkit.entity.Player) e.getWhoClicked();
+            new de.coolemod.donut.gui.SettingsGUI(plugin).handleClick(sp, clicked);
+            return;
+        }
+
         // Enchant Worth GUI: komplett blockieren + Navigation
         if (title.contains("ᴇɴᴄʜᴀɴᴛ ᴘʀɪᴄᴇs")) {
             e.setCancelled(true);
@@ -157,7 +167,7 @@ public class InventoryClickListener implements Listener {
         }
 
         // KRITISCH: Blockiere ALLE Shop-GUIs SOFORT und KOMPLETT
-        if (title.contains("Slay Shop") || title.contains("SHOP") || title.contains("SCHUL") || title.contains("FOOD") || title.contains("GEAR") || title.contains("NETHER") || title.contains("SHARDS") || title.contains("ᴀᴜᴋᴛɪᴏɴѕʜᴀᴜѕ") || title.contains("AUKTIONSHAUS") || title.contains("Orders") || title.contains("Kiste") || title.contains("DONUT CORE") || title.contains("ᴍᴇɪɴᴇ ᴀᴜᴋᴛɪᴏɴᴇɴ") || title.contains("MEINE AUKTIONEN") || title.contains("Hilfe") || title.contains("SELL MULTI")) {
+        if (title.contains("Slay Shop") || title.contains("SHOP") || title.contains("SCHUL") || title.contains("FOOD") || title.contains("GEAR") || title.contains("Wähle dein Gear") || title.contains("NETHER") || title.contains("SHARDS") || title.contains("ᴀᴜᴋᴛɪᴏɴѕʜᴀᴜѕ") || title.contains("AUKTIONSHAUS") || title.contains("Orders") || title.contains("Kiste") || title.contains("KISTE") || title.contains("Wähle dein Gear") || title.contains("DONUT CORE") || title.contains("ᴍᴇɪɴᴇ ᴀᴜᴋᴛɪᴏɴᴇɴ") || title.contains("MEINE AUKTIONEN") || title.contains("Hilfe") || title.contains("SELL MULTI") || title.contains("ᴄᴏʟʟᴇᴄᴛ ɪᴛᴇᴍs") || title.contains("ᴏʀᴅᴇʀ ᴅᴇᴛᴀɪʟs") || title.contains("ᴏʀᴅᴇʀ sᴛᴏʀɴɪᴇʀᴇɴ") || title.contains("ɪᴛᴇᴍs ᴀʙʜᴏʟᴇɴ")) {
             e.setCancelled(true);
             e.setResult(org.bukkit.event.Event.Result.DENY);
         }
@@ -411,8 +421,18 @@ public class InventoryClickListener implements Listener {
                     if (action.startsWith("crate_open:")) {
                         String id = action.split(":" , 2)[1];
                         org.bukkit.entity.Player p3 = (org.bukkit.entity.Player)e.getWhoClicked();
-                        // openCrateAnimated konsumiert bereits den Schlüssel
-                        plugin.getCrateManager().openCrateAnimated(p3, id);
+                        plugin.getCrateManager().openCrateSelection(p3, id, false);
+                        return;
+                    } else if (action.startsWith("crate_select_pool:")) {
+                        String[] parts = action.split(":", 3);
+                        if (parts.length == 3) {
+                            String id = parts[1];
+                            int poolIdx = Integer.parseInt(parts[2]);
+                            org.bukkit.entity.Player pSel = (org.bukkit.entity.Player)e.getWhoClicked();
+                            plugin.getCrateManager().giveSelectionRewards(pSel, id, poolIdx);
+                        }
+                        return;
+                    } else if (action.equals("crate_selection_border")) {
                         return;
                     } else if (action.startsWith("crate_buy:")) {
                         // ENTFERNT: Kein Kauf mit Geld mehr möglich
@@ -438,8 +458,7 @@ public class InventoryClickListener implements Listener {
                         String id = action.split(":" , 2)[1];
                         org.bukkit.entity.Player p5 = (org.bukkit.entity.Player)e.getWhoClicked();
                         if (!p5.hasPermission("donut.crate.admin")) { p5.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§c✗ Keine Berechtigung."); return; }
-                        // Admin test: skip key check
-                        plugin.getCrateManager().openCrateAnimated(p5, id, true);
+                        plugin.getCrateManager().openCrateSelection(p5, id, true);
                         p5.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§a✓ Admin-Test: Kiste geöffnet.");
                         return;
                     } else if (action.equals("crate_back")) {
@@ -974,7 +993,7 @@ public class InventoryClickListener implements Listener {
         }
 
         // Kisten: öffne Detailansicht bei Klick
-        if (title.contains("Kiste")) {
+        if (title.contains("Kiste") || title.contains("KISTE")) {
             e.setCancelled(true);
             if (e.isShiftClick()) return;
             if (!clicked.hasItemMeta()) return;

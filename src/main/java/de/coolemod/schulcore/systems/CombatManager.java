@@ -5,6 +5,7 @@ import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -31,9 +32,14 @@ public class CombatManager implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerDamage(EntityDamageByEntityEvent e) {
         if (!(e.getEntity() instanceof Player)) return;
-        if (!(e.getDamager() instanceof Player)) return;
         Player victim = (Player) e.getEntity();
-        Player attacker = (Player) e.getDamager();
+        Player attacker = null;
+        if (e.getDamager() instanceof Player) {
+            attacker = (Player) e.getDamager();
+        } else if (e.getDamager() instanceof Projectile projectile && projectile.getShooter() instanceof Player shooter) {
+            attacker = shooter;
+        }
+        if (attacker == null || attacker.equals(victim)) return;
         // Nur Nachricht senden wenn Spieler NOCH NICHT im Combat war
         boolean attackerWasInCombat = isInCombat(attacker);
         boolean victimWasInCombat = isInCombat(victim);

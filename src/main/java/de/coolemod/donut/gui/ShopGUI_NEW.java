@@ -58,9 +58,12 @@ public class ShopGUI_NEW implements InventoryHolder {
         NETHER_ITEMS.put(16, new ShopItem(Material.MAGMA_CREAM, "§c§lMagma Cream", 5, 1, "§8┃ §7Brauzutat", "§8▸ §aPreis§8: §e$5"));
         NETHER_ITEMS.put(20, new ShopItem(Material.GLOWSTONE_DUST, "§e§lGlowstone Dust", 3, 1, "§8┃ §7Licht & Brauen", "§8▸ §aPreis§8: §e$3"));
         NETHER_ITEMS.put(22, new ShopItem(Material.GHAST_TEAR, "§f§lGhast Tear", 20, 1, "§8┃ §7Regen-Tränke", "§8▸ §aPreis§8: §e$20"));
-        NETHER_ITEMS.put(24, new ShopItem(Material.NETHERITE_SCRAP, "§c§lNetherite Scrap", 2000, 1, "§8┃ §c§lSEHR SELTEN!", "§8▸ §aPreis§8: §e$2,000"));
 
         // Shard Shop Items
+        SHARD_ITEMS.put(31, new ShopItem(Material.AMETHYST_SHARD, "§a§lShard Aufladung", 1000, 1, true,
+            "§8┃ §7Kaufe zusaetzliche Shards mit Geld",
+            "§8┃ §7Waehle die Menge im Kaufmenue",
+            "§8▸ §aPreis§8: §e$1,000 §7pro Shard"));
         SHARD_ITEMS.put(11, new ShopItem(Material.SPAWNER, "§d§lZombie Spawner", 500, 1, "ZOMBIE", "§8┃ §7Spawner für Zombies", "§8┃ §d§lSHARD-ONLY!", "§8▸ §aPreis§8: §d500 Shards"));
         SHARD_ITEMS.put(13, new ShopItem(Material.SPAWNER, "§d§lSkeleton Spawner", 500, 1, "SKELETON", "§8┃ §7Spawner für Skelette", "§8┃ §d§lSHARD-ONLY!", "§8▸ §aPreis§8: §d500 Shards"));
         SHARD_ITEMS.put(15, new ShopItem(Material.SPAWNER, "§d§lCreeper Spawner", 750, 1, "CREEPER", "§8┃ §7Spawner für Creeper", "§8┃ §d§lSEHR WERTVOLL!", "§8▸ §aPreis§8: §d750 Shards"));
@@ -124,7 +127,7 @@ public class ShopGUI_NEW implements InventoryHolder {
         inventory.setItem(22, createButton(Material.TOTEM_OF_UNDYING, "§b§l⚔ GEAR", "category_gear", "§8┃ §7Kampf-Ausrüstung", "§8┃ §7Totems, Perlen & XP", "§8▸ §eKlicke zum Öffnen!"));
         inventory.setItem(24, createButton(Material.NETHER_WART, "§c§l✦ NETHER", "category_nether", "§8┃ §7Nether-Ressourcen", "§8┃ §7Blazerods, Quarz & mehr", "§8▸ §eKlicke zum Öffnen!"));
         inventory.setItem(30, createButton(Material.END_STONE, "§5§l⬢ END §8(§c✖§8)", "category_end", "§8┃ §cGesperrt!", "§8┃ §7End-Items später verfügbar"));
-        inventory.setItem(32, createButton(Material.SPAWNER, "§d§l❖ SHARD SHOP", "category_shards", "§8┃ §7Spawner & Spezial-Items", "§8┃ §7Kaufe mit Shards!", "§8▸ §eKlicke zum Öffnen!"));
+        inventory.setItem(32, createButton(Material.SPAWNER, "§d§l❖ SHARD SHOP", "category_shards", "§8┃ §7Spawner & Shard-Aufladung", "§8┃ §7Spawner kaufen oder Shards aufladen", "§8▸ §eKlicke zum Öffnen!"));
 
         // Info
         ItemStack info = new ItemStack(Material.PAPER);
@@ -208,10 +211,17 @@ public class ShopGUI_NEW implements InventoryHolder {
         fillBorders(inventory);
 
         int shards = plugin.getShards().getShards(p.getUniqueId());
+        double balance = plugin.getEconomy().getBalance(p.getUniqueId());
         ItemStack shardInfo = new ItemStack(Material.AMETHYST_SHARD);
         ItemMeta si = shardInfo.getItemMeta();
         si.setDisplayName("§d§l❖ §5§lDEINE SHARDS");
-        si.setLore(Arrays.asList("§8┃", "§8┃ §7Shards§8: §d" + shards));
+        si.setLore(Arrays.asList(
+            "§8┃",
+            "§8┃ §7Shards§8: §d" + NumberFormatter.formatInt(shards),
+            "§8┃ §7Balance§8: §a" + NumberFormatter.formatMoney(balance),
+            "§8┃",
+            "§8▸ §7Spawner mit Shards kaufen oder Shards aufladen"
+        ));
         shardInfo.setItemMeta(si);
         inventory.setItem(4, shardInfo);
 
@@ -281,22 +291,27 @@ public class ShopGUI_NEW implements InventoryHolder {
     public void updateBuyGUI(Inventory inv, BuySession session) {
         ShopItem item = session.shopItem;
         double pricePerUnit = (double) item.price / item.amount;
-        int maxStack = item.material.getMaxStackSize();
+        boolean unlimitedAmount = item.grantsShardBalance;
+        int maxStack = unlimitedAmount ? Integer.MAX_VALUE : item.material.getMaxStackSize();
         if (session.amount > maxStack) session.amount = maxStack;
+        if (session.amount < 1) session.amount = 1;
         double totalPrice = session.amount * pricePerUnit;
-        boolean atMax = session.amount >= maxStack;
 
         // Slot 13: Item display
-        ItemStack display = new ItemStack(item.material, Math.min(maxStack, Math.max(1, session.amount)));
+        ItemStack display = new ItemStack(item.material, Math.min(64, Math.max(1, session.amount)));
         ItemMeta dm = display.getItemMeta();
         dm.setDisplayName(item.name);
         List<String> displayLore = new ArrayList<>();
         displayLore.add("§8");
-        displayLore.add("§7Menge: §f" + session.amount + "x");
+        displayLore.add("§7Menge: §f" + NumberFormatter.formatInt(session.amount) + "x");
         if (item.isShard) {
             displayLore.add("§7Preis/Stück: §d" + NumberFormatter.formatInt((int) Math.ceil(pricePerUnit)) + " Shards");
             displayLore.add("§8");
             displayLore.add("§dGesamtpreis: §5" + NumberFormatter.formatInt((int) Math.ceil(totalPrice)) + " Shards");
+        } else if (unlimitedAmount) {
+            displayLore.add("§7Preis/Stück: §e" + NumberFormatter.formatMoney(pricePerUnit));
+            displayLore.add("§8");
+            displayLore.add("§aGesamtpreis: §e" + NumberFormatter.formatMoney(totalPrice));
         } else {
             displayLore.add("§7Preis/Stück: §e" + NumberFormatter.formatMoney(pricePerUnit));
             displayLore.add("§8");
@@ -316,16 +331,35 @@ public class ShopGUI_NEW implements InventoryHolder {
 
         for (int i = 19; i <= 25; i++) inv.setItem(i, border.clone());
 
-        if (atMax) {
-            inv.setItem(21, createBuyAmountButton(Material.RED_STAINED_GLASS_PANE, "§c§lRemove 16", "buy_remove_16", 16));
-            inv.setItem(22, createBuyAmountButton(Material.RED_STAINED_GLASS_PANE, "§c§lRemove 1", "buy_remove_1", 1));
+        if (unlimitedAmount) {
+            // Shard charging: bigger buttons + custom input
+            inv.setItem(19, createBuyAmountButton(Material.RED_STAINED_GLASS_PANE, "§c§l-100", "buy_remove_100", 64));
+            inv.setItem(20, createBuyAmountButton(Material.RED_STAINED_GLASS_PANE, "§c§l-10", "buy_remove_10", 10));
+            inv.setItem(21, createBuyAmountButton(Material.RED_STAINED_GLASS_PANE, "§c§l-1", "buy_remove_1", 1));
+            inv.setItem(23, createBuyAmountButton(Material.LIME_STAINED_GLASS_PANE, "§a§l+1", "buy_add_1", 1));
+            inv.setItem(24, createBuyAmountButton(Material.LIME_STAINED_GLASS_PANE, "§a§l+10", "buy_add_10", 10));
+            inv.setItem(25, createBuyAmountButton(Material.LIME_STAINED_GLASS_PANE, "§a§l+100", "buy_add_100", 64));
+            // Custom amount button at slot 10
+            ItemStack customBtn = new ItemStack(Material.NAME_TAG);
+            ItemMeta cbm = customBtn.getItemMeta();
+            cbm.setDisplayName("§e§l✎ EIGENE MENGE");
+            cbm.setLore(Arrays.asList("§8────────────────", "§7Gib eine beliebige Menge", "§7im Chat ein!", "§8────────────────", "§eKlicke hier!"));
+            cbm.getPersistentDataContainer().set(new org.bukkit.NamespacedKey(plugin, "shop_action"), org.bukkit.persistence.PersistentDataType.STRING, "buy_custom_amount");
+            customBtn.setItemMeta(cbm);
+            inv.setItem(10, customBtn);
         } else {
-            inv.setItem(20, createBuyAmountButton(Material.RED_STAINED_GLASS_PANE, "§c§lRemove 16", "buy_remove_16", 16));
-            inv.setItem(21, createBuyAmountButton(Material.RED_STAINED_GLASS_PANE, "§c§lRemove 1", "buy_remove_1", 1));
-            inv.setItem(23, createBuyAmountButton(Material.LIME_STAINED_GLASS_PANE, "§a§lAdd 1", "buy_add_1", 1));
-            inv.setItem(24, createBuyAmountButton(Material.LIME_STAINED_GLASS_PANE, "§a§lAdd 16", "buy_add_16", 16));
-            if (maxStack >= 64) {
-                inv.setItem(25, createBuyAmountButton(Material.LIME_STAINED_GLASS_PANE, "§a§lSet to 64", "buy_set_64", 64));
+            boolean atMax = session.amount >= maxStack;
+            if (atMax) {
+                inv.setItem(21, createBuyAmountButton(Material.RED_STAINED_GLASS_PANE, "§c§lRemove 16", "buy_remove_16", 16));
+                inv.setItem(22, createBuyAmountButton(Material.RED_STAINED_GLASS_PANE, "§c§lRemove 1", "buy_remove_1", 1));
+            } else {
+                inv.setItem(20, createBuyAmountButton(Material.RED_STAINED_GLASS_PANE, "§c§lRemove 16", "buy_remove_16", 16));
+                inv.setItem(21, createBuyAmountButton(Material.RED_STAINED_GLASS_PANE, "§c§lRemove 1", "buy_remove_1", 1));
+                inv.setItem(23, createBuyAmountButton(Material.LIME_STAINED_GLASS_PANE, "§a§lAdd 1", "buy_add_1", 1));
+                inv.setItem(24, createBuyAmountButton(Material.LIME_STAINED_GLASS_PANE, "§a§lAdd 16", "buy_add_16", 16));
+                if (maxStack >= 64) {
+                    inv.setItem(25, createBuyAmountButton(Material.LIME_STAINED_GLASS_PANE, "§a§lSet to 64", "buy_set_64", 64));
+                }
             }
         }
 
@@ -373,27 +407,34 @@ public class ShopGUI_NEW implements InventoryHolder {
         public final String spawnerType;
         public final String[] lore;
         public final boolean isShard;
+        public final boolean grantsShardBalance;
 
-        // Normaler Item-Kauf (Food/Gear/Nether)
-        public ShopItem(Material material, String name, int price, int amount, String lore1, String lore2) {
-            this.material = material;
-            this.name = name;
-            this.price = price;
-            this.amount = amount;
-            this.spawnerType = null;
-            this.lore = new String[]{lore1, lore2};
-            this.isShard = false;
-        }
-
-        // Shard-Shop Spawner
-        public ShopItem(Material material, String name, int price, int amount, String spawnerType, String lore1, String lore2, String lore3) {
+        private ShopItem(Material material, String name, int price, int amount, String spawnerType,
+                         boolean isShard, boolean grantsShardBalance, String... lore) {
             this.material = material;
             this.name = name;
             this.price = price;
             this.amount = amount;
             this.spawnerType = spawnerType;
-            this.lore = new String[]{lore1, lore2, lore3};
-            this.isShard = true;
+            this.lore = lore;
+            this.isShard = isShard;
+            this.grantsShardBalance = grantsShardBalance;
+        }
+
+        // Normaler Item-Kauf (Food/Gear/Nether)
+        public ShopItem(Material material, String name, int price, int amount, String lore1, String lore2) {
+            this(material, name, price, amount, null, false, false, lore1, lore2);
+        }
+
+        // Shard-Shop Spawner
+        public ShopItem(Material material, String name, int price, int amount, String spawnerType, String lore1, String lore2, String lore3) {
+            this(material, name, price, amount, spawnerType, true, false, lore1, lore2, lore3);
+        }
+
+        // Geld -> Shard-Guthaben
+        public ShopItem(Material material, String name, int price, int amount, boolean grantsShardBalance,
+                        String lore1, String lore2, String lore3) {
+            this(material, name, price, amount, null, false, grantsShardBalance, lore1, lore2, lore3);
         }
 
         public ItemStack toItemStack() {

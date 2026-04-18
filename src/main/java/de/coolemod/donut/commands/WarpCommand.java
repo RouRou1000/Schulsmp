@@ -70,7 +70,7 @@ public class WarpCommand implements CommandExecutor, Listener {
 
         String worldName;
         if (slot == 11) {
-            worldName = "world";
+            worldName = "world_farm";
         } else if (slot == 13) {
             worldName = "world_nether";
         } else if (slot == 15) {

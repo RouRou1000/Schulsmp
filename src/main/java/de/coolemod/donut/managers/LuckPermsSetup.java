@@ -127,7 +127,9 @@ public class LuckPermsSetup {
             "worldguard.region.info.*",
             "worldguard.region.list"
         ),
-        "spieler", List.of()
+        "spieler", List.of(
+            "voicechat.*"
+        )
     );
 
     public LuckPermsSetup(DonutPlugin plugin) {

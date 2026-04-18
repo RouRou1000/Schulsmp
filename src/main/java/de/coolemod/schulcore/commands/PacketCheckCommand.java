@@ -145,6 +145,7 @@ public class PacketCheckCommand implements CommandExecutor, TabCompleter, Listen
         sender.sendMessage("  §7Client: " + info.getClientDisplayName());
         sender.sendMessage("  §7Brand: §f" + info.brand);
         sender.sendMessage("  §7Ping: §e" + target.getPing() + "ms");
+        sender.sendMessage("  §7Verdachts-Score: " + formatSuspicionScore(info.suspicionScore));
         sender.sendMessage("");
 
         sender.sendMessage("  §e§lRegistrierte Channels §8(" + info.channels.size() + ")§7:");
@@ -164,6 +165,12 @@ public class PacketCheckCommand implements CommandExecutor, TabCompleter, Listen
         if (info.suspicious) {
             sender.sendMessage("  §4§l⚠ VERDÄCHTIG!");
             sender.sendMessage("  §cGrund: §f" + info.suspicionReason);
+            if (!info.evidence.isEmpty()) {
+                sender.sendMessage("  §cEvidenz:");
+                for (String evidence : info.evidence) {
+                    sender.sendMessage("    §8▸ §f" + evidence);
+                }
+            }
             sender.sendMessage("  §cVorschlag: §f/ac bann " + target.getName() + " Hacking 30d");
             if (!info.detectedClients.isEmpty()) {
                 sender.sendMessage("  §cErkannte Clients:");
@@ -369,9 +376,9 @@ public class PacketCheckCommand implements CommandExecutor, TabCompleter, Listen
         List<Map.Entry<UUID, PlayerClientInfo>> entries = allData.entrySet().stream()
             .filter(e -> Bukkit.getPlayer(e.getKey()) != null)
             .sorted((a, b) -> {
-                // Verdächtige zuerst, dann nach Client-Name
-                int suspA = a.getValue().suspicious ? 1 : 0;
-                int suspB = b.getValue().suspicious ? 1 : 0;
+                // Hohe Scores zuerst, dann nach Client-Name
+                int suspA = a.getValue().suspicionScore;
+                int suspB = b.getValue().suspicionScore;
                 if (suspB != suspA) return Integer.compare(suspB, suspA);
                 return a.getValue().playerName.compareToIgnoreCase(b.getValue().playerName);
             })
@@ -407,6 +414,7 @@ public class PacketCheckCommand implements CommandExecutor, TabCompleter, Listen
                     line.append("§eVerdächtig");
                 }
                 sender.sendMessage(line.toString());
+                sender.sendMessage("      §7Score: " + formatSuspicionScore(info.suspicionScore));
                 sender.sendMessage("      §7Brand: §f" + info.brand);
                 if (!info.suspicionReason.isEmpty()) {
                     sender.sendMessage("      §7Grund: §f" + info.suspicionReason);
@@ -501,7 +509,8 @@ public class PacketCheckCommand implements CommandExecutor, TabCompleter, Listen
             sender.sendMessage("  " + status + "§f" + p.getName()
                 + " §8→ " + info.getClientDisplayName()
                 + " §8(§7" + info.brand + "§8)"
-                + " §8[§7" + p.getPing() + "ms§8]");
+                + " §8[§7" + p.getPing() + "ms§8]"
+                + " §8[" + formatSuspicionScore(info.suspicionScore) + "§8]");
         }
 
         sender.sendMessage("");
@@ -599,15 +608,20 @@ public class PacketCheckCommand implements CommandExecutor, TabCompleter, Listen
     // ==========================================
 
     private static boolean isHackedChannel(String channel) {
-        String lower = channel.toLowerCase();
-        return lower.contains("meteor") || lower.contains("wurst") ||
-            lower.contains("impact") || lower.contains("aristois") ||
-            lower.contains("inertia") || lower.contains("liquidbounce") ||
-            lower.contains("rusherhack") || lower.contains("fdp") ||
-            lower.contains("future") || lower.contains("konas") ||
-            lower.contains("lambda") || lower.contains("salhack") ||
-            lower.contains("nhack") || lower.contains("xulu") ||
-            lower.contains("phobos") || lower.contains("sigma");
+        return PacketCheckListener.isSuspiciousChannelName(channel);
+    }
+
+    private String formatSuspicionScore(int score) {
+        if (score >= 80) {
+            return "§4" + score;
+        }
+        if (score >= 40) {
+            return "§e" + score;
+        }
+        if (score > 0) {
+            return "§6" + score;
+        }
+        return "§a0";
     }
 
     private Duration parseDuration(String input) {

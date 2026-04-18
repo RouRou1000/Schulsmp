@@ -34,6 +34,15 @@ public class TpaManager {
             return;
         }
 
+        // Settings-Check: Hat der Ziel-Spieler TPA deaktiviert?
+        var sm = plugin.getSettingsManager();
+        if (sm != null && !sm.getSetting(target.getUniqueId(),
+                de.coolemod.donut.managers.SettingsManager.Setting.TPA_ENABLED)) {
+            sender.sendMessage("§8┃ §b§lTPA §8┃ §f" + target.getName() + " §chat TPA-Anfragen deaktiviert!");
+            sender.playSound(sender.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
+            return;
+        }
+
         if (combatManager.isInCombat(sender)) {
             sender.sendMessage("§8┃ §b§lTPA §8┃ §cDu bist im Kampf!");
             sender.playSound(sender.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
@@ -159,6 +168,15 @@ public class TpaManager {
     public void sendTpaHereRequest(Player sender, Player target) {
         if (sender.equals(target)) {
             sender.sendMessage("§8┃ §b§lTPA §8┃ §cDu kannst dir selbst keine Anfrage senden!");
+            return;
+        }
+
+        // Settings-Check: Hat der Ziel-Spieler TPAHere deaktiviert?
+        var sm = plugin.getSettingsManager();
+        if (sm != null && !sm.getSetting(target.getUniqueId(),
+                de.coolemod.donut.managers.SettingsManager.Setting.TPAHERE_ENABLED)) {
+            sender.sendMessage("§8┃ §b§lTPA §8┃ §f" + target.getName() + " §chat TPAHere-Anfragen deaktiviert!");
+            sender.playSound(sender.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
             return;
         }
 

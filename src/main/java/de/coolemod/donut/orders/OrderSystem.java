@@ -23,6 +23,7 @@ public class OrderSystem {
     private final Map<UUID, CreateSession> createSessions = new HashMap<>();
     private final Map<UUID, BrowseSession> browseSessions = new HashMap<>();
     private final Map<UUID, DeliverySession> deliverySessions = new HashMap<>();
+    private final Map<String, List<ItemStack>> pendingCollections = new HashMap<>();
 
     private final NamespacedKey UI_KEY;
     private final NamespacedKey ACTION_KEY;
@@ -69,6 +70,8 @@ public class OrderSystem {
         public double pricePerItem;
         public int delivered;
         public long timestamp;
+        public boolean closed;
+        public boolean cancelled;
 
         public Order(String id, UUID owner, ItemStack itemType, int requiredAmount, double pricePerItem) {
             this.id = id;
@@ -78,6 +81,8 @@ public class OrderSystem {
             this.pricePerItem = pricePerItem;
             this.delivered = 0;
             this.timestamp = System.currentTimeMillis();
+            this.closed = false;
+            this.cancelled = false;
         }
     }
 
@@ -137,7 +142,7 @@ public class OrderSystem {
 
     public boolean completeDelivery(String orderId, Player deliverer, int count) {
         Order order = orders.get(orderId);
-        if (order == null) return false;
+        if (order == null || order.closed) return false;
 
         int canDeliver = Math.min(count, order.requiredAmount - order.delivered);
         if (canDeliver <= 0) return false;
@@ -145,6 +150,22 @@ public class OrderSystem {
         // Pay deliverer
         double payment = canDeliver * order.pricePerItem;
         plugin.getEconomy().deposit(deliverer.getUniqueId(), payment);
+
+        // Store delivered items for buyer to collect
+        DeliverySession session = getDeliverySession(deliverer.getUniqueId());
+        if (session != null && session.matchingItems != null) {
+            List<ItemStack> toStore = new ArrayList<>();
+            int remaining = canDeliver;
+            for (ItemStack item : session.matchingItems) {
+                if (remaining <= 0) break;
+                ItemStack stored = item.clone();
+                int take = Math.min(stored.getAmount(), remaining);
+                stored.setAmount(take);
+                toStore.add(stored);
+                remaining -= take;
+            }
+            addPendingItems(order.id, toStore);
+        }
 
         // Update order
         order.delivered += canDeliver;
@@ -157,7 +178,7 @@ public class OrderSystem {
 
         // Complete order if fulfilled
         if (order.delivered >= order.requiredAmount) {
-            orders.remove(orderId);
+            order.closed = true;
             if (owner != null) {
                 owner.sendMessage("§a✓✓ Deine Order wurde vollständig erfüllt!");
             }
@@ -168,28 +189,37 @@ public class OrderSystem {
 
     public boolean cancelOrder(Player player, String orderId) {
         Order order = orders.get(orderId);
-        if (order == null) return false;
+        if (order == null || order.closed) return false;
         if (!order.owner.equals(player.getUniqueId())) return false;
 
         // Refund remaining amount
         double remaining = (order.requiredAmount - order.delivered) * order.pricePerItem;
         plugin.getEconomy().deposit(player.getUniqueId(), remaining);
-        orders.remove(orderId);
+        order.closed = true;
+        order.cancelled = true;
+        cleanupClosedOrder(orderId);
 
         player.sendMessage("§a✓ Order storniert. Rückerstattung: §e" + NumberFormatter.formatMoney(remaining));
         return true;
     }
 
     public List<Order> getOrders() {
-        return new ArrayList<>(orders.values());
+        return orders.values().stream()
+            .filter(order -> !order.closed)
+            .sorted(Comparator.comparingLong((Order order) -> order.timestamp).reversed())
+            .toList();
     }
 
     public List<Order> getPlayerOrders(UUID player) {
-        List<Order> result = new ArrayList<>();
-        for (Order o : orders.values()) {
-            if (o.owner.equals(player)) result.add(o);
-        }
-        return result;
+        return orders.values().stream()
+            .filter(order -> order.owner.equals(player))
+            .filter(order -> !order.closed || hasPendingItems(order.id))
+            .sorted(Comparator.comparingLong((Order order) -> order.timestamp).reversed())
+            .toList();
+    }
+
+    public Order getOrder(String orderId) {
+        return orders.get(orderId);
     }
 
     // ==================== CREATE SESSION ====================
@@ -276,6 +306,70 @@ public class OrderSystem {
 
     public void endDeliverySession(UUID player) {
         deliverySessions.remove(player);
+    }
+
+    // ==================== PENDING COLLECTIONS ====================
+
+    public void addPendingItems(String orderId, List<ItemStack> items) {
+        if (items == null || items.isEmpty()) {
+            return;
+        }
+        pendingCollections.computeIfAbsent(orderId, ignored -> new ArrayList<>()).addAll(items);
+    }
+
+    public List<ItemStack> getPendingItems(String orderId) {
+        return pendingCollections.getOrDefault(orderId, new ArrayList<>());
+    }
+
+    public void clearPendingItems(String orderId) {
+        pendingCollections.remove(orderId);
+    }
+
+    public int getPendingItemCount(String orderId) {
+        List<ItemStack> items = pendingCollections.get(orderId);
+        if (items == null) return 0;
+        return items.stream().mapToInt(ItemStack::getAmount).sum();
+    }
+
+    public boolean hasPendingItems(String orderId) {
+        return getPendingItemCount(orderId) > 0;
+    }
+
+    public int collectOrderItems(Player player, String orderId) {
+        Order order = orders.get(orderId);
+        if (order == null || !order.owner.equals(player.getUniqueId())) {
+            return 0;
+        }
+
+        List<ItemStack> pending = pendingCollections.get(orderId);
+        if (pending == null || pending.isEmpty()) {
+            return 0;
+        }
+
+        int amount = 0;
+        for (ItemStack item : pending) {
+            if (item == null || item.getType() == Material.AIR) {
+                continue;
+            }
+            amount += item.getAmount();
+            for (ItemStack leftover : player.getInventory().addItem(item.clone()).values()) {
+                player.getWorld().dropItemNaturally(player.getLocation(), leftover);
+            }
+        }
+
+        clearPendingItems(orderId);
+        cleanupClosedOrder(orderId);
+        return amount;
+    }
+
+    private void cleanupClosedOrder(String orderId) {
+        Order order = orders.get(orderId);
+        if (order == null) {
+            return;
+        }
+        if (order.closed && !hasPendingItems(orderId)) {
+            orders.remove(orderId);
+        }
     }
 
     // ==================== GUI CREATION ====================
@@ -409,8 +503,28 @@ public class OrderSystem {
         meta.setDisplayName("§8⬛");
         border.setItemMeta(meta);
 
-        for (int i : new int[]{0,1,2,3,4,5,6,7,8,9,17,18,26,27,35,36,44,45,46,47,48,49,50,51,52,53}) {
+        for (int i : new int[]{0,1,2,3,4,5,6,7,8,9,17,18,26,27,35,36,44,45,46,47,48,50,51,52,53}) {
             inv.setItem(i, border);
+        }
+
+        // Collect button (slot 49)
+        int totalPending = orders.values().stream()
+            .filter(o -> o.owner.equals(player))
+            .filter(o -> hasPendingItems(o.id))
+            .mapToInt(o -> getPendingItemCount(o.id)).sum();
+        if (totalPending > 0) {
+            ItemStack collectBtn = mark(new ItemStack(Material.CHEST), "open_collect", null);
+            ItemMeta collectMeta = collectBtn.getItemMeta();
+            collectMeta.setDisplayName("§a§l✓ " + toSmallCaps("ITEMS ABHOLEN") + " §7(" + totalPending + "x)");
+            List<String> collectLore = new ArrayList<>();
+            collectLore.add("§8");
+            collectLore.add("§7Du hast §a" + totalPending + "x §7Items");
+            collectLore.add("§7zum Abholen bereit.");
+            collectLore.add("§8");
+            collectLore.add("§a▸ Klicken zum Öffnen");
+            collectMeta.setLore(collectLore);
+            collectBtn.setItemMeta(collectMeta);
+            inv.setItem(49, collectBtn);
         }
 
         // First slot: "Neue Order erstellen" Button
@@ -444,21 +558,266 @@ public class OrderSystem {
             lore.add("§7Benötigt: §f" + order.requiredAmount + "x");
             lore.add("§7Geliefert: §a" + order.delivered + "x");
             lore.add("§7Verbleibend: §e" + (order.requiredAmount - order.delivered) + "x");
+            lore.add("§7Abholbar: " + (getPendingItemCount(order.id) > 0 ? "§a" + getPendingItemCount(order.id) + "x" : "§c0x"));
             lore.add("§8");
             lore.add("§6⛃ §7Preis/Stück: §e" + NumberFormatter.formatMoney(order.pricePerItem));
             lore.add("§6⛃ §7Gesamt: §e" + NumberFormatter.formatMoney(order.requiredAmount * order.pricePerItem));
             lore.add("§8§m                    ");
             lore.add("§8");
-            lore.add("§c§l✖ " + toSmallCaps("STORNIEREN"));
-            lore.add("§7Verbleibendes Geld wird erstattet");
+            lore.add("§e§l▸ " + toSmallCaps("OPTIONEN ÖFFNEN"));
+            lore.add("§7Stornieren, Infos oder Abholen");
             displayMeta.setLore(lore);
             display.setItemMeta(displayMeta);
-            mark(display, "cancel", order.id);
+            mark(display, "my_order_open", order.id);
 
             inv.setItem(slot, display);
             slot++;
         }
 
+        return inv;
+    }
+
+    public Inventory createOrderDetailGUI(UUID player, String orderId) {
+        Order order = orders.get(orderId);
+        if (order == null || !order.owner.equals(player)) {
+            return createMyOrdersGUI(player);
+        }
+
+        Inventory inv = Bukkit.createInventory(null, 27, "§9§l" + toSmallCaps("ORDER DETAILS"));
+        ItemStack border = mark(new ItemStack(Material.BLACK_STAINED_GLASS_PANE), "border", null);
+        ItemMeta borderMeta = border.getItemMeta();
+        borderMeta.setDisplayName("§8⬛");
+        border.setItemMeta(borderMeta);
+        for (int i = 0; i < inv.getSize(); i++) {
+            inv.setItem(i, border);
+        }
+
+        ItemStack cancelItem = mark(new ItemStack(order.closed ? Material.GRAY_DYE : Material.RED_STAINED_GLASS_PANE), order.closed ? "disabled" : "order_cancel_prompt", order.id);
+        ItemMeta cancelMeta = cancelItem.getItemMeta();
+        cancelMeta.setDisplayName(order.closed ? "§7§lNICHT STORNIERBAR" : "§c§lORDER STORNIEREN");
+        List<String> cancelLore = new ArrayList<>();
+        cancelLore.add("§8────────────────");
+        if (order.closed) {
+            cancelLore.add(order.cancelled ? "§7Diese Order wurde bereits storniert." : "§7Diese Order ist bereits abgeschlossen.");
+        } else {
+            cancelLore.add("§7Offener Rest wird erstattet.");
+            cancelLore.add("§7Stornierung braucht Bestätigung.");
+            cancelLore.add("§8");
+            cancelLore.add("§c▸ Klicken zum Fortfahren");
+        }
+        cancelMeta.setLore(cancelLore);
+        cancelItem.setItemMeta(cancelMeta);
+        inv.setItem(11, cancelItem);
+
+        ItemStack info = order.itemType.clone();
+        ItemMeta infoMeta = info.getItemMeta();
+        if (infoMeta != null) {
+            infoMeta.setDisplayName("§e§l" + formatMaterialName(order.itemType.getType()));
+            List<String> infoLore = new ArrayList<>();
+            infoLore.add("§8────────────────");
+            infoLore.add("§7Status: " + (order.cancelled ? "§cStorniert" : order.closed ? "§aAbgeschlossen" : "§eAktiv"));
+            infoLore.add("§7Benötigt: §f" + order.requiredAmount + "x");
+            infoLore.add("§7Geliefert: §a" + order.delivered + "x");
+            infoLore.add("§7Verbleibend: §e" + Math.max(0, order.requiredAmount - order.delivered) + "x");
+            infoLore.add("§7Abholbar: " + (getPendingItemCount(order.id) > 0 ? "§a" + getPendingItemCount(order.id) + "x" : "§c0x"));
+            infoLore.add("§8");
+            infoLore.add("§6⛃ §7Preis/Stück: §e" + NumberFormatter.formatMoney(order.pricePerItem));
+            infoLore.add("§6⛃ §7Gesamt: §e" + NumberFormatter.formatMoney(order.requiredAmount * order.pricePerItem));
+            infoLore.add("§8────────────────");
+            infoMeta.setLore(infoLore);
+            infoMeta.getPersistentDataContainer().set(UI_KEY, PersistentDataType.STRING, "true");
+            infoMeta.getPersistentDataContainer().set(ACTION_KEY, PersistentDataType.STRING, "disabled");
+            info.setItemMeta(infoMeta);
+        }
+        inv.setItem(13, info);
+
+        ItemStack collectItem = mark(new ItemStack(getPendingItemCount(order.id) > 0 ? Material.CHEST : Material.HOPPER), getPendingItemCount(order.id) > 0 ? "order_collect" : "disabled", order.id);
+        ItemMeta collectMeta = collectItem.getItemMeta();
+        collectMeta.setDisplayName(getPendingItemCount(order.id) > 0 ? "§a§lITEMS ABHOLEN" : "§7§lNICHTS ABZUHOLEN");
+        List<String> collectLore = new ArrayList<>();
+        collectLore.add("§8────────────────");
+        collectLore.add("§7Abholbare Items: " + (getPendingItemCount(order.id) > 0 ? "§a" + getPendingItemCount(order.id) + "x" : "§c0x"));
+        if (getPendingItemCount(order.id) > 0) {
+            collectLore.add("§8");
+            collectLore.add("§a▸ Klicken zum Einsammeln");
+        }
+        collectMeta.setLore(collectLore);
+        collectItem.setItemMeta(collectMeta);
+        inv.setItem(15, collectItem);
+
+        ItemStack back = mark(new ItemStack(Material.ARROW), "order_detail_back", null);
+        ItemMeta backMeta = back.getItemMeta();
+        backMeta.setDisplayName("§e§lZURÜCK");
+        back.setItemMeta(backMeta);
+        inv.setItem(22, back);
+        return inv;
+    }
+
+    public Inventory createCollectGUI(UUID player) {
+        Inventory inv = Bukkit.createInventory(null, 54, "§a§l" + toSmallCaps("ITEMS ABHOLEN"));
+
+        // Fill borders
+        ItemStack border = mark(new ItemStack(Material.BLACK_STAINED_GLASS_PANE), "border", null);
+        ItemMeta borderMeta = border.getItemMeta();
+        borderMeta.setDisplayName("§8⬛");
+        border.setItemMeta(borderMeta);
+        for (int i : new int[]{0,1,2,3,4,5,6,7,8,9,17,18,26,27,35,36,44,45,46,47,48,50,51,52,53}) {
+            inv.setItem(i, border);
+        }
+
+        // Collect all pending orders
+        List<Order> withPending = orders.values().stream()
+            .filter(o -> o.owner.equals(player))
+            .filter(o -> hasPendingItems(o.id))
+            .sorted(Comparator.comparingLong((Order o) -> o.timestamp).reversed())
+            .toList();
+
+        int totalPending = withPending.stream().mapToInt(o -> getPendingItemCount(o.id)).sum();
+
+        // Info header
+        ItemStack info = new ItemStack(Material.CHEST);
+        ItemMeta infoMeta = info.getItemMeta();
+        infoMeta.setDisplayName("§a§lAbholbare Items");
+        List<String> infoLore = new ArrayList<>();
+        infoLore.add("§8────────────────");
+        infoLore.add("§7Orders mit Items: §f" + withPending.size());
+        infoLore.add("§7Gesamt abholbar: §a" + totalPending + "x");
+        infoLore.add("§8────────────────");
+        infoMeta.setLore(infoLore);
+        info.setItemMeta(infoMeta);
+        inv.setItem(4, info);
+
+        // Show orders with pending items
+        int slot = 10;
+        for (Order order : withPending) {
+            if (slot == 17) slot = 19;
+            if (slot == 26) slot = 28;
+            if (slot == 35) slot = 37;
+            if (slot >= 44) break;
+
+            int pending = getPendingItemCount(order.id);
+            ItemStack display = order.itemType.clone();
+            ItemMeta displayMeta = display.getItemMeta();
+            List<String> lore = displayMeta.hasLore() ? new ArrayList<>(displayMeta.getLore()) : new ArrayList<>();
+            lore.add("§8");
+            lore.add("§8§m                    ");
+            lore.add("§7Benötigt: §f" + order.requiredAmount + "x");
+            lore.add("§7Geliefert: §a" + order.delivered + "x");
+            lore.add("§7Abholbar: §a" + pending + "x");
+            lore.add("§8§m                    ");
+            lore.add("§8");
+            lore.add("§a§l▸ Klicken zum Abholen");
+            displayMeta.setLore(lore);
+            display.setItemMeta(displayMeta);
+            mark(display, "collect_single", order.id);
+            inv.setItem(slot, display);
+            slot++;
+        }
+
+        if (withPending.isEmpty()) {
+            ItemStack empty = new ItemStack(Material.BARRIER);
+            ItemMeta emptyMeta = empty.getItemMeta();
+            emptyMeta.setDisplayName("§7Keine Items abholbar");
+            List<String> emptyLore = new ArrayList<>();
+            emptyLore.add("§8");
+            emptyLore.add("§7Es gibt aktuell nichts abzuholen.");
+            emptyMeta.setLore(emptyLore);
+            empty.setItemMeta(emptyMeta);
+            inv.setItem(22, empty);
+        }
+
+        // Collect All button
+        if (totalPending > 0) {
+            ItemStack collectAll = mark(new ItemStack(Material.LIME_STAINED_GLASS_PANE), "collect_all", null);
+            ItemMeta collectAllMeta = collectAll.getItemMeta();
+            collectAllMeta.setDisplayName("§a§l✓ ALLES ABHOLEN");
+            List<String> collectAllLore = new ArrayList<>();
+            collectAllLore.add("§8────────────────");
+            collectAllLore.add("§7Alle §a" + totalPending + "x §7Items");
+            collectAllLore.add("§7auf einmal abholen.");
+            collectAllLore.add("§8────────────────");
+            collectAllLore.add("§a▸ Klicken zum Einsammeln");
+            collectAllMeta.setLore(collectAllLore);
+            collectAll.setItemMeta(collectAllMeta);
+            inv.setItem(49, collectAll);
+        }
+
+        // Back button
+        ItemStack back = mark(new ItemStack(Material.ARROW), "collect_back", null);
+        ItemMeta backBtnMeta = back.getItemMeta();
+        backBtnMeta.setDisplayName("§e§lZURÜCK");
+        back.setItemMeta(backBtnMeta);
+        inv.setItem(45, back);
+
+        return inv;
+    }
+
+    public int collectAllOrderItems(Player player) {
+        UUID uuid = player.getUniqueId();
+        List<Order> withPending = orders.values().stream()
+            .filter(o -> o.owner.equals(uuid))
+            .filter(o -> hasPendingItems(o.id))
+            .toList();
+
+        int total = 0;
+        for (Order order : withPending) {
+            total += collectOrderItems(player, order.id);
+        }
+        return total;
+    }
+
+    public Inventory createOrderCancelConfirmGUI(UUID player, String orderId) {
+        Order order = orders.get(orderId);
+        if (order == null || !order.owner.equals(player)) {
+            return createMyOrdersGUI(player);
+        }
+
+        Inventory inv = Bukkit.createInventory(null, 27, "§c§l" + toSmallCaps("ORDER STORNIEREN"));
+        ItemStack border = mark(new ItemStack(Material.BLACK_STAINED_GLASS_PANE), "border", null);
+        ItemMeta borderMeta = border.getItemMeta();
+        borderMeta.setDisplayName("§8⬛");
+        border.setItemMeta(borderMeta);
+        for (int i = 0; i < inv.getSize(); i++) {
+            inv.setItem(i, border);
+        }
+
+        double refund = Math.max(0, (order.requiredAmount - order.delivered) * order.pricePerItem);
+
+        ItemStack deny = mark(new ItemStack(Material.RED_STAINED_GLASS_PANE), "order_detail_back", order.id);
+        ItemMeta denyMeta = deny.getItemMeta();
+        denyMeta.setDisplayName("§7§lABBRECHEN");
+        deny.setItemMeta(denyMeta);
+        inv.setItem(11, deny);
+
+        ItemStack info = order.itemType.clone();
+        ItemMeta infoMeta = info.getItemMeta();
+        if (infoMeta != null) {
+            infoMeta.setDisplayName("§c§lStornierung bestätigen");
+            List<String> infoLore = new ArrayList<>();
+            infoLore.add("§8────────────────");
+            infoLore.add("§7Item: §f" + formatMaterialName(order.itemType.getType()));
+            infoLore.add("§7Verbleibend: §e" + Math.max(0, order.requiredAmount - order.delivered) + "x");
+            infoLore.add("§6⛃ §7Erstattung: §e" + NumberFormatter.formatMoney(refund));
+            infoLore.add("§8────────────────");
+            infoMeta.setLore(infoLore);
+            infoMeta.getPersistentDataContainer().set(UI_KEY, PersistentDataType.STRING, "true");
+            infoMeta.getPersistentDataContainer().set(ACTION_KEY, PersistentDataType.STRING, "disabled");
+            info.setItemMeta(infoMeta);
+        }
+        inv.setItem(13, info);
+
+        ItemStack confirm = mark(new ItemStack(Material.LIME_STAINED_GLASS_PANE), "order_cancel_confirm", order.id);
+        ItemMeta confirmMeta = confirm.getItemMeta();
+        confirmMeta.setDisplayName("§c§lJA, STORNIEREN");
+        List<String> confirmLore = new ArrayList<>();
+        confirmLore.add("§8────────────────");
+        confirmLore.add("§7Die Order wird geschlossen.");
+        confirmLore.add("§7Offenes Geld wird erstattet.");
+        confirmLore.add("§8");
+        confirmLore.add("§c▸ Klicken zum Bestätigen");
+        confirmMeta.setLore(confirmLore);
+        confirm.setItemMeta(confirmMeta);
+        inv.setItem(15, confirm);
         return inv;
     }
 
@@ -888,9 +1247,12 @@ public class OrderSystem {
         return title != null && (
             title.contains("ᴏʀᴅᴇʀs") ||
             title.contains("ᴍᴇɪɴᴇ ᴏʀᴅᴇʀs") ||
+            title.contains("ᴏʀᴅᴇʀ ᴅᴇᴛᴀɪʟs") ||
+            title.contains("ᴏʀᴅᴇʀ sᴛᴏʀɴɪᴇʀᴇɴ") ||
             title.contains("ɴᴇᴜᴇ ᴏʀᴅᴇʀ") ||
             title.contains("ɪᴛᴇᴍ ᴡᴀʜʟᴇɴ") ||
-            title.contains("ʟɪᴇғᴇʀᴜɴɢ ʙᴇsᴛᴀᴛɪɢᴇɴ")
+            title.contains("ʟɪᴇғᴇʀᴜɴɢ ʙᴇsᴛᴀᴛɪɢᴇɴ") ||
+            title.contains("ɪᴛᴇᴍs ᴀʙʜᴏʟᴇɴ")
         );
     }
 
@@ -912,7 +1274,79 @@ public class OrderSystem {
         return item.getItemMeta().getPersistentDataContainer().get(ORDER_ID_KEY, PersistentDataType.STRING);
     }
 
+    private static final java.util.Map<String, String> DISPLAY_NAMES = java.util.Map.ofEntries(
+        java.util.Map.entry("TURTLE_HELMET", "Turtle Shell"),
+        java.util.Map.entry("LEATHER_CHESTPLATE", "Leather Tunic"),
+        java.util.Map.entry("LEATHER_HELMET", "Leather Cap"),
+        java.util.Map.entry("LEATHER_LEGGINGS", "Leather Pants"),
+        java.util.Map.entry("COD", "Raw Cod"),
+        java.util.Map.entry("SALMON", "Raw Salmon"),
+        java.util.Map.entry("CHICKEN", "Raw Chicken"),
+        java.util.Map.entry("BEEF", "Raw Beef"),
+        java.util.Map.entry("MUTTON", "Raw Mutton"),
+        java.util.Map.entry("PORKCHOP", "Raw Porkchop"),
+        java.util.Map.entry("RABBIT", "Raw Rabbit"),
+        java.util.Map.entry("COOKED_BEEF", "Steak"),
+        java.util.Map.entry("REDSTONE", "Redstone Dust"),
+        java.util.Map.entry("REPEATER", "Redstone Repeater"),
+        java.util.Map.entry("COMPARATOR", "Redstone Comparator"),
+        java.util.Map.entry("SLIME_BALL", "Slimeball"),
+        java.util.Map.entry("VINE", "Vines"),
+        java.util.Map.entry("HAY_BLOCK", "Hay Bale"),
+        java.util.Map.entry("JACK_O_LANTERN", "Jack o'Lantern"),
+        java.util.Map.entry("POTION", "Potion"),
+        java.util.Map.entry("SPLASH_POTION", "Splash Potion"),
+        java.util.Map.entry("LINGERING_POTION", "Lingering Potion"),
+        java.util.Map.entry("COD_BUCKET", "Bucket of Cod"),
+        java.util.Map.entry("SALMON_BUCKET", "Bucket of Salmon"),
+        java.util.Map.entry("PUFFERFISH_BUCKET", "Bucket of Pufferfish"),
+        java.util.Map.entry("TROPICAL_FISH_BUCKET", "Bucket of Tropical Fish"),
+        java.util.Map.entry("AXOLOTL_BUCKET", "Bucket of Axolotl"),
+        java.util.Map.entry("TADPOLE_BUCKET", "Bucket of Tadpole"),
+        java.util.Map.entry("DIAMOND_BLOCK", "Block of Diamond"),
+        java.util.Map.entry("NETHERITE_BLOCK", "Block of Netherite"),
+        java.util.Map.entry("EMERALD_BLOCK", "Block of Emerald"),
+        java.util.Map.entry("GOLD_BLOCK", "Block of Gold"),
+        java.util.Map.entry("IRON_BLOCK", "Block of Iron"),
+        java.util.Map.entry("COAL_BLOCK", "Block of Coal"),
+        java.util.Map.entry("COPPER_BLOCK", "Block of Copper"),
+        java.util.Map.entry("LAPIS_BLOCK", "Block of Lapis Lazuli"),
+        java.util.Map.entry("REDSTONE_BLOCK", "Block of Redstone"),
+        java.util.Map.entry("AMETHYST_BLOCK", "Block of Amethyst"),
+        java.util.Map.entry("BAMBOO_BLOCK", "Block of Bamboo"),
+        java.util.Map.entry("RESIN_BLOCK", "Block of Resin"),
+        java.util.Map.entry("QUARTZ_BLOCK", "Block of Quartz"),
+        java.util.Map.entry("RAW_COPPER_BLOCK", "Block of Raw Copper"),
+        java.util.Map.entry("RAW_GOLD_BLOCK", "Block of Raw Gold"),
+        java.util.Map.entry("RAW_IRON_BLOCK", "Block of Raw Iron"),
+        java.util.Map.entry("WAXED_COPPER_BLOCK", "Waxed Block of Copper"),
+        java.util.Map.entry("STRIPPED_BAMBOO_BLOCK", "Block of Stripped Bamboo"),
+        java.util.Map.entry("QUARTZ", "Nether Quartz"),
+        java.util.Map.entry("SMOOTH_QUARTZ", "Smooth Quartz Block"),
+        java.util.Map.entry("LAPIS_ORE", "Lapis Lazuli Ore"),
+        java.util.Map.entry("DEEPSLATE_LAPIS_ORE", "Deepslate Lapis Lazuli Ore"),
+        java.util.Map.entry("COAST_ARMOR_TRIM_SMITHING_TEMPLATE", "Coast Armor Trim"),
+        java.util.Map.entry("DUNE_ARMOR_TRIM_SMITHING_TEMPLATE", "Dune Armor Trim"),
+        java.util.Map.entry("EYE_ARMOR_TRIM_SMITHING_TEMPLATE", "Eye Armor Trim"),
+        java.util.Map.entry("HOST_ARMOR_TRIM_SMITHING_TEMPLATE", "Host Armor Trim"),
+        java.util.Map.entry("RAISER_ARMOR_TRIM_SMITHING_TEMPLATE", "Raiser Armor Trim"),
+        java.util.Map.entry("RIB_ARMOR_TRIM_SMITHING_TEMPLATE", "Rib Armor Trim"),
+        java.util.Map.entry("SENTRY_ARMOR_TRIM_SMITHING_TEMPLATE", "Sentry Armor Trim"),
+        java.util.Map.entry("SHAPER_ARMOR_TRIM_SMITHING_TEMPLATE", "Shaper Armor Trim"),
+        java.util.Map.entry("SILENCE_ARMOR_TRIM_SMITHING_TEMPLATE", "Silence Armor Trim"),
+        java.util.Map.entry("SNOUT_ARMOR_TRIM_SMITHING_TEMPLATE", "Snout Armor Trim"),
+        java.util.Map.entry("SPIRE_ARMOR_TRIM_SMITHING_TEMPLATE", "Spire Armor Trim"),
+        java.util.Map.entry("TIDE_ARMOR_TRIM_SMITHING_TEMPLATE", "Tide Armor Trim"),
+        java.util.Map.entry("VEX_ARMOR_TRIM_SMITHING_TEMPLATE", "Vex Armor Trim"),
+        java.util.Map.entry("WARD_ARMOR_TRIM_SMITHING_TEMPLATE", "Ward Armor Trim"),
+        java.util.Map.entry("WAYFINDER_ARMOR_TRIM_SMITHING_TEMPLATE", "Wayfinder Armor Trim"),
+        java.util.Map.entry("WILD_ARMOR_TRIM_SMITHING_TEMPLATE", "Wild Armor Trim"),
+        java.util.Map.entry("NETHERITE_UPGRADE_SMITHING_TEMPLATE", "Netherite Upgrade")
+    );
+
     private String formatMaterialName(Material material) {
+        String override = DISPLAY_NAMES.get(material.name());
+        if (override != null) return override;
         String[] parts = material.name().split("_");
         StringBuilder result = new StringBuilder();
         for (String part : parts) {

@@ -1,6 +1,12 @@
 ﻿# SchulCore - Konfiguration (Deutsch) - MC 1.21.5 Nerfed Economy
 settings:
   shard-per-kill: 8
+  shard-buy-price-money: 1000
+  spawn-shards:
+    enabled: true
+    world-name: world
+    interval-seconds: 30
+    reward: 1
   spawner-cost-multiplier: 1.1
   scoreboard-update-ticks: 20
   default-money: 0.0
@@ -1589,11 +1595,9 @@ worth:
 # Crates-Konfiguration - ARMOR ONLY (No Weapons/Tools)
 crates:
   basic:
-    display: "Â§aâœª Basis-Kiste âœª"
+    display: "§a✪ Basis-Kiste ✪"
     key: "Basic Key"
     tier: "basic"
-    guaranteed:
-      - "IRON_HELMET:1"
     animation:
       ticks: 2
       cycles: 30
@@ -1602,15 +1606,14 @@ crates:
       - "DIAMOND_CHESTPLATE:1:35"
       - "DIAMOND_LEGGINGS:1:35"
       - "DIAMOND_BOOTS:1:40"
-    bundles:
-      - "IRON_INGOT:5;COAL:10"
+      - "DIAMOND_SWORD:1:35"
+      - "DIAMOND_PICKAXE:1:35"
+      - "DIAMOND_PICKAXE:1:35"
 
   rare:
-    display: "Â§5âœª Seltene Kiste âœª"
+    display: "§5✪ Seltene Kiste ✪"
     key: "Rare Key"
     tier: "rare"
-    guaranteed:
-      - "DIAMOND_HELMET:1"
     animation:
       ticks: 2
       cycles: 45
@@ -1619,15 +1622,14 @@ crates:
       - "DIAMOND_CHESTPLATE:1:30"
       - "DIAMOND_LEGGINGS:1:30"
       - "DIAMOND_BOOTS:1:40"
-    bundles:
-      - "DIAMOND:2;EMERALD:3"
+      - "DIAMOND_SWORD:1:30"
+      - "DIAMOND_PICKAXE:1:30"
+      - "DIAMOND_PICKAXE:1:30"
 
   legendary:
-    display: "Â§6âœª LegendÃ¤re Kiste âœª"
+    display: "§6✪ Legendäre Kiste ✪"
     key: "Legend Key"
     tier: "legendary"
-    guaranteed:
-      - "NETHERITE_CHESTPLATE:1"
     animation:
       ticks: 3
       cycles: 80
@@ -1636,11 +1638,9 @@ crates:
       - "NETHERITE_CHESTPLATE:1:30"
       - "NETHERITE_LEGGINGS:1:30"
       - "NETHERITE_BOOTS:1:35"
-      - "ELYTRA:1:8"
-      - "TOTEM_OF_UNDYING:1:12"
-    bundles:
-      - "DIAMOND:5;EMERALD:8;GOLD_INGOT:10"
-      - "NETHERITE_SCRAP:2;DIAMOND:4"
+      - "NETHERITE_SWORD:1:30"
+      - "NETHERITE_PICKAXE:1:30"
+      - "NETHERITE_PICKAXE:1:30"
 
 # Enchantment-Worth-Multiplikatoren (per enchant level) [Minecraft 1.21.5 IDs - lowercase]
 # Values derived from in-game market prices (price / level = per-level multiplier)
@@ -1693,10 +1693,10 @@ worth-enchant-multipliers:
   # === MACE (1.21+) ===
   density: 150
   breach: 200
-  wind_burst: 300
+  wind_burst: 1000
   # === CURSES ===
-  binding_curse: 0
-  vanishing_curse: 0
+  binding_curse: 250
+  vanishing_curse: 250
 
 # Named-Worth (spezifische Items mit Display-Namen)
 worth-named:

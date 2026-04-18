@@ -3,6 +3,7 @@ package de.coolemod.donut.listeners;
 import de.coolemod.donut.DonutPlugin;
 import de.coolemod.donut.gui.ShopGUI_NEW;
 import de.coolemod.donut.utils.NumberFormatter;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
@@ -11,9 +12,14 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
+
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * NEUER Shop Listener - nutzt InventoryHolder für maximale Sicherheit
@@ -21,6 +27,7 @@ import org.bukkit.persistence.PersistentDataType;
  */
 public class ShopListener_NEW implements Listener {
     private final DonutPlugin plugin;
+    private static final Map<UUID, String> AWAITING_CUSTOM_AMOUNT = new ConcurrentHashMap<>();
 
     public ShopListener_NEW(DonutPlugin plugin) {
         this.plugin = plugin;
@@ -66,8 +73,14 @@ public class ShopListener_NEW implements Listener {
             case "buy_add_1":
                 modifyBuyAmount(p, e.getInventory(), 1);
                 break;
+            case "buy_add_10":
+                modifyBuyAmount(p, e.getInventory(), 10);
+                break;
             case "buy_add_16":
                 modifyBuyAmount(p, e.getInventory(), 16);
+                break;
+            case "buy_add_100":
+                modifyBuyAmount(p, e.getInventory(), 100);
                 break;
             case "buy_set_64":
                 setBuyAmount(p, e.getInventory(), 64);
@@ -75,8 +88,17 @@ public class ShopListener_NEW implements Listener {
             case "buy_remove_1":
                 modifyBuyAmount(p, e.getInventory(), -1);
                 break;
+            case "buy_remove_10":
+                modifyBuyAmount(p, e.getInventory(), -10);
+                break;
             case "buy_remove_16":
                 modifyBuyAmount(p, e.getInventory(), -16);
+                break;
+            case "buy_remove_100":
+                modifyBuyAmount(p, e.getInventory(), -100);
+                break;
+            case "buy_custom_amount":
+                startCustomAmountInput(p);
                 break;
             case "buy_confirm":
                 confirmBuyPurchase(p);
@@ -141,7 +163,8 @@ public class ShopListener_NEW implements Listener {
     private void modifyBuyAmount(Player p, Inventory inv, int delta) {
         ShopGUI_NEW.BuySession session = ShopGUI_NEW.getBuySession(p.getUniqueId());
         if (session == null) return;
-        int maxStack = session.shopItem.material.getMaxStackSize();
+        boolean unlimited = session.shopItem.grantsShardBalance;
+        int maxStack = unlimited ? Integer.MAX_VALUE : session.shopItem.material.getMaxStackSize();
         session.amount = Math.max(1, Math.min(maxStack, session.amount + delta));
         p.playSound(p.getLocation(), org.bukkit.Sound.UI_BUTTON_CLICK, 0.5f, 1f);
         new ShopGUI_NEW(plugin).updateBuyGUI(inv, session);
@@ -150,10 +173,65 @@ public class ShopListener_NEW implements Listener {
     private void setBuyAmount(Player p, Inventory inv, int amount) {
         ShopGUI_NEW.BuySession session = ShopGUI_NEW.getBuySession(p.getUniqueId());
         if (session == null) return;
-        int maxStack = session.shopItem.material.getMaxStackSize();
+        boolean unlimited = session.shopItem.grantsShardBalance;
+        int maxStack = unlimited ? Integer.MAX_VALUE : session.shopItem.material.getMaxStackSize();
         session.amount = Math.max(1, Math.min(maxStack, amount));
         p.playSound(p.getLocation(), org.bukkit.Sound.UI_BUTTON_CLICK, 0.5f, 1f);
         new ShopGUI_NEW(plugin).updateBuyGUI(inv, session);
+    }
+
+    private void startCustomAmountInput(Player p) {
+        ShopGUI_NEW.BuySession session = ShopGUI_NEW.getBuySession(p.getUniqueId());
+        if (session == null) return;
+        AWAITING_CUSTOM_AMOUNT.put(p.getUniqueId(), session.shopCategory);
+        p.closeInventory();
+        p.sendMessage("");
+        p.sendMessage("\u00a78\u2503 \u00a7d\u00a7l\u2756 SHARD SHOP \u00a78\u2503 \u00a77Gib die gew\u00fcnschte Menge im \u00a7eChat \u00a77ein!");
+        p.sendMessage("\u00a78\u2503 \u00a77Tippe \u00a7cabbrechen \u00a77zum Abbrechen.");
+        p.sendMessage("");
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onPlayerChat(AsyncPlayerChatEvent e) {
+        Player p = e.getPlayer();
+        if (!AWAITING_CUSTOM_AMOUNT.containsKey(p.getUniqueId())) return;
+        e.setCancelled(true);
+        String category = AWAITING_CUSTOM_AMOUNT.remove(p.getUniqueId());
+        String msg = e.getMessage().trim();
+
+        if (msg.equalsIgnoreCase("abbrechen") || msg.equalsIgnoreCase("cancel")) {
+            Bukkit.getScheduler().runTask(plugin, () -> {
+                ShopGUI_NEW shop = new ShopGUI_NEW(plugin);
+                shop.openShardShop(p);
+            });
+            p.sendMessage("\u00a78\u2503 \u00a7c\u00a7l\u2716 \u00a77Eingabe abgebrochen.");
+            return;
+        }
+
+        int amount;
+        try {
+            amount = Integer.parseInt(msg);
+        } catch (NumberFormatException ex) {
+            p.sendMessage("\u00a78\u2503 \u00a7c\u00a7l\u2716 \u00a77Ung\u00fcltige Zahl! Bitte erneut versuchen.");
+            AWAITING_CUSTOM_AMOUNT.put(p.getUniqueId(), category);
+            return;
+        }
+
+        if (amount < 1) {
+            p.sendMessage("\u00a78\u2503 \u00a7c\u00a7l\u2716 \u00a77Die Menge muss mindestens 1 sein!");
+            AWAITING_CUSTOM_AMOUNT.put(p.getUniqueId(), category);
+            return;
+        }
+
+        final int finalAmount = amount;
+        Bukkit.getScheduler().runTask(plugin, () -> {
+            ShopGUI_NEW.BuySession session = ShopGUI_NEW.getBuySession(p.getUniqueId());
+            if (session != null) {
+                session.amount = finalAmount;
+            }
+            ShopGUI_NEW shop = new ShopGUI_NEW(plugin);
+            shop.openBuyGUI(p);
+        });
     }
 
     private void goBackFromBuyGUI(Player p) {
@@ -240,15 +318,28 @@ public class ShopListener_NEW implements Listener {
             }
 
             if (plugin.getEconomy().withdraw(p.getUniqueId(), totalPrice)) {
-                giveItems(p, item.material, amount);
+                if (item.grantsShardBalance) {
+                    plugin.getShards().addShards(p.getUniqueId(), amount);
 
-                p.sendMessage("");
-                p.sendMessage("§8┃ §6§lSCHUL SHOP §8┃ §a§l✓ GEKAUFT!");
-                p.sendMessage("§8┃ §7Item§8: §f" + item.name + " §8x" + NumberFormatter.formatInt(amount));
-                p.sendMessage("§8┃ §7Preis§8: §e" + NumberFormatter.formatMoney(totalPrice));
-                p.sendMessage("§8┃ §7Neuer Kontostand§8: §a" + NumberFormatter.formatMoney(plugin.getEconomy().getBalance(p.getUniqueId())));
-                p.sendMessage("");
-                p.playSound(p.getLocation(), org.bukkit.Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 1f);
+                    p.sendMessage("");
+                    p.sendMessage("§8┃ §d§lSHARD SHOP §8┃ §a§l✓ AUFGELADEN!");
+                    p.sendMessage("§8┃ §7Shards§8: §d+" + NumberFormatter.formatInt(amount));
+                    p.sendMessage("§8┃ §7Preis§8: §e" + NumberFormatter.formatMoney(totalPrice));
+                    p.sendMessage("§8┃ §7Neue Shards§8: §d" + NumberFormatter.formatInt(plugin.getShards().getShards(p.getUniqueId())));
+                    p.sendMessage("§8┃ §7Neuer Kontostand§8: §a" + NumberFormatter.formatMoney(plugin.getEconomy().getBalance(p.getUniqueId())));
+                    p.sendMessage("");
+                    p.playSound(p.getLocation(), org.bukkit.Sound.ENTITY_PLAYER_LEVELUP, 1f, 1.5f);
+                } else {
+                    giveItems(p, item.material, amount);
+
+                    p.sendMessage("");
+                    p.sendMessage("§8┃ §6§lSCHUL SHOP §8┃ §a§l✓ GEKAUFT!");
+                    p.sendMessage("§8┃ §7Item§8: §f" + item.name + " §8x" + NumberFormatter.formatInt(amount));
+                    p.sendMessage("§8┃ §7Preis§8: §e" + NumberFormatter.formatMoney(totalPrice));
+                    p.sendMessage("§8┃ §7Neuer Kontostand§8: §a" + NumberFormatter.formatMoney(plugin.getEconomy().getBalance(p.getUniqueId())));
+                    p.sendMessage("");
+                    p.playSound(p.getLocation(), org.bukkit.Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 1f);
+                }
 
                 // Refresh GUI
                 new ShopGUI_NEW(plugin).updateBuyGUI(p.getOpenInventory().getTopInventory(), session);

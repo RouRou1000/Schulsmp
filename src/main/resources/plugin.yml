@@ -39,6 +39,9 @@ commands:
     description: "Zeigt die Hilfe-GUI mit allen Commands"
     usage: /<command>
     aliases: [hilfe]
+  discord:
+    description: "Zeigt den Discord-Link des Servers"
+    usage: /discord
   tutorial:
     description: "Öffnet das Tutorial-Buch"
     usage: /tutorial
@@ -75,8 +78,8 @@ commands:
     description: "Verwalte Geld eines Spielers (Admin)"
     usage: /money [set|add|remove] <spieler> [betrag]
   shards:
-    description: "Verwalte Shards eines Spielers (Admin)"
-    usage: /shards [set|add|remove] <spieler> [menge]
+    description: "Zeigt Shards oder oeffnet den Shard-Shop; Admins koennen sie verwalten"
+    usage: /shards [buy|set|add|remove] [spieler] [menge]
   ac:
     description: "Anti-Cheat / PacketCheck System"
     usage: /ac <spieler|bann|unban|sort|list|help>
@@ -104,6 +107,10 @@ commands:
   c:
     description: "Sende eine Nachricht in den Clan-Chat"
     usage: /c <nachricht>
+  settings:
+    description: "Öffne deine Einstellungen"
+    usage: /settings
+    aliases: [einstellungen, optionen]
 softdepend: [ProtocolLib, LuckPerms]
 permissions:
   donut.clan:
@@ -129,6 +136,9 @@ permissions:
   donut.money:
     description: "Geld-Verwaltung (/money)"
     default: false
+  donut.shards.use:
+    description: "Eigene Shards anzeigen und den Shard-Shop oeffnen (/shards buy)"
+    default: true
   donut.shards:
     description: "Shards-Verwaltung (/shards)"
     default: false

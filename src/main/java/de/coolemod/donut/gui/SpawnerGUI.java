@@ -109,7 +109,7 @@ public class SpawnerGUI implements InventoryHolder {
         stackInfo.setItemMeta(sm);
         inventory.setItem(53, stackInfo);
 
-        // === Slots 10-43: Stored drops ===
+        // === Slots 10-43: Stored drops (sorted by material name) ===
         List<ItemStack> drops = spawner.getStoredDrops();
         NamespacedKey dropKey = new NamespacedKey(plugin, "spawner_drop_index");
         int slot = 10;

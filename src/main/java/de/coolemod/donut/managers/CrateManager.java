@@ -219,69 +219,375 @@ public class CrateManager {
     }
 
     public void openCrateAnimated(Player p, String crateId, boolean skipKeyCheck) {
-        if (!crates.containsKey(crateId)) { p.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§cKiste nicht gefunden."); return; }
+        if (!crates.containsKey(crateId)) {
+            p.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§cKiste nicht gefunden.");
+            return;
+        }
+
         Crate c = crates.get(crateId);
-        // Prüfe Schlüssel (außer bei Admin-Test)
         if (!skipKeyCheck && !consumeKey(p, crateId)) {
             p.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§cDu hast keinen passenden Schlüssel.");
             return;
         }
 
-        Inventory inv = Bukkit.createInventory(null, 27, "§6Öffne: " + c.display);
-        GUI_FILL: {
-            ItemStack glass = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
-            ItemMeta gm = glass.getItemMeta(); gm.setDisplayName("§7"); glass.setItemMeta(gm);
-            for (int i = 0; i < inv.getSize(); i++) inv.setItem(i, glass);
-            // Mitte zeigt Animation
+        ItemStack reward = createFixedReward(c);
+        if (reward == null) {
+            reward = pickWeighted(c);
+            if (reward != null) {
+                reward = applyTierEnchantIfNeeded(reward, c.tier);
+            }
+        }
+        if (reward == null) {
+            p.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§cFür diese Kiste ist keine Belohnung konfiguriert.");
+            return;
+        }
+
+        if (p.getInventory().firstEmpty() == -1) {
+            p.getWorld().dropItemNaturally(p.getLocation(), reward);
+        } else {
+            p.getInventory().addItem(reward);
+        }
+
+        p.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§aDu hast erhalten: §e" + reward.getAmount() + "x " + formatMaterialName(reward.getType()));
+        p.getWorld().playSound(p.getLocation(), org.bukkit.Sound.ENTITY_PLAYER_LEVELUP, 1f, 1.15f);
+        try {
+            org.bukkit.Particle part;
+            try {
+                part = org.bukkit.Particle.valueOf("FIREWORKS_SPARK");
+            } catch (IllegalArgumentException ex) {
+                part = org.bukkit.Particle.CLOUD;
+            }
+            p.getWorld().spawnParticle(part, p.getLocation().add(0, 1, 0), 40);
+        } catch (Throwable ignored) {
+            p.getWorld().spawnParticle(org.bukkit.Particle.CLOUD, p.getLocation().add(0, 1, 0), 40);
+        }
+    }
+
+    public List<ItemStack> getPreviewItems(String crateId) {
+        Crate crate = crates.get(crateId);
+        if (crate == null) {
+            return List.of();
+        }
+
+        String tier = normalizeTier(crate.tier, crate.id);
+        if (tier.equals("basic")) {
+            return buildGearPool(Material.DIAMOND_HELMET, Material.DIAMOND_CHESTPLATE, Material.DIAMOND_LEGGINGS, Material.DIAMOND_BOOTS, Material.DIAMOND_SWORD, Material.DIAMOND_PICKAXE, tier);
+        }
+        if (tier.equals("rare")) {
+            return buildGearPool(Material.DIAMOND_HELMET, Material.DIAMOND_CHESTPLATE, Material.DIAMOND_LEGGINGS, Material.DIAMOND_BOOTS, Material.DIAMOND_SWORD, Material.DIAMOND_PICKAXE, tier);
+        }
+        if (tier.equals("legendary")) {
+            return buildGearPool(Material.NETHERITE_HELMET, Material.NETHERITE_CHESTPLATE, Material.NETHERITE_LEGGINGS, Material.NETHERITE_BOOTS, Material.NETHERITE_SWORD, Material.NETHERITE_PICKAXE, tier);
+        }
+
+        return crate.pool.stream().map(entry -> entry.item.clone()).toList();
+    }
+
+    public List<String> getTierDescription(String crateId) {
+        Crate crate = crates.get(crateId);
+        if (crate == null) {
+            return List.of();
+        }
+
+        String tier = normalizeTier(crate.tier, crate.id);
+        List<String> lines = new ArrayList<>();
+        switch (tier) {
+            case "basic" -> {
+                lines.add("§7Belohnung: §fWähle 1 Teil");
+                lines.add("§7Rüstung: §bDiamond + Protection II");
+                lines.add("§7Schwert: §bDiamond + Sharpness II");
+                lines.add("§7Pickaxe: §bDiamond + Effi II (Fortune/Silk Touch)");
+            }
+            case "rare" -> {
+                lines.add("§7Belohnung: §fWähle 1 Teil");
+                lines.add("§7Rüstung: §dDiamond + volle Enchants");
+                lines.add("§7Schwert: §dDiamond + volle Enchants");
+                lines.add("§7Pickaxe: §dDiamond + Effi V (Fortune/Silk Touch)");
+            }
+            case "legendary" -> {
+                lines.add("§7Belohnung: §fWähle 1 Teil");
+                lines.add("§7Rüstung: §6Netherite + volle Enchants");
+                lines.add("§7Schwert: §6Netherite + volle Enchants");
+                lines.add("§7Pickaxe: §6Netherite + Effi V (Fortune/Silk Touch)");
+            }
+            default -> lines.add("§7Belohnung basiert auf dem konfigurierten Pool.");
+        }
+        return lines;
+    }
+
+    private ItemStack createFixedReward(Crate crate) {
+        List<ItemStack> pool = getPreviewItems(crate.id);
+        if (pool.isEmpty()) {
+            return null;
+        }
+        return pool.get(random.nextInt(pool.size())).clone();
+    }
+
+    private List<ItemStack> buildGearPool(Material helmet, Material chestplate, Material leggings, Material boots, Material sword, Material pickaxe, String tier) {
+        List<ItemStack> pool = new ArrayList<>();
+        pool.add(createTierPiece(helmet, tier, null));
+        pool.add(createTierPiece(chestplate, tier, null));
+        pool.add(createTierPiece(leggings, tier, null));
+        pool.add(createTierPiece(boots, tier, null));
+        pool.add(createTierPiece(sword, tier, null));
+        pool.add(createTierPiece(pickaxe, tier, "fortune"));
+        pool.add(createTierPiece(pickaxe, tier, "silktouch"));
+        return pool;
+    }
+
+    private ItemStack createTierPiece(Material material, String tier, String variant) {
+        ItemStack item = new ItemStack(material);
+        String name = material.name();
+        if (name.endsWith("SWORD")) {
+            switch (tier) {
+                case "basic" -> applyBasicSwordEnchants(item);
+                case "rare", "legendary" -> applyAdvancedSwordEnchants(item);
+            }
+        } else if (name.endsWith("PICKAXE") && "silktouch".equals(variant)) {
+            switch (tier) {
+                case "basic" -> applyBasicSilkTouchPickaxeEnchants(item);
+                case "rare", "legendary" -> applyAdvancedSilkTouchPickaxeEnchants(item);
+            }
+            ItemMeta meta = item.getItemMeta();
+            if (meta != null) {
+                meta.setDisplayName("§b" + formatMaterialName(material) + " §7(Silk Touch)");
+                item.setItemMeta(meta);
+            }
+        } else if (name.endsWith("PICKAXE")) {
+            switch (tier) {
+                case "basic" -> applyBasicPickaxeEnchants(item);
+                case "rare", "legendary" -> applyAdvancedPickaxeEnchants(item);
+            }
+            ItemMeta meta = item.getItemMeta();
+            if (meta != null) {
+                meta.setDisplayName("§b" + formatMaterialName(material) + " §7(Fortune)");
+                item.setItemMeta(meta);
+            }
+        } else {
+            switch (tier) {
+                case "basic" -> applyBasicArmorEnchants(item);
+                case "rare", "legendary" -> applyAdvancedArmorEnchants(item);
+            }
+        }
+        return item;
+    }
+
+    private void applyBasicArmorEnchants(ItemStack item) {
+        addEnchant(item, org.bukkit.enchantments.Enchantment.PROTECTION, 2);
+        if (item.getType() == Material.DIAMOND_LEGGINGS) {
+            addEnchant(item, org.bukkit.enchantments.Enchantment.SWIFT_SNEAK, 2);
+        }
+        if (item.getType() == Material.DIAMOND_BOOTS) {
+            addEnchant(item, org.bukkit.enchantments.Enchantment.DEPTH_STRIDER, 2);
+        }
+    }
+
+    private void applyAdvancedArmorEnchants(ItemStack item) {
+        addEnchant(item, org.bukkit.enchantments.Enchantment.PROTECTION, 4);
+        addEnchant(item, org.bukkit.enchantments.Enchantment.UNBREAKING, 3);
+        addEnchant(item, org.bukkit.enchantments.Enchantment.MENDING, 1);
+
+        if (item.getType().name().endsWith("HELMET")) {
+            addEnchant(item, org.bukkit.enchantments.Enchantment.RESPIRATION, 3);
+            addEnchant(item, org.bukkit.enchantments.Enchantment.AQUA_AFFINITY, 1);
+        }
+        if (item.getType().name().endsWith("CHESTPLATE")) {
+            addEnchant(item, org.bukkit.enchantments.Enchantment.THORNS, 2);
+        }
+        if (item.getType().name().endsWith("LEGGINGS")) {
+            addEnchant(item, org.bukkit.enchantments.Enchantment.SWIFT_SNEAK, 3);
+        }
+        if (item.getType().name().endsWith("BOOTS")) {
+            addEnchant(item, org.bukkit.enchantments.Enchantment.FEATHER_FALLING, 4);
+            addEnchant(item, org.bukkit.enchantments.Enchantment.DEPTH_STRIDER, 3);
+        }
+    }
+
+    private void applyBasicSwordEnchants(ItemStack item) {
+        addEnchant(item, org.bukkit.enchantments.Enchantment.SHARPNESS, 2);
+        addEnchant(item, org.bukkit.enchantments.Enchantment.UNBREAKING, 1);
+    }
+
+    private void applyAdvancedSwordEnchants(ItemStack item) {
+        addEnchant(item, org.bukkit.enchantments.Enchantment.SHARPNESS, 5);
+        addEnchant(item, org.bukkit.enchantments.Enchantment.UNBREAKING, 3);
+        addEnchant(item, org.bukkit.enchantments.Enchantment.MENDING, 1);
+        addEnchant(item, org.bukkit.enchantments.Enchantment.LOOTING, 3);
+        addEnchant(item, org.bukkit.enchantments.Enchantment.FIRE_ASPECT, 2);
+        addEnchant(item, org.bukkit.enchantments.Enchantment.SWEEPING_EDGE, 3);
+    }
+
+    private void applyBasicPickaxeEnchants(ItemStack item) {
+        addEnchant(item, org.bukkit.enchantments.Enchantment.EFFICIENCY, 2);
+        addEnchant(item, org.bukkit.enchantments.Enchantment.UNBREAKING, 1);
+    }
+
+    private void applyAdvancedPickaxeEnchants(ItemStack item) {
+        addEnchant(item, org.bukkit.enchantments.Enchantment.EFFICIENCY, 5);
+        addEnchant(item, org.bukkit.enchantments.Enchantment.UNBREAKING, 3);
+        addEnchant(item, org.bukkit.enchantments.Enchantment.MENDING, 1);
+        addEnchant(item, org.bukkit.enchantments.Enchantment.FORTUNE, 3);
+    }
+
+    private void applyBasicSilkTouchPickaxeEnchants(ItemStack item) {
+        addEnchant(item, org.bukkit.enchantments.Enchantment.EFFICIENCY, 2);
+        addEnchant(item, org.bukkit.enchantments.Enchantment.UNBREAKING, 1);
+        addEnchant(item, org.bukkit.enchantments.Enchantment.SILK_TOUCH, 1);
+    }
+
+    private void applyAdvancedSilkTouchPickaxeEnchants(ItemStack item) {
+        addEnchant(item, org.bukkit.enchantments.Enchantment.EFFICIENCY, 5);
+        addEnchant(item, org.bukkit.enchantments.Enchantment.UNBREAKING, 3);
+        addEnchant(item, org.bukkit.enchantments.Enchantment.MENDING, 1);
+        addEnchant(item, org.bukkit.enchantments.Enchantment.SILK_TOUCH, 1);
+    }
+
+    private void addEnchant(ItemStack item, org.bukkit.enchantments.Enchantment enchantment, int level) {
+        if (item == null || enchantment == null) {
+            return;
+        }
+        try {
+            item.addUnsafeEnchantment(enchantment, level);
+        } catch (IllegalArgumentException ignored) {
+        }
+    }
+
+    private String normalizeTier(String tier, String fallback) {
+        String value = tier == null || tier.isBlank() ? fallback : tier;
+        return value == null ? "" : value.toLowerCase(Locale.ROOT);
+    }
+
+    private String formatMaterialName(Material material) {
+        String[] parts = material.name().split("_");
+        StringBuilder builder = new StringBuilder();
+        for (String part : parts) {
+            if (!builder.isEmpty()) {
+                builder.append(' ');
+            }
+            builder.append(part.charAt(0)).append(part.substring(1).toLowerCase(Locale.ROOT));
+        }
+        return builder.toString();
+    }
+
+    /**
+     * Öffnet eine Kiste mit Auswahl-GUI statt Animation.
+     * Spieler kann ein Pool-Item auswählen; garantierte Items + Bundle werden automatisch gegeben.
+     */
+    public void openCrateSelection(Player p, String crateId, boolean skipKeyCheck) {
+        if (!crates.containsKey(crateId)) {
+            p.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§cKiste nicht gefunden.");
+            return;
+        }
+        Crate c = crates.get(crateId);
+        if (!skipKeyCheck && !consumeKey(p, crateId)) {
+            p.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§cDu hast keinen passenden Schlüssel.");
+            return;
+        }
+
+        List<ItemStack> selectableItems = getPreviewItems(crateId);
+        if (selectableItems.isEmpty()) {
+            p.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§cFür diese Kiste sind keine Belohnungen konfiguriert.");
+            return;
+        }
+
+        int rows = Math.max(3, Math.min(6, (selectableItems.size() + 8) / 9 + 2));
+        int invSize = rows * 9;
+
+        String tierColor = "§7";
+        if (c.tier != null) {
+            switch (c.tier.toLowerCase()) {
+                case "legendary": tierColor = "§6"; break;
+                case "rare": tierColor = "§b"; break;
+                default: tierColor = "§a"; break;
+            }
+        }
+
+        Inventory inv = Bukkit.createInventory(null, invSize, tierColor + "§l✦ " + c.display + " §8- §fWähle dein Gear");
+
+        // Fill borders with glass
+        ItemStack glass = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
+        ItemMeta gm = glass.getItemMeta();
+        gm.setDisplayName("§8⬛");
+        gm.getPersistentDataContainer().set(new NamespacedKey(plugin, "donut_gui_action"), PersistentDataType.STRING, "crate_selection_border");
+        glass.setItemMeta(gm);
+        for (int i = 0; i < 9; i++) inv.setItem(i, glass);
+        for (int i = invSize - 9; i < invSize; i++) inv.setItem(i, glass);
+        for (int r = 1; r < rows - 1; r++) {
+            inv.setItem(r * 9, glass);
+            inv.setItem(r * 9 + 8, glass);
+        }
+
+        // Info item in top row (slot 4)
+        ItemStack info = new ItemStack(Material.NETHER_STAR);
+        ItemMeta infoMeta = info.getItemMeta();
+        infoMeta.setDisplayName(tierColor + "§l✦ " + c.display + " ✦");
+        List<String> infoLore = new ArrayList<>();
+        infoLore.add("§8────────────────");
+        infoLore.add("§7Wähle dein Gear!");
+        infoLore.add("§8────────────────");
+        infoMeta.setLore(infoLore);
+        infoMeta.getPersistentDataContainer().set(new NamespacedKey(plugin, "donut_gui_action"), PersistentDataType.STRING, "crate_selection_border");
+        info.setItemMeta(infoMeta);
+        inv.setItem(4, info);
+
+        // Preview items in inner slots
+        int slot = 10;
+        for (int i = 0; i < selectableItems.size(); i++) {
+            if (slot % 9 == 0) slot++;
+            if (slot % 9 == 8) slot += 2;
+            if (slot >= invSize - 9) break;
+
+            ItemStack display = selectableItems.get(i).clone();
+            ItemMeta meta = display.getItemMeta();
+            if (meta != null) {
+                List<String> lore = meta.hasLore() ? new ArrayList<>(meta.getLore()) : new ArrayList<>();
+                lore.add("§8────────────────");
+                lore.add("§a§l▶ Klicke zum Auswählen!");
+                meta.setLore(lore);
+                meta.getPersistentDataContainer().set(new NamespacedKey(plugin, "donut_gui_action"), PersistentDataType.STRING, "crate_select_pool:" + crateId + ":" + i);
+                display.setItemMeta(meta);
+            }
+            inv.setItem(slot, display);
+            slot++;
         }
 
         p.openInventory(inv);
+    }
 
-        // Animation: cycles steps, each tick replace the center item with random pool item; after cycles pick reward
-        AtomicInteger counter = new AtomicInteger(0);
-        List<ItemStack> displayPool = c.pool.stream().map(pe -> pe.item.clone()).collect(Collectors.toList());
-        final java.util.concurrent.atomic.AtomicReference<BukkitTask> taskRef = new java.util.concurrent.atomic.AtomicReference<>();
-        BukkitTask task = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
-            int count = counter.incrementAndGet();
-            int idx = (displayPool.isEmpty() ? 0 : (count % displayPool.size()));
-            if (!displayPool.isEmpty()) inv.setItem(13, displayPool.get(idx));
-            if (count >= c.cycles) {
-                if (taskRef.get() != null) taskRef.get().cancel();
-                List<ItemStack> rewards = new ArrayList<>();
-                for (PoolEntry ge : c.guaranteed) rewards.add(ge.item.clone());
-                if (!c.bundles.isEmpty()) {
-                    List<ItemStack> chosenBundle = c.bundles.get(random.nextInt(c.bundles.size()));
-                    for (ItemStack bi : chosenBundle) rewards.add(bi.clone());
-                }
-                ItemStack main = pickWeighted(c);
-                if (main != null) rewards.add(main.clone());
-                for (int i = 0; i < rewards.size(); i++) {
-                    rewards.set(i, applyTierEnchantIfNeeded(rewards.get(i), c.tier));
-                }
-                Bukkit.getScheduler().runTask(plugin, () -> {
-                    p.closeInventory();
-                    StringBuilder names = new StringBuilder();
-                    for (ItemStack reward : rewards) {
-                        if (p.getInventory().firstEmpty() == -1) p.getWorld().dropItemNaturally(p.getLocation(), reward);
-                        else p.getInventory().addItem(reward);
-                        if (names.length() > 0) names.append(", ");
-                        names.append(reward.getAmount()).append("x ").append(reward.getType().name());
-                    }
-                    p.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§aDu hast erhalten: §e" + names.toString());
-                    p.getWorld().playSound(p.getLocation(), org.bukkit.Sound.ENTITY_PLAYER_LEVELUP, 1f, 1f);
-                    Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                        try {
-                            org.bukkit.Particle part;
-                            try { part = org.bukkit.Particle.valueOf("FIREWORKS_SPARK"); } catch (IllegalArgumentException ex) { part = org.bukkit.Particle.CLOUD; }
-                            p.getWorld().spawnParticle(part, p.getLocation().add(0,1,0), 40);
-                        } catch (Throwable t) {
-                            p.getWorld().spawnParticle(org.bukkit.Particle.CLOUD, p.getLocation().add(0,1,0), 40);
-                        }
-                    }, 2L);
-                });
+    /**
+     * Gibt die Belohnungen nachdem ein Spieler ein Pool-Item ausgewählt hat.
+     */
+    public void giveSelectionRewards(Player p, String crateId, int poolIndex) {
+        Crate c = crates.get(crateId);
+        if (c == null) return;
+        List<ItemStack> previewItems = getPreviewItems(crateId);
+        if (poolIndex < 0 || poolIndex >= previewItems.size()) return;
+
+        // Selected preview item (already has tier enchants applied)
+        ItemStack selected = previewItems.get(poolIndex).clone();
+        List<ItemStack> rewards = new ArrayList<>();
+        rewards.add(selected);
+
+        // Give items
+        p.closeInventory();
+        StringBuilder names = new StringBuilder();
+        for (ItemStack reward : rewards) {
+            if (p.getInventory().firstEmpty() == -1) p.getWorld().dropItemNaturally(p.getLocation(), reward);
+            else p.getInventory().addItem(reward);
+            if (!names.isEmpty()) names.append(", ");
+            names.append(reward.getAmount()).append("x ").append(reward.getType().name());
+        }
+        p.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§aDu hast erhalten: §e" + names.toString());
+        p.getWorld().playSound(p.getLocation(), org.bukkit.Sound.ENTITY_PLAYER_LEVELUP, 1f, 1f);
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            try {
+                org.bukkit.Particle part;
+                try { part = org.bukkit.Particle.valueOf("FIREWORKS_SPARK"); } catch (IllegalArgumentException ex) { part = org.bukkit.Particle.CLOUD; }
+                p.getWorld().spawnParticle(part, p.getLocation().add(0,1,0), 40);
+            } catch (Throwable t) {
+                p.getWorld().spawnParticle(org.bukkit.Particle.CLOUD, p.getLocation().add(0,1,0), 40);
             }
-        }, 0L, c.ticks);
-        taskRef.set(task);
+        }, 2L);
     }
 
     private ItemStack applyTierEnchantIfNeeded(ItemStack item, String tier) {

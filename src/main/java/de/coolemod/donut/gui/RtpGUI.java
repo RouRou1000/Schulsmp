@@ -24,11 +24,11 @@ public class RtpGUI implements InventoryHolder {
         filler.setItemMeta(fillerMeta);
         for (int i = 0; i < 27; i++) inventory.setItem(i, filler);
 
-        // Overworld - Slot 11
-        ItemStack overworld = new ItemStack(Material.GRASS_BLOCK);
+        // Farm Welt - Slot 11
+        ItemStack overworld = new ItemStack(Material.HAY_BLOCK);
         ItemMeta owMeta = overworld.getItemMeta();
-        owMeta.setDisplayName("§a§lOverworld");
-        owMeta.setLore(List.of("", "§7Teleportiert dich an eine", "§7zufällige Position in der §aOverworld§7.", "", "§e▸ Klicke zum Teleportieren"));
+        owMeta.setDisplayName("§a§lFarm Welt");
+        owMeta.setLore(List.of("", "§7Teleportiert dich an eine", "§7zufällige Position in der §aFarm Welt§7.", "", "§e▸ Klicke zum Teleportieren"));
         overworld.setItemMeta(owMeta);
         inventory.setItem(11, overworld);
 

@@ -3,6 +3,7 @@ package de.coolemod.donut.commands;
 import de.coolemod.donut.DonutPlugin;
 import de.coolemod.donut.listeners.PacketCheckListener;
 import de.coolemod.donut.listeners.PacketCheckListener.PlayerClientInfo;
+import de.coolemod.donut.managers.AntiCheatHistoryManager;
 import de.coolemod.donut.managers.WipeManager;
 import org.bukkit.BanList;
 import org.bukkit.Bukkit;
@@ -36,6 +37,7 @@ public class PacketCheckCommand implements CommandExecutor, TabCompleter, Listen
     private final DonutPlugin plugin;
     private final PacketCheckListener listener;
     private final WipeManager wipeManager;
+    private final AntiCheatHistoryManager antiCheatHistoryManager;
 
     private static final List<String> BAN_REASONS = List.of(
             "Hacking", "Cheating", "KillAura", "Fly", "Speed",
@@ -45,15 +47,17 @@ public class PacketCheckCommand implements CommandExecutor, TabCompleter, Listen
     );
 
     private static final List<String> BAN_DURATIONS = List.of(
-            "30m", "1h", "6h", "12h", "1d", "3d", "7d", "14d", "30d", "90d", "1y"
+            "30m", "1h", "6h", "12h", "1d", "3d", "7d", "14d", "30d", "60d", "90d", "1y"
     );
 
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd.MM.yyyy HH:mm");
 
-    public PacketCheckCommand(DonutPlugin plugin, PacketCheckListener listener, WipeManager wipeManager) {
+    public PacketCheckCommand(DonutPlugin plugin, PacketCheckListener listener, WipeManager wipeManager,
+                              AntiCheatHistoryManager antiCheatHistoryManager) {
         this.plugin = plugin;
         this.listener = listener;
         this.wipeManager = wipeManager;
+        this.antiCheatHistoryManager = antiCheatHistoryManager;
         Bukkit.getPluginManager().registerEvents(this, plugin);
     }
 
@@ -102,6 +106,7 @@ public class PacketCheckCommand implements CommandExecutor, TabCompleter, Listen
         switch (sub) {
             case "bann", "ban" -> handleBan(sender, args);
             case "banwipe" -> handleBanWipe(sender, args);
+            case "probe" -> sender.sendMessage("§8[§c§lAC§8] §7Die Probe wurde entfernt.");
             case "unban", "entbannen" -> handleUnban(sender, args);
             case "sort" -> handleSort(sender);
             case "list" -> handleList(sender);
@@ -133,6 +138,8 @@ public class PacketCheckCommand implements CommandExecutor, TabCompleter, Listen
         sender.sendMessage("  §7Client: " + info.getClientDisplayName());
         sender.sendMessage("  §7Brand: §f" + info.brand);
         sender.sendMessage("  §7Ping: §e" + target.getPing() + "ms");
+        sender.sendMessage("  §7Strikes: §e" + getStrikeCount(target.getUniqueId()));
+        sender.sendMessage("  §7Verdachts-Score: " + formatSuspicionScore(info.suspicionScore));
         sender.sendMessage("");
 
         sender.sendMessage("  §e§lRegistrierte Channels §8(" + info.channels.size() + ")§7:");
@@ -152,7 +159,13 @@ public class PacketCheckCommand implements CommandExecutor, TabCompleter, Listen
         if (info.suspicious) {
             sender.sendMessage("  §4§l⚠ VERDÄCHTIG!");
             sender.sendMessage("  §cGrund: §f" + info.suspicionReason);
-            sender.sendMessage("  §cVorschlag: §f/ac bann " + target.getName() + " Hacking 30d");
+            if (!info.evidence.isEmpty()) {
+                sender.sendMessage("  §cEvidenz:");
+                for (String evidence : info.evidence) {
+                    sender.sendMessage("    §8▸ §f" + evidence);
+                }
+            }
+            sender.sendMessage("  §cVorschlag: §f/ac bann " + target.getName() + " Hacking " + formatDurationToken(getNextBanDuration(target.getUniqueId())));
             if (!info.detectedClients.isEmpty()) {
                 sender.sendMessage("  §cErkannte Clients:");
                 for (String client : info.detectedClients) {
@@ -168,46 +181,29 @@ public class PacketCheckCommand implements CommandExecutor, TabCompleter, Listen
     }
 
     private void handleBan(CommandSender sender, String[] args) {
-        if (args.length < 4) {
-            sender.sendMessage("§8[§c§lAC§8] §7Nutze: §c/ac bann <spieler> <grund> <zeit>");
-            sender.sendMessage("§8[§c§lAC§8] §7Beispiel: §f/ac bann Steve Hacking 30d");
-            sender.sendMessage("§8[§c§lAC§8] §7Zeiten: §f30m, 1h, 6h, 12h, 1d, 7d, 14d, 30d, 90d, 1y");
+        BanPlan plan = resolveBanPlan(sender, args, "bann");
+        if (plan == null) {
             return;
         }
 
-        String targetName = args[1];
-        String durationInput = args[args.length - 1];
-        Duration duration = parseDuration(durationInput);
-        if (duration == null || duration.isZero() || duration.isNegative()) {
-            sender.sendMessage("§8[§c§lAC§8] §cUngültige Zeit: §e" + durationInput);
-            return;
-        }
-
-        String reason = String.join(" ", Arrays.copyOfRange(args, 2, args.length - 1)).trim();
-        if (reason.isEmpty()) {
-            sender.sendMessage("§8[§c§lAC§8] §cBitte gib einen Grund an.");
-            return;
-        }
-
-        @SuppressWarnings("deprecation")
-        OfflinePlayer target = Bukkit.getOfflinePlayer(targetName);
-        if (target.getName() == null && !target.hasPlayedBefore()) {
-            sender.sendMessage("§8[§c§lAC§8] §cSpieler §e" + targetName + " §cwurde nie auf dem Server gesehen.");
-            return;
-        }
-
-        Date expiresAt = Date.from(Instant.now().plus(duration));
+        Date expiresAt = Date.from(Instant.now().plus(plan.duration()));
         String source = sender.getName();
-        String name = target.getName() != null ? target.getName() : targetName;
+        String name = plan.playerName();
 
-        Bukkit.getBanList(BanList.Type.NAME).addBan(name, reason, expiresAt, source);
+        Bukkit.getBanList(BanList.Type.NAME).addBan(name, plan.reason(), expiresAt, source);
+        int strike = recordStrike(plan, source);
 
-        Player onlineTarget = target.getPlayer();
+        Player onlineTarget = plan.target().getPlayer();
         if (onlineTarget != null && onlineTarget.isOnline()) {
             String kickMsg = isBedrockPlayer(onlineTarget.getName())
-                    ? buildBedrockBanMessage(reason, formatDuration(duration))
-                    : buildJavaBanMessage(reason, "Dauer", formatDuration(duration), DATE_FORMAT.format(expiresAt), source);
+                    ? buildBedrockBanMessage(plan.reason(), formatDuration(plan.duration()))
+                    : buildJavaBanMessage(plan.reason(), "Dauer", formatDuration(plan.duration()), DATE_FORMAT.format(expiresAt), source);
             onlineTarget.kickPlayer(kickMsg);
+        }
+
+        if (plan.automaticDuration()) {
+            sender.sendMessage("§8[§c§lAC§8] §7Automatische Bannzeit gewählt: §f" + formatDuration(plan.duration())
+                    + " §8(Strike §e" + strike + "§8)");
         }
 
         for (Player p : Bukkit.getOnlinePlayers()) {
@@ -217,8 +213,9 @@ public class PacketCheckCommand implements CommandExecutor, TabCompleter, Listen
                 p.sendMessage("  §c§lAntiCheat §8- §7Bann");
                 p.sendMessage("§c§l━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
                 p.sendMessage("  §7Spieler: §f" + name);
-                p.sendMessage("  §7Grund: §f" + reason);
-                p.sendMessage("  §7Dauer: §f" + formatDuration(duration));
+                p.sendMessage("  §7Grund: §f" + plan.reason());
+                p.sendMessage("  §7Dauer: §f" + formatDuration(plan.duration()));
+                p.sendMessage("  §7Strike: §f" + strike);
                 p.sendMessage("  §7Bis: §f" + DATE_FORMAT.format(expiresAt));
                 p.sendMessage("  §7Von: §f" + source);
                 p.sendMessage("§c§l━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
@@ -226,46 +223,24 @@ public class PacketCheckCommand implements CommandExecutor, TabCompleter, Listen
         }
 
         if (!(sender instanceof Player)) {
-            sender.sendMessage("§8[§c§lAC§8] §a" + name + " §7wurde für §f" + formatDuration(duration) + " §7gebannt.");
+            sender.sendMessage("§8[§c§lAC§8] §a" + name + " §7wurde für §f" + formatDuration(plan.duration()) + " §7gebannt.");
         }
     }
 
     private void handleBanWipe(CommandSender sender, String[] args) {
-        if (args.length < 4) {
-            sender.sendMessage("§8[§c§lAC§8] §7Nutze: §c/ac banwipe <spieler> <grund> <zeit>");
-            sender.sendMessage("§8[§c§lAC§8] §7Bannt UND wiped den Spieler (Inventar, Geld, etc.)");
+        BanPlan plan = resolveBanPlan(sender, args, "banwipe");
+        if (plan == null) {
             return;
         }
 
-        String targetName = args[1];
-        String durationInput = args[args.length - 1];
-        Duration duration = parseDuration(durationInput);
-        if (duration == null || duration.isZero() || duration.isNegative()) {
-            sender.sendMessage("§8[§c§lAC§8] §cUngültige Zeit: §e" + durationInput);
-            return;
-        }
-
-        String reason = String.join(" ", Arrays.copyOfRange(args, 2, args.length - 1)).trim();
-        if (reason.isEmpty()) {
-            sender.sendMessage("§8[§c§lAC§8] §cBitte gib einen Grund an.");
-            return;
-        }
-
-        @SuppressWarnings("deprecation")
-        OfflinePlayer target = Bukkit.getOfflinePlayer(targetName);
-        if (target.getName() == null && !target.hasPlayedBefore()) {
-            sender.sendMessage("§8[§c§lAC§8] §cSpieler §e" + targetName + " §cwurde nie auf dem Server gesehen.");
-            return;
-        }
-
-        String name = target.getName() != null ? target.getName() : targetName;
+        String name = plan.playerName();
 
         // Wipe durchführen
         if (wipeManager != null) {
-            if (wipeManager.hasBackup(target.getUniqueId())) {
+            if (wipeManager.hasBackup(plan.target().getUniqueId())) {
                 sender.sendMessage("§8[§c§lAC§8] §7Hinweis: Altes Backup wird überschrieben.");
             }
-            boolean wiped = wipeManager.wipePlayer(target.getUniqueId(), name, sender.getName());
+            boolean wiped = wipeManager.wipePlayer(plan.target().getUniqueId(), name, sender.getName());
             if (!wiped) {
                 sender.sendMessage("§8[§c§lAC§8] §cWipe fehlgeschlagen! Bann wird trotzdem durchgeführt.");
             }
@@ -273,17 +248,23 @@ public class PacketCheckCommand implements CommandExecutor, TabCompleter, Listen
             sender.sendMessage("§8[§c§lAC§8] §cWipeManager nicht verfügbar! Nur Bann wird durchgeführt.");
         }
 
-        Date expiresAt = Date.from(Instant.now().plus(duration));
+        Date expiresAt = Date.from(Instant.now().plus(plan.duration()));
         String source = sender.getName();
 
-        Bukkit.getBanList(BanList.Type.NAME).addBan(name, reason, expiresAt, source);
+        Bukkit.getBanList(BanList.Type.NAME).addBan(name, plan.reason(), expiresAt, source);
+        int strike = recordStrike(plan, source);
 
-        Player onlineTarget = target.getPlayer();
+        Player onlineTarget = plan.target().getPlayer();
         if (onlineTarget != null && onlineTarget.isOnline()) {
             String kickMsg = isBedrockPlayer(onlineTarget.getName())
-                    ? buildBedrockBanMessage(reason, formatDuration(duration))
-                    : buildJavaBanMessage(reason, "Dauer", formatDuration(duration), DATE_FORMAT.format(expiresAt), source);
+                    ? buildBedrockBanMessage(plan.reason(), formatDuration(plan.duration()))
+                    : buildJavaBanMessage(plan.reason(), "Dauer", formatDuration(plan.duration()), DATE_FORMAT.format(expiresAt), source);
             onlineTarget.kickPlayer(kickMsg);
+        }
+
+        if (plan.automaticDuration()) {
+            sender.sendMessage("§8[§c§lAC§8] §7Automatische Bannzeit gewählt: §f" + formatDuration(plan.duration())
+                    + " §8(Strike §e" + strike + "§8)");
         }
 
         for (Player p : Bukkit.getOnlinePlayers()) {
@@ -293,8 +274,9 @@ public class PacketCheckCommand implements CommandExecutor, TabCompleter, Listen
                 p.sendMessage("  §c§lAntiCheat §8- §4§lBann + Wipe");
                 p.sendMessage("§c§l━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
                 p.sendMessage("  §7Spieler: §f" + name);
-                p.sendMessage("  §7Grund: §f" + reason);
-                p.sendMessage("  §7Dauer: §f" + formatDuration(duration));
+                p.sendMessage("  §7Grund: §f" + plan.reason());
+                p.sendMessage("  §7Dauer: §f" + formatDuration(plan.duration()));
+                p.sendMessage("  §7Strike: §f" + strike);
                 p.sendMessage("  §7Bis: §f" + DATE_FORMAT.format(expiresAt));
                 p.sendMessage("  §7Von: §f" + source);
                 p.sendMessage("  §4§lDaten wurden gewiped!");
@@ -304,7 +286,7 @@ public class PacketCheckCommand implements CommandExecutor, TabCompleter, Listen
         }
 
         if (!(sender instanceof Player)) {
-            sender.sendMessage("§8[§c§lAC§8] §a" + name + " §7wurde für §f" + formatDuration(duration) + " §7gebannt und gewiped.");
+            sender.sendMessage("§8[§c§lAC§8] §a" + name + " §7wurde für §f" + formatDuration(plan.duration()) + " §7gebannt und gewiped.");
         }
     }
 
@@ -328,8 +310,8 @@ public class PacketCheckCommand implements CommandExecutor, TabCompleter, Listen
         List<Map.Entry<UUID, PlayerClientInfo>> entries = allData.entrySet().stream()
             .filter(e -> Bukkit.getPlayer(e.getKey()) != null)
             .sorted((a, b) -> {
-                int suspA = a.getValue().suspicious ? 1 : 0;
-                int suspB = b.getValue().suspicious ? 1 : 0;
+                int suspA = a.getValue().suspicionScore;
+                int suspB = b.getValue().suspicionScore;
                 if (suspB != suspA) return Integer.compare(suspB, suspA);
                 return a.getValue().playerName.compareToIgnoreCase(b.getValue().playerName);
             })
@@ -364,6 +346,7 @@ public class PacketCheckCommand implements CommandExecutor, TabCompleter, Listen
                     line.append("§eVerdächtig");
                 }
                 sender.sendMessage(line.toString());
+                sender.sendMessage("      §7Score: " + formatSuspicionScore(info.suspicionScore));
                 sender.sendMessage("      §7Brand: §f" + info.brand);
                 if (!info.suspicionReason.isEmpty()) {
                     sender.sendMessage("      §7Grund: §f" + info.suspicionReason);
@@ -419,7 +402,8 @@ public class PacketCheckCommand implements CommandExecutor, TabCompleter, Listen
             sender.sendMessage("  " + status + "§f" + p.getName()
                 + " §8→ " + info.getClientDisplayName()
                 + " §8(§7" + info.brand + "§8)"
-                + " §8[§7" + p.getPing() + "ms§8]");
+                + " §8[§7" + p.getPing() + "ms§8]"
+                + " §8[" + formatSuspicionScore(info.suspicionScore) + "§8]");
         }
 
         sender.sendMessage("");
@@ -434,13 +418,14 @@ public class PacketCheckCommand implements CommandExecutor, TabCompleter, Listen
         sender.sendMessage("§c§l━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
         sender.sendMessage("");
         sender.sendMessage("  §c/ac <spieler> §8- §7Prüft einen Spieler");
-        sender.sendMessage("  §c/ac bann <spieler> <grund> <zeit> §8- §7Bannt einen Spieler");
-        sender.sendMessage("  §c/ac banwipe <spieler> <grund> <zeit> §8- §7Bannt + Wiped");
+        sender.sendMessage("  §c/ac bann <spieler> <grund> [zeit] §8- §7Bannt einen Spieler");
+        sender.sendMessage("  §c/ac banwipe <spieler> <grund> [zeit] §8- §7Bannt + Wiped");
         sender.sendMessage("  §c/ac unban <spieler> §8- §7Entbannt einen Spieler");
         sender.sendMessage("  §c/ac sort §8- §7Sortiert nach Hacked-Clients");
         sender.sendMessage("  §c/ac list §8- §7Alle Spieler mit Client");
         sender.sendMessage("  §c/ac help §8- §7Diese Hilfe");
         sender.sendMessage("");
+        sender.sendMessage("  §7Auto-Bannstaffel: §f14d §8→ §f30d §8→ §f60d §8→ §f90d");
         sender.sendMessage("  §7Erkennt: §4Meteor§7, §4Wurst§7, §4Impact§7, §4Aristois§7,");
         sender.sendMessage("  §4LiquidBounce§7, §4RusherHack§7, §4Future§7, §4Sigma §7u.v.m.");
         sender.sendMessage("");
@@ -478,8 +463,8 @@ public class PacketCheckCommand implements CommandExecutor, TabCompleter, Listen
                         .filter(s -> s.toLowerCase().startsWith(input))
                         .collect(Collectors.toList());
             }
-            if (args.length == 4) {
-                String input = args[3].toLowerCase();
+            if (args.length >= 4) {
+                String input = args[args.length - 1].toLowerCase();
                 return BAN_DURATIONS.stream()
                         .filter(s -> s.startsWith(input))
                         .collect(Collectors.toList());
@@ -506,7 +491,7 @@ public class PacketCheckCommand implements CommandExecutor, TabCompleter, Listen
     }
 
     private String buildBedrockBanMessage(String reason, String timeValue) {
-        return "Gebannt\nGrund: " + reason + "\nZeit: " + timeValue + "\nDiscord: discord.gg/9c8KZh49tU";
+        return "Gebannt\nGrund: " + reason + "\nZeit: " + timeValue + "\nDiscord: discord.gg/gP8g4V2e";
     }
 
     private String buildJavaBanMessage(String reason, String timeLabel, String timeValue, String expiresStr, String source) {
@@ -516,20 +501,96 @@ public class PacketCheckCommand implements CommandExecutor, TabCompleter, Listen
                 + "§7" + timeLabel + ": §f" + timeValue + "\n"
                 + "§7Läuft ab: §f" + expiresStr + "\n"
                 + "§7Gebannt von: §f" + source + "\n\n"
-                + "§8Wenn das ein Fehler war, erstelle ein Ticket:\n§b§ndiscord.gg/9c8KZh49tU\n\n"
+                + "§8Wenn das ein Fehler war, erstelle ein Ticket:\n§b§ndiscord.gg/gP8g4V2e\n\n"
                 + "§c§l━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n";
     }
 
     private static boolean isHackedChannel(String channel) {
-        String lower = channel.toLowerCase();
-        return lower.contains("meteor") || lower.contains("wurst") ||
-            lower.contains("impact") || lower.contains("aristois") ||
-            lower.contains("inertia") || lower.contains("liquidbounce") ||
-            lower.contains("rusherhack") || lower.contains("fdp") ||
-            lower.contains("future") || lower.contains("konas") ||
-            lower.contains("lambda") || lower.contains("salhack") ||
-            lower.contains("nhack") || lower.contains("xulu") ||
-            lower.contains("phobos") || lower.contains("sigma");
+        return PacketCheckListener.isSuspiciousChannelName(channel);
+    }
+
+    private String formatSuspicionScore(int score) {
+        if (score >= 80) {
+            return "§4" + score;
+        }
+        if (score >= 40) {
+            return "§e" + score;
+        }
+        if (score > 0) {
+            return "§6" + score;
+        }
+        return "§a0";
+    }
+
+    private int getStrikeCount(UUID playerId) {
+        return antiCheatHistoryManager != null ? antiCheatHistoryManager.getStrikeCount(playerId) : 0;
+    }
+
+    private Duration getNextBanDuration(UUID playerId) {
+        return antiCheatHistoryManager != null ? antiCheatHistoryManager.getNextBanDuration(playerId) : Duration.ofDays(14);
+    }
+
+    private int recordStrike(BanPlan plan, String source) {
+        if (antiCheatHistoryManager == null) {
+            return 1;
+        }
+        return antiCheatHistoryManager.recordBan(plan.target().getUniqueId(), plan.playerName(), plan.reason(), plan.duration(), source);
+    }
+
+    private BanPlan resolveBanPlan(CommandSender sender, String[] args, String subcommand) {
+        if (args.length < 3) {
+            sender.sendMessage("§8[§c§lAC§8] §7Nutze: §c/ac " + subcommand + " <spieler> <grund> [zeit]");
+            sender.sendMessage("§8[§c§lAC§8] §7Ohne Zeit greift automatisch: §f14d §8→ §f30d §8→ §f60d §8→ §f90d");
+            return null;
+        }
+
+        String targetName = args[1];
+        @SuppressWarnings("deprecation")
+        OfflinePlayer target = Bukkit.getOfflinePlayer(targetName);
+        if (target.getName() == null && !target.hasPlayedBefore()) {
+            sender.sendMessage("§8[§c§lAC§8] §cSpieler §e" + targetName + " §cwurde nie auf dem Server gesehen.");
+            return null;
+        }
+
+        Duration duration = null;
+        int reasonEndExclusive = args.length;
+        if (args.length >= 4) {
+            Duration parsed = parseDuration(args[args.length - 1]);
+            if (parsed != null && !parsed.isZero() && !parsed.isNegative()) {
+                duration = parsed;
+                reasonEndExclusive = args.length - 1;
+            }
+        }
+
+        String reason = String.join(" ", Arrays.copyOfRange(args, 2, reasonEndExclusive)).trim();
+        if (reason.isEmpty()) {
+            sender.sendMessage("§8[§c§lAC§8] §cBitte gib einen Grund an.");
+            return null;
+        }
+
+        boolean automaticDuration = false;
+        if (duration == null) {
+            duration = getNextBanDuration(target.getUniqueId());
+            automaticDuration = true;
+        }
+
+        String playerName = target.getName() != null ? target.getName() : targetName;
+        return new BanPlan(target, playerName, reason, duration, automaticDuration);
+    }
+
+    private String formatDurationToken(Duration duration) {
+        long days = duration.toDays();
+        if (days > 0 && duration.toHours() % 24 == 0) {
+            return days + "d";
+        }
+        long hours = duration.toHours();
+        if (hours > 0 && duration.toMinutes() % 60 == 0) {
+            return hours + "h";
+        }
+        return Math.max(duration.toMinutes(), 1) + "m";
+    }
+
+    private record BanPlan(OfflinePlayer target, String playerName, String reason, Duration duration, boolean automaticDuration) {
     }
 
     private Duration parseDuration(String input) {

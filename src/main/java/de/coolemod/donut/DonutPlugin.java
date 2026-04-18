@@ -31,6 +31,7 @@ public final class DonutPlugin extends JavaPlugin {
     // Manager
     private EconomyManager economy;
     private ShardsManager shards;
+    private SpawnShardManager spawnShardManager;
     private PlayerStatsManager stats;
     private de.coolemod.donut.managers.SidebarManager scoreboardManager;
     private SpawnerManager spawnerManager;
@@ -53,6 +54,9 @@ public final class DonutPlugin extends JavaPlugin {
     // NEW: Wipe und PacketCheck
     private WipeManager wipeManager;
     private PacketCheckListener packetCheckListener;
+    // NEW: Settings System
+    private de.coolemod.donut.managers.SettingsManager settingsManager;
+    private AntiCheatHistoryManager antiCheatHistoryManager;
     // NEW: LuckPerms Auto-Setup
     private Object luckPermsSetup;
 
@@ -76,6 +80,13 @@ public final class DonutPlugin extends JavaPlugin {
             this.economy = new EconomyManager(this);
             markStartupPhase("Erstelle ShardsManager");
             this.shards = new ShardsManager(this);
+            markStartupPhase("Erstelle SpawnShardManager");
+            try {
+                this.spawnShardManager = new SpawnShardManager(this);
+            } catch (Throwable throwable) {
+                this.spawnShardManager = null;
+                getLogger().warning("SpawnShardManager konnte nicht initialisiert werden: " + throwable.getMessage());
+            }
             markStartupPhase("Erstelle PlayerStatsManager");
             this.stats = new PlayerStatsManager(this);
             markStartupPhase("Erstelle SidebarManager");
@@ -110,6 +121,20 @@ public final class DonutPlugin extends JavaPlugin {
             this.tpaManager = new TpaManager(this, combatManager, homeManager);
             markStartupPhase("Erstelle WipeManager");
             this.wipeManager = new WipeManager(this);
+            markStartupPhase("Erstelle SettingsManager");
+            try {
+                this.settingsManager = new de.coolemod.donut.managers.SettingsManager(this);
+            } catch (Throwable throwable) {
+                this.settingsManager = null;
+                getLogger().warning("SettingsManager konnte nicht initialisiert werden: " + throwable.getMessage());
+            }
+            markStartupPhase("Erstelle AntiCheatHistoryManager");
+            try {
+                this.antiCheatHistoryManager = new AntiCheatHistoryManager(this);
+            } catch (Throwable throwable) {
+                this.antiCheatHistoryManager = null;
+                getLogger().warning("AntiCheatHistoryManager konnte nicht initialisiert werden: " + throwable.getMessage());
+            }
             markStartupPhase("Erstelle PacketCheckListener");
             try {
                 this.packetCheckListener = new PacketCheckListener(this);
@@ -123,6 +148,7 @@ public final class DonutPlugin extends JavaPlugin {
             getLogger().info("[DEBUG] Registriere Listener...");
             getLogger().info("[DEBUG] PlayerDeathListener...");
             getServer().getPluginManager().registerEvents(new PlayerDeathListener(this), this);
+            getServer().getPluginManager().registerEvents(new DeathMessageListener(this), this);
             getLogger().info("[DEBUG] SpawnerBreakListener...");
             getServer().getPluginManager().registerEvents(new SpawnerBreakListener(this), this);
             getLogger().info("[DEBUG] InventoryClickListener...");
@@ -131,6 +157,12 @@ public final class DonutPlugin extends JavaPlugin {
             getServer().getPluginManager().registerEvents(new InventoryCloseListener(this), this);
             getLogger().info("[DEBUG] InventoryDragListener...");
             getServer().getPluginManager().registerEvents(new InventoryDragListener(this), this);
+            getLogger().info("[DEBUG] SpawnShardManager...");
+            if (spawnShardManager != null) {
+                getServer().getPluginManager().registerEvents(spawnShardManager, this);
+            } else {
+                getLogger().warning("SpawnShardManager ist nicht verfügbar - Spawn-Shards deaktiviert.");
+            }
             getLogger().info("[DEBUG] GlassPaneProtectionListener...");
             getServer().getPluginManager().registerEvents(new GlassPaneProtectionListener(this), this);
             getLogger().info("[DEBUG] SignProtectionListener...");
@@ -153,6 +185,12 @@ public final class DonutPlugin extends JavaPlugin {
             getServer().getPluginManager().registerEvents(new OrderListener(this, orderSystem), this);
             getLogger().info("[DEBUG] ShopListener_NEW...");
             getServer().getPluginManager().registerEvents(new de.coolemod.donut.listeners.ShopListener_NEW(this), this);
+            getLogger().info("[DEBUG] SettingsListener...");
+            if (settingsManager != null) {
+                getServer().getPluginManager().registerEvents(new de.coolemod.donut.listeners.SettingsListener(this), this);
+            } else {
+                getLogger().warning("SettingsListener wurde nicht registriert, da SettingsManager fehlt.");
+            }
             getLogger().info("[DEBUG] PacketCheck Listener...");
             if (packetCheckListener != null) {
                 getServer().getPluginManager().registerEvents(packetCheckListener, this);
@@ -189,6 +227,8 @@ public final class DonutPlugin extends JavaPlugin {
             registerCommand("rtp", new de.coolemod.donut.commands.WarpCommand(this), null);
             getLogger().info("[DEBUG] HelpCommand...");
             registerCommand("help", new de.coolemod.donut.commands.HelpCommand(this), null);
+            getLogger().info("[DEBUG] DiscordCommand...");
+            registerCommand("discord", new de.coolemod.donut.commands.DiscordCommand(), null);
             getLogger().info("[DEBUG] TutorialCommand...");
             registerCommand("tutorial", new TutorialCommand(this), null);
             getLogger().info("[DEBUG] MessageCommand...");
@@ -214,7 +254,7 @@ public final class DonutPlugin extends JavaPlugin {
             registerCommand("tpdeny", tpaCommand, null);
             getLogger().info("[DEBUG] AC/Wipe/Spawn/Rank Commands...");
             if (packetCheckListener != null) {
-                PacketCheckCommand acCmd = new PacketCheckCommand(this, packetCheckListener, wipeManager);
+                PacketCheckCommand acCmd = new PacketCheckCommand(this, packetCheckListener, wipeManager, antiCheatHistoryManager);
                 registerCommand("ac", acCmd, acCmd);
                 getServer().getPluginManager().registerEvents(acCmd, this);
             } else {
@@ -241,7 +281,26 @@ public final class DonutPlugin extends JavaPlugin {
             ClanCommand clanCommand = new ClanCommand(this);
             registerCommand("clan", clanCommand, clanCommand);
             registerCommand("c", clanCommand, clanCommand);
+            getLogger().info("[DEBUG] SettingsCommand...");
+            if (settingsManager != null) {
+                registerCommand("settings", new de.coolemod.donut.commands.SettingsCommand(this), null);
+            } else {
+                registerCommand("settings", (sender, command, label, args) -> {
+                    sender.sendMessage("§8[§d§lSETTINGS§8] §cDas Settings-System ist derzeit nicht verfügbar.");
+                    return true;
+                }, null);
+            }
             getLogger().info("[DEBUG] Commands erfolgreich registriert.");
+
+            markStartupPhase("Starte SpawnShardManager");
+            if (spawnShardManager != null) {
+                try {
+                    spawnShardManager.start();
+                } catch (Throwable throwable) {
+                    getLogger().warning("SpawnShardManager konnte nicht gestartet werden: " + throwable.getMessage());
+                    spawnShardManager = null;
+                }
+            }
 
             // Scoreboard starten
             markStartupPhase("Starte Scoreboard");
@@ -281,12 +340,15 @@ public final class DonutPlugin extends JavaPlugin {
         // Daten speichern (null-safe)
         if (economy != null) economy.save();
         if (shards != null) shards.save();
+        if (spawnShardManager != null) spawnShardManager.stop();
         if (stats != null) stats.save();
         if (auctionManager != null) auctionManager.save();
         if (ordersManager != null) ordersManager.save();
         if (spawnerManager != null) spawnerManager.saveData();
         if (sellMultiplierManager != null) sellMultiplierManager.save();
         if (clanManager != null) clanManager.save();
+        if (settingsManager != null) settingsManager.save();
+        if (antiCheatHistoryManager != null) antiCheatHistoryManager.save();
         getLogger().info("SchulCore deaktiviert und Daten gespeichert.");
     }
 
@@ -312,6 +374,8 @@ public final class DonutPlugin extends JavaPlugin {
     public TpaManager getTpaManager() { return tpaManager; }  // NEW
     public WipeManager getWipeManager() { return wipeManager; }  // NEW
     public PacketCheckListener getPacketCheckListener() { return packetCheckListener; }  // NEW
+    public de.coolemod.donut.managers.SettingsManager getSettingsManager() { return settingsManager; }  // NEW
+    public AntiCheatHistoryManager getAntiCheatHistoryManager() { return antiCheatHistoryManager; }
     public SellMultiplierManager getSellMultiplier() { return sellMultiplierManager; }
 
     public void ensureAutoOp() {
