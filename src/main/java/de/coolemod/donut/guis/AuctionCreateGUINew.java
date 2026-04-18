@@ -508,8 +508,10 @@ public class AuctionCreateGUINew {
             sign.setLine(3, "");
             sign.update(false, false);
 
-            // Open sign for editing
-            player.openSign(sign);
+            // Open sign for editing (2 tick delay for client to receive block change)
+            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                player.openSign(sign);
+            }, 2L);
 
             // Remove sign after 10 seconds if not edited
             Bukkit.getScheduler().runTaskLater(plugin, () -> {

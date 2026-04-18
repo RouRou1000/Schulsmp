@@ -279,7 +279,9 @@ public class AuctionCreateGUI_V2 {
             sign.setLine(3, "");
             sign.update(false, false);
             
-            player.openSign(sign);
+            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                player.openSign(sign);
+            }, 2L);
             
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
                 block.setType(originalType);

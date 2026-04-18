@@ -331,7 +331,9 @@ public class AuctionHouseListener implements Listener {
             sign.setLine(3, "");
             sign.update(false, false);
             
-            player.openSign(sign);
+            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                player.openSign(sign);
+            }, 2L);
             
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
                 block.setType(originalType);
@@ -357,7 +359,9 @@ public class AuctionHouseListener implements Listener {
             sign.setLine(3, "");
             sign.update(false, false);
             
-            player.openSign(sign);
+            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                player.openSign(sign);
+            }, 2L);
             
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
                 block.setType(originalType);
