@@ -328,15 +328,17 @@ public class AuctionHouseListener implements Listener {
 
             block.setType(Material.OAK_SIGN);
             org.bukkit.block.Sign sign = (org.bukkit.block.Sign) block.getState();
-            sign.setLine(0, "");
-            sign.setLine(1, "^^^^^^^^^^^^^^");
-            sign.setLine(2, "Item-Name suchen");
-            sign.setLine(3, "");
-            sign.update(false, false);
+            sign.setWaxed(false);
+            org.bukkit.block.sign.SignSide front = sign.getSide(org.bukkit.block.sign.Side.FRONT);
+            front.setLine(0, "");
+            front.setLine(1, "^^^^^^^^^^^^^^");
+            front.setLine(2, "Item-Name suchen");
+            front.setLine(3, "");
+            sign.update(true, false);
 
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                player.openSign(sign);
-            }, 2L);
+                player.openSign(sign, org.bukkit.block.sign.Side.FRONT);
+            }, 3L);
 
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
                 cleanupAhSign(player);
@@ -362,15 +364,17 @@ public class AuctionHouseListener implements Listener {
 
             block.setType(Material.OAK_SIGN);
             org.bukkit.block.Sign sign = (org.bukkit.block.Sign) block.getState();
-            sign.setLine(0, "");
-            sign.setLine(1, "^^^^^^^^^^^^^^");
-            sign.setLine(2, "Preis eingeben");
-            sign.setLine(3, "");
-            sign.update(false, false);
+            sign.setWaxed(false);
+            org.bukkit.block.sign.SignSide front = sign.getSide(org.bukkit.block.sign.Side.FRONT);
+            front.setLine(0, "");
+            front.setLine(1, "^^^^^^^^^^^^^^");
+            front.setLine(2, "Preis eingeben");
+            front.setLine(3, "");
+            sign.update(true, false);
 
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                player.openSign(sign);
-            }, 2L);
+                player.openSign(sign, org.bukkit.block.sign.Side.FRONT);
+            }, 3L);
 
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
                 cleanupAhSign(player);

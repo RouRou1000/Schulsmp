@@ -787,13 +787,17 @@ public class OrderListener implements Listener {
 
             block.setType(Material.OAK_SIGN);
             Sign sign = (Sign) block.getState();
-            sign.setLine(0, initialValue == null ? "" : initialValue);
-            sign.setLine(1, "^^^^^^^^^^^^^^");
-            sign.setLine(2, title);
-            sign.setLine(3, hint);
-            sign.update(false, false);
+            sign.setWaxed(false);
+            org.bukkit.block.sign.SignSide front = sign.getSide(org.bukkit.block.sign.Side.FRONT);
+            front.setLine(0, initialValue == null ? "" : initialValue);
+            front.setLine(1, "^^^^^^^^^^^^^^");
+            front.setLine(2, title);
+            front.setLine(3, hint);
+            sign.update(true, false);
 
-            player.openSign(sign);
+            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                player.openSign(sign, org.bukkit.block.sign.Side.FRONT);
+            }, 3L);
 
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
                 if (player.hasMetadata(ORDER_SIGN_MODE)) {
