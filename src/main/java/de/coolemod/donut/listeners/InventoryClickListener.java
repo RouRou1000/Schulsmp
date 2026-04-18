@@ -6,6 +6,7 @@ import de.coolemod.donut.utils.NumberFormatter;
 import de.coolemod.donut.gui.OrdersGUI;
 import de.coolemod.donut.gui.SlayShopGUI;
 import de.coolemod.donut.gui.ShopGUI;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.event.EventHandler;
@@ -404,7 +405,11 @@ public class InventoryClickListener implements Listener {
                     ((org.bukkit.entity.Player)e.getWhoClicked()).closeInventory();
                     return;
                 case "orders_my":
-                    new OrdersGUI(plugin).openMyOrders((org.bukkit.entity.Player)e.getWhoClicked());
+                    org.bukkit.entity.Player ordersMyPlayer = (org.bukkit.entity.Player)e.getWhoClicked();
+                    ordersMyPlayer.closeInventory();
+                    Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                        ordersMyPlayer.openInventory(plugin.getOrderSystem().createMyOrdersGUI(ordersMyPlayer.getUniqueId()));
+                    }, 2L);
                     return;
                 case "orders_back":
                     new OrdersGUI(plugin).open((org.bukkit.entity.Player)e.getWhoClicked(), 1);
@@ -977,7 +982,10 @@ public class InventoryClickListener implements Listener {
                 if (plugin.getOrdersManager().cancelOrder(player.getUniqueId(), id)) {
                     player.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§a✓ Order storniert und Geld erstattet!");
                     player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_ITEM_PICKUP, 1f, 1f);
-                    new OrdersGUI(plugin).openMyOrders(player);
+                    player.closeInventory();
+                    Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                        player.openInventory(plugin.getOrderSystem().createMyOrdersGUI(player.getUniqueId()));
+                    }, 2L);
                 } else {
                     player.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§c✗ Konnte Order nicht stornieren.");
                 }
