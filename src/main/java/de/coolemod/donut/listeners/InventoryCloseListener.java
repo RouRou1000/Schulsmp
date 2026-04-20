@@ -42,6 +42,18 @@ public class InventoryCloseListener implements Listener {
         if (title.contains("ɪᴛᴇᴍѕ ᴠᴇʀᴋᴀᴜꜰᴇɴ") || title.contains("ITEMS VERKAUFEN")) {
             returnItemsToPlayer(p, inv, 10, 43);
         }
+
+        // Collect Items GUI - sync remaining items back to pending collections
+        if (title.contains("Collect Items") && !p.hasMetadata("collect_gui_navigating")) {
+            java.util.List<ItemStack> remaining = new java.util.ArrayList<>();
+            for (int i = 0; i < 45; i++) {
+                ItemStack item = inv.getItem(i);
+                if (item != null && item.getType() != Material.AIR) {
+                    remaining.add(item.clone());
+                }
+            }
+            plugin.getOrderSystem().syncPendingFromCollectGUI(p.getUniqueId(), remaining);
+        }
     }
 
     /**

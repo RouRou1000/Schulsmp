@@ -167,8 +167,86 @@ public class InventoryClickListener implements Listener {
             return;
         }
 
+        // Collect Items GUI: Erlaube Item-Entnahme (Slots 0-44), blockiere nur Bottom Row (45-53)
+        if (title.contains("Collect Items")) {
+            int slot = e.getRawSlot();
+            if (slot >= 45 && slot <= 53) {
+                // Bottom row buttons - block click but allow action handling below
+                e.setCancelled(true);
+                e.setResult(org.bukkit.event.Event.Result.DENY);
+                // Handle button actions
+                if (clicked != null && clicked.hasItemMeta()) {
+                    org.bukkit.entity.Player cp = (org.bukkit.entity.Player) e.getWhoClicked();
+                    org.bukkit.NamespacedKey actionKey = new org.bukkit.NamespacedKey(plugin, "donut_gui_action");
+                    String action = clicked.getItemMeta().getPersistentDataContainer()
+                        .getOrDefault(actionKey, org.bukkit.persistence.PersistentDataType.STRING, "");
+                    switch (action) {
+                        case "collect_all" -> {
+                            // Sync GUI state, then collect remaining into inventory
+                            syncCollectGUI(cp, e.getView().getTopInventory());
+                            int collected = plugin.getOrderSystem().collectAllOrderItems(cp);
+                            cp.setMetadata("collect_gui_navigating", new org.bukkit.metadata.FixedMetadataValue(plugin, true));
+                            cp.closeInventory();
+                            cp.removeMetadata("collect_gui_navigating", plugin);
+                            if (collected > 0) {
+                                cp.sendMessage("§a✓ Du hast §f" + collected + "x §aItem(s) abgeholt.");
+                                cp.playSound(cp.getLocation(), org.bukkit.Sound.ENTITY_ITEM_PICKUP, 1f, 1.1f);
+                            }
+                            Bukkit.getScheduler().runTaskLater(plugin, () ->
+                                cp.openInventory(plugin.getOrderSystem().createCollectGUI(cp.getUniqueId())), 2L);
+                        }
+                        case "collect_drop_all" -> {
+                            syncCollectGUI(cp, e.getView().getTopInventory());
+                            int dropped = plugin.getOrderSystem().dropAllOrderItems(cp);
+                            cp.setMetadata("collect_gui_navigating", new org.bukkit.metadata.FixedMetadataValue(plugin, true));
+                            cp.closeInventory();
+                            cp.removeMetadata("collect_gui_navigating", plugin);
+                            if (dropped > 0) {
+                                cp.sendMessage("§e↓ Du hast §f" + dropped + "x §eItem(s) fallen gelassen.");
+                                cp.playSound(cp.getLocation(), org.bukkit.Sound.ENTITY_ITEM_PICKUP, 1f, 0.8f);
+                            }
+                            Bukkit.getScheduler().runTaskLater(plugin, () ->
+                                cp.openInventory(plugin.getOrderSystem().createCollectGUI(cp.getUniqueId())), 2L);
+                        }
+                        case "collect_prev" -> {
+                            syncCollectGUI(cp, e.getView().getTopInventory());
+                            de.coolemod.donut.orders.OrderSystem.BrowseSession s = plugin.getOrderSystem().getBrowseSession(cp.getUniqueId());
+                            int prevPage = Math.max(0, s.collectPage - 1);
+                            s.collectPage = prevPage;
+                            cp.setMetadata("collect_gui_navigating", new org.bukkit.metadata.FixedMetadataValue(plugin, true));
+                            cp.closeInventory();
+                            cp.removeMetadata("collect_gui_navigating", plugin);
+                            Bukkit.getScheduler().runTaskLater(plugin, () ->
+                                cp.openInventory(plugin.getOrderSystem().createCollectGUI(cp.getUniqueId(), prevPage)), 2L);
+                        }
+                        case "collect_back" -> {
+                            syncCollectGUI(cp, e.getView().getTopInventory());
+                            cp.setMetadata("collect_gui_navigating", new org.bukkit.metadata.FixedMetadataValue(plugin, true));
+                            cp.closeInventory();
+                            cp.removeMetadata("collect_gui_navigating", plugin);
+                            Bukkit.getScheduler().runTaskLater(plugin, () ->
+                                cp.openInventory(plugin.getOrderSystem().createMyOrdersGUI(cp.getUniqueId())), 2L);
+                        }
+                        case "collect_next" -> {
+                            syncCollectGUI(cp, e.getView().getTopInventory());
+                            de.coolemod.donut.orders.OrderSystem.BrowseSession s = plugin.getOrderSystem().getBrowseSession(cp.getUniqueId());
+                            int nextPage = s.collectPage + 1;
+                            s.collectPage = nextPage;
+                            cp.setMetadata("collect_gui_navigating", new org.bukkit.metadata.FixedMetadataValue(plugin, true));
+                            cp.closeInventory();
+                            cp.removeMetadata("collect_gui_navigating", plugin);
+                            Bukkit.getScheduler().runTaskLater(plugin, () ->
+                                cp.openInventory(plugin.getOrderSystem().createCollectGUI(cp.getUniqueId(), nextPage)), 2L);
+                        }
+                    }
+                }
+            }
+            // Slots 0-44 and player inventory: allow freely (player can take items)
+            return;
+        }
+
         // KRITISCH: Blockiere ALLE Shop-GUIs SOFORT und KOMPLETT
-        if (title.contains("Slay Shop") || title.contains("SHOP") || title.contains("SCHUL") || title.contains("FOOD") || title.contains("GEAR") || title.contains("Wähle dein Gear") || title.contains("NETHER") || title.contains("SHARDS") || title.contains("ᴀᴜᴋᴛɪᴏɴѕʜᴀᴜѕ") || title.contains("AUKTIONSHAUS") || title.contains("Orders") || title.contains("Kiste") || title.contains("KISTE") || title.contains("Wähle dein Gear") || title.contains("DONUT CORE") || title.contains("ᴍᴇɪɴᴇ ᴀᴜᴋᴛɪᴏɴᴇɴ") || title.contains("MEINE AUKTIONEN") || title.contains("Hilfe") || title.contains("SELL MULTI") || title.contains("ᴄᴏʟʟᴇᴄᴛ ɪᴛᴇᴍs") || title.contains("ᴏʀᴅᴇʀ ᴅᴇᴛᴀɪʟs") || title.contains("ᴏʀᴅᴇʀ sᴛᴏʀɴɪᴇʀᴇɴ") || title.contains("ɪᴛᴇᴍs ᴀʙʜᴏʟᴇɴ") || title.contains("Collect Items") || title.contains("ʙᴀʟᴛᴏᴘ")) {
+        if (title.contains("Slay Shop") || title.contains("SHOP") || title.contains("SCHUL") || title.contains("FOOD") || title.contains("GEAR") || title.contains("Wähle dein Gear") || title.contains("NETHER") || title.contains("SHARDS") || title.contains("ᴀᴜᴋᴛɪᴏɴѕʜᴀᴜѕ") || title.contains("AUKTIONSHAUS") || title.contains("Orders") || title.contains("Kiste") || title.contains("KISTE") || title.contains("Wähle dein Gear") || title.contains("DONUT CORE") || title.contains("ᴍᴇɪɴᴇ ᴀᴜᴋᴛɪᴏɴᴇɴ") || title.contains("MEINE AUKTIONEN") || title.contains("Hilfe") || title.contains("SELL MULTI") || title.contains("ᴄᴏʟʟᴇᴄᴛ ɪᴛᴇᴍs") || title.contains("ᴏʀᴅᴇʀ ᴅᴇᴛᴀɪʟs") || title.contains("ᴏʀᴅᴇʀ sᴛᴏʀɴɪᴇʀᴇɴ") || title.contains("ɪᴛᴇᴍs ᴀʙʜᴏʟᴇɴ") || title.contains("ʙᴀʟᴛᴏᴘ")) {
             e.setCancelled(true);
             e.setResult(org.bukkit.event.Event.Result.DENY);
         }
@@ -1065,5 +1143,20 @@ public class InventoryClickListener implements Listener {
             // Navigation Actions werden durch donut_gui_action weiter unten behandelt
             return;
         }
+    }
+
+    /**
+     * Syncs the collect GUI contents back to pendingCollections.
+     * Call before navigating away or performing bulk actions.
+     */
+    private void syncCollectGUI(org.bukkit.entity.Player player, org.bukkit.inventory.Inventory topInv) {
+        java.util.List<ItemStack> remaining = new java.util.ArrayList<>();
+        for (int i = 0; i < 45; i++) {
+            ItemStack item = topInv.getItem(i);
+            if (item != null && item.getType() != Material.AIR) {
+                remaining.add(item.clone());
+            }
+        }
+        plugin.getOrderSystem().syncPendingFromCollectGUI(player.getUniqueId(), remaining);
     }
 }

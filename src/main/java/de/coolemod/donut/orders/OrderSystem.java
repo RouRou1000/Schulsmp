@@ -335,6 +335,34 @@ public class OrderSystem {
         return getPendingItemCount(orderId) > 0;
     }
 
+    /**
+     * Called when the collect GUI is closed. Clears all pending items for the player
+     * and re-adds whatever items remain in the GUI (not taken by the player).
+     */
+    public void syncPendingFromCollectGUI(UUID playerUUID, List<ItemStack> remainingItems) {
+        // Get all orders with pending items for this player
+        List<Order> playerOrders = orders.values().stream()
+            .filter(o -> o.owner.equals(playerUUID))
+            .filter(o -> hasPendingItems(o.id))
+            .toList();
+
+        // Clear all pending for this player's orders
+        for (Order order : playerOrders) {
+            clearPendingItems(order.id);
+        }
+
+        // Put remaining items back into the first order that had pending
+        if (!remainingItems.isEmpty() && !playerOrders.isEmpty()) {
+            String firstOrderId = playerOrders.get(0).id;
+            pendingCollections.put(firstOrderId, new ArrayList<>(remainingItems));
+        }
+
+        // Cleanup any closed orders that no longer have pending items
+        for (Order order : playerOrders) {
+            cleanupClosedOrder(order.id);
+        }
+    }
+
     public int collectOrderItems(Player player, String orderId) {
         Order order = orders.get(orderId);
         if (order == null || !order.owner.equals(player.getUniqueId())) {
@@ -667,14 +695,11 @@ public class OrderSystem {
 
         // Flatten all pending items across orders into individual stacks
         List<ItemStack> allItems = new ArrayList<>();
-        Map<Integer, String> itemToOrderId = new java.util.LinkedHashMap<>();
         for (Order order : withPending) {
             List<ItemStack> pending = pendingCollections.getOrDefault(order.id, new ArrayList<>());
             for (ItemStack item : pending) {
                 if (item != null && !item.getType().isAir()) {
-                    int idx = allItems.size();
                     allItems.add(item.clone());
-                    itemToOrderId.put(idx, order.id);
                 }
             }
         }
@@ -685,15 +710,12 @@ public class OrderSystem {
 
         Inventory inv = Bukkit.createInventory(null, 54, "§8ORDERS -> Collect Items");
 
-        // Place items (slots 0–44)
+        // Place items (slots 0–44) - NO PDC marking, plain items players can take
         int start = page * itemsPerPage;
         int end = Math.min(start + itemsPerPage, allItems.size());
         for (int i = start; i < end; i++) {
             int slot = i - start;
-            ItemStack display = allItems.get(i).clone();
-            String orderId = itemToOrderId.get(i);
-            mark(display, "collect_single", orderId);
-            inv.setItem(slot, display);
+            inv.setItem(slot, allItems.get(i).clone());
         }
 
         if (allItems.isEmpty()) {
