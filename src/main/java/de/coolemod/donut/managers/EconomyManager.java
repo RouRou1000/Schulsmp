@@ -4,6 +4,7 @@ import de.coolemod.donut.DonutPlugin;
 import de.coolemod.donut.storage.DataManager;
 import org.bukkit.configuration.file.FileConfiguration;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -43,6 +44,10 @@ public class EconomyManager {
     public void set(UUID uuid, double amount) {
         balances.put(uuid, amount);
         save();
+    }
+
+    public Map<UUID, Double> getBalances() {
+        return Collections.unmodifiableMap(balances);
     }
 
     public void save() {

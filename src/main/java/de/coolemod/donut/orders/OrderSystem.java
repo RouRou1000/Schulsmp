@@ -99,8 +99,6 @@ public class OrderSystem {
     public boolean deliverToOrder(String orderId, Player deliverer, int amount) {
         Order order = orders.get(orderId);
         if (order == null) return false;
-        if (order.owner.equals(deliverer.getUniqueId())) return false; // Can't deliver to own order
-
         int canDeliver = Math.min(amount, order.requiredAmount - order.delivered);
         if (canDeliver <= 0) return false;
 
@@ -245,12 +243,14 @@ public class OrderSystem {
         public String searchQuery;
         public int itemSelectPage;
         public String itemSelectSearch;
+        public int collectPage;
 
         public BrowseSession() {
             this.page = 0;
             this.searchQuery = null;
             this.itemSelectPage = 0;
             this.itemSelectSearch = null;
+            this.collectPage = 0;
         }
     }
 
@@ -654,7 +654,22 @@ public class OrderSystem {
     }
 
     public Inventory createCollectGUI(UUID player) {
-        Inventory inv = Bukkit.createInventory(null, 54, "§a§l" + toSmallCaps("ITEMS ABHOLEN"));
+        return createCollectGUI(player, 0);
+    }
+
+    public Inventory createCollectGUI(UUID player, int page) {
+        // Collect all pending orders
+        List<Order> withPending = orders.values().stream()
+            .filter(o -> o.owner.equals(player))
+            .filter(o -> hasPendingItems(o.id))
+            .sorted(Comparator.comparingLong((Order o) -> o.timestamp).reversed())
+            .toList();
+
+        int totalPending = withPending.stream().mapToInt(o -> getPendingItemCount(o.id)).sum();
+        int totalPages = Math.max(1, (withPending.size() + 27) / 28);
+        page = Math.max(0, Math.min(page, totalPages - 1));
+
+        Inventory inv = Bukkit.createInventory(null, 54, "§a§l" + toSmallCaps("ITEMS ABHOLEN") + " §8(" + (page + 1) + "/" + totalPages + ")");
 
         // Fill borders
         ItemStack border = mark(new ItemStack(Material.BLACK_STAINED_GLASS_PANE), "border", null);
@@ -665,15 +680,6 @@ public class OrderSystem {
             inv.setItem(i, border);
         }
 
-        // Collect all pending orders
-        List<Order> withPending = orders.values().stream()
-            .filter(o -> o.owner.equals(player))
-            .filter(o -> hasPendingItems(o.id))
-            .sorted(Comparator.comparingLong((Order o) -> o.timestamp).reversed())
-            .toList();
-
-        int totalPending = withPending.stream().mapToInt(o -> getPendingItemCount(o.id)).sum();
-
         // Info header
         ItemStack info = new ItemStack(Material.CHEST);
         ItemMeta infoMeta = info.getItemMeta();
@@ -682,19 +688,23 @@ public class OrderSystem {
         infoLore.add("§8────────────────");
         infoLore.add("§7Orders mit Items: §f" + withPending.size());
         infoLore.add("§7Gesamt abholbar: §a" + totalPending + "x");
+        infoLore.add("§7Seite: §f" + (page + 1) + "§7/§f" + totalPages);
         infoLore.add("§8────────────────");
         infoMeta.setLore(infoLore);
         info.setItemMeta(infoMeta);
         inv.setItem(4, info);
 
-        // Show orders with pending items
+        // Show orders with pending items (paginated)
+        int start = page * 28;
+        int end = Math.min(start + 28, withPending.size());
         int slot = 10;
-        for (Order order : withPending) {
+        for (int i = start; i < end; i++) {
             if (slot == 17) slot = 19;
             if (slot == 26) slot = 28;
             if (slot == 35) slot = 37;
             if (slot >= 44) break;
 
+            Order order = withPending.get(i);
             int pending = getPendingItemCount(order.id);
             ItemStack display = order.itemType.clone();
             ItemMeta displayMeta = display.getItemMeta();
@@ -726,11 +736,27 @@ public class OrderSystem {
             inv.setItem(22, empty);
         }
 
+        // Navigation - prev page
+        if (page > 0) {
+            ItemStack prevBtn = mark(new ItemStack(Material.ARROW), "collect_prev", null);
+            ItemMeta prevMeta = prevBtn.getItemMeta();
+            prevMeta.setDisplayName("§e§l◄ " + toSmallCaps("VORHERIGE SEITE"));
+            prevBtn.setItemMeta(prevMeta);
+            inv.setItem(45, prevBtn);
+        } else {
+            // Back button
+            ItemStack back = mark(new ItemStack(Material.ARROW), "collect_back", null);
+            ItemMeta backBtnMeta = back.getItemMeta();
+            backBtnMeta.setDisplayName("§e§lZURÜCK");
+            back.setItemMeta(backBtnMeta);
+            inv.setItem(45, back);
+        }
+
         // Collect All button
         if (totalPending > 0) {
             ItemStack collectAll = mark(new ItemStack(Material.LIME_STAINED_GLASS_PANE), "collect_all", null);
             ItemMeta collectAllMeta = collectAll.getItemMeta();
-            collectAllMeta.setDisplayName("§a§l✓ ALLES ABHOLEN");
+            collectAllMeta.setDisplayName("§a§l✓ " + toSmallCaps("ALLES ABHOLEN"));
             List<String> collectAllLore = new ArrayList<>();
             collectAllLore.add("§8────────────────");
             collectAllLore.add("§7Alle §a" + totalPending + "x §7Items");
@@ -739,15 +765,40 @@ public class OrderSystem {
             collectAllLore.add("§a▸ Klicken zum Einsammeln");
             collectAllMeta.setLore(collectAllLore);
             collectAll.setItemMeta(collectAllMeta);
-            inv.setItem(49, collectAll);
+            inv.setItem(48, collectAll);
         }
 
-        // Back button
-        ItemStack back = mark(new ItemStack(Material.ARROW), "collect_back", null);
-        ItemMeta backBtnMeta = back.getItemMeta();
-        backBtnMeta.setDisplayName("§e§lZURÜCK");
-        back.setItemMeta(backBtnMeta);
-        inv.setItem(45, back);
+        // Drop All button
+        if (totalPending > 0) {
+            ItemStack dropAll = mark(new ItemStack(Material.DROPPER), "collect_drop_all", null);
+            ItemMeta dropMeta = dropAll.getItemMeta();
+            dropMeta.setDisplayName("§e§l↓ " + toSmallCaps("ALLES DROPPEN"));
+            List<String> dropLore = new ArrayList<>();
+            dropLore.add("§8────────────────");
+            dropLore.add("§7Alle §a" + totalPending + "x §7Items");
+            dropLore.add("§7auf den Boden werfen.");
+            dropLore.add("§8────────────────");
+            dropLore.add("§e▸ Klicken zum Droppen");
+            dropMeta.setLore(dropLore);
+            dropAll.setItemMeta(dropMeta);
+            inv.setItem(50, dropAll);
+        }
+
+        // Page info
+        ItemStack pageInfo = mark(new ItemStack(Material.PAPER), "disabled", null);
+        ItemMeta pageMeta = pageInfo.getItemMeta();
+        pageMeta.setDisplayName("§e§l📄 " + toSmallCaps("SEITE") + " §f" + (page + 1) + "§7/§f" + totalPages);
+        pageInfo.setItemMeta(pageMeta);
+        inv.setItem(49, pageInfo);
+
+        // Navigation - next page
+        if (page < totalPages - 1) {
+            ItemStack nextBtn = mark(new ItemStack(Material.ARROW), "collect_next", null);
+            ItemMeta nextMeta = nextBtn.getItemMeta();
+            nextMeta.setDisplayName("§e§l" + toSmallCaps("NÄCHSTE SEITE") + " ►");
+            nextBtn.setItemMeta(nextMeta);
+            inv.setItem(53, nextBtn);
+        }
 
         return inv;
     }
@@ -762,6 +813,28 @@ public class OrderSystem {
         int total = 0;
         for (Order order : withPending) {
             total += collectOrderItems(player, order.id);
+        }
+        return total;
+    }
+
+    public int dropAllOrderItems(Player player) {
+        UUID uuid = player.getUniqueId();
+        List<Order> withPending = orders.values().stream()
+            .filter(o -> o.owner.equals(uuid))
+            .filter(o -> hasPendingItems(o.id))
+            .toList();
+
+        int total = 0;
+        for (Order order : withPending) {
+            List<ItemStack> pending = pendingCollections.get(order.id);
+            if (pending == null || pending.isEmpty()) continue;
+            for (ItemStack item : pending) {
+                if (item == null || item.getType() == Material.AIR) continue;
+                total += item.getAmount();
+                player.getWorld().dropItemNaturally(player.getLocation(), item.clone());
+            }
+            clearPendingItems(order.id);
+            cleanupClosedOrder(order.id);
         }
         return total;
     }

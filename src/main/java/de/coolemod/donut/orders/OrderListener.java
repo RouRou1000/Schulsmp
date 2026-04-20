@@ -95,12 +95,6 @@ public class OrderListener implements Listener {
                         return;
                     }
 
-                    if (order.owner.equals(player.getUniqueId())) {
-                        player.sendMessage("§cDu kannst deine eigene Order nicht beliefern!");
-                        player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_VILLAGER_NO, 1f, 1f);
-                        return;
-                    }
-
                     Inventory deliveryInv = orderSystem.createDeliveryChestGUI(player, orderId);
                     if (deliveryInv != null) {
                         player.closeInventory();
@@ -281,6 +275,43 @@ public class OrderListener implements Listener {
                 player.closeInventory();
                 Bukkit.getScheduler().runTaskLater(plugin, () -> {
                     player.openInventory(orderSystem.createCollectGUI(player.getUniqueId()));
+                }, 2L);
+                break;
+            }
+
+            case "collect_drop_all": {
+                int totalDropped = orderSystem.dropAllOrderItems(player);
+                if (totalDropped > 0) {
+                    player.sendMessage("§e↓ Du hast §f" + totalDropped + "x §eItem(s) fallen gelassen.");
+                    player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_ITEM_PICKUP, 1f, 0.8f);
+                } else {
+                    player.sendMessage("§cEs gibt aktuell nichts zu droppen.");
+                }
+                player.closeInventory();
+                Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                    player.openInventory(orderSystem.createCollectGUI(player.getUniqueId()));
+                }, 2L);
+                break;
+            }
+
+            case "collect_prev": {
+                OrderSystem.BrowseSession collectPrevSession = orderSystem.getBrowseSession(player.getUniqueId());
+                int prevPage = Math.max(0, collectPrevSession.collectPage - 1);
+                collectPrevSession.collectPage = prevPage;
+                player.closeInventory();
+                Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                    player.openInventory(orderSystem.createCollectGUI(player.getUniqueId(), prevPage));
+                }, 2L);
+                break;
+            }
+
+            case "collect_next": {
+                OrderSystem.BrowseSession collectNextSession = orderSystem.getBrowseSession(player.getUniqueId());
+                int nextPage = collectNextSession.collectPage + 1;
+                collectNextSession.collectPage = nextPage;
+                player.closeInventory();
+                Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                    player.openInventory(orderSystem.createCollectGUI(player.getUniqueId(), nextPage));
                 }, 2L);
                 break;
             }

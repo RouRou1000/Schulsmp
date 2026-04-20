@@ -213,6 +213,8 @@ public final class DonutPlugin extends JavaPlugin {
             registerCommand("pay", new PayCommand(this), null);
             getLogger().info("[DEBUG] BalanceCommand...");
             registerCommand("balance", new BalanceCommand(this), null);
+            getLogger().info("[DEBUG] BaltopCommand...");
+            registerCommand("baltop", new BaltopCommand(this), null);
             getLogger().info("[DEBUG] AuctionHouseCommand...");
             registerCommand("ah", new AuctionHouseCommand(this, auctionHouse), null);
             getLogger().info("[DEBUG] OrderCommand...");

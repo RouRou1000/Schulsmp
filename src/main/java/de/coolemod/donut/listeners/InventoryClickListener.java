@@ -168,9 +168,49 @@ public class InventoryClickListener implements Listener {
         }
 
         // KRITISCH: Blockiere ALLE Shop-GUIs SOFORT und KOMPLETT
-        if (title.contains("Slay Shop") || title.contains("SHOP") || title.contains("SCHUL") || title.contains("FOOD") || title.contains("GEAR") || title.contains("Wähle dein Gear") || title.contains("NETHER") || title.contains("SHARDS") || title.contains("ᴀᴜᴋᴛɪᴏɴѕʜᴀᴜѕ") || title.contains("AUKTIONSHAUS") || title.contains("Orders") || title.contains("Kiste") || title.contains("KISTE") || title.contains("Wähle dein Gear") || title.contains("DONUT CORE") || title.contains("ᴍᴇɪɴᴇ ᴀᴜᴋᴛɪᴏɴᴇɴ") || title.contains("MEINE AUKTIONEN") || title.contains("Hilfe") || title.contains("SELL MULTI") || title.contains("ᴄᴏʟʟᴇᴄᴛ ɪᴛᴇᴍs") || title.contains("ᴏʀᴅᴇʀ ᴅᴇᴛᴀɪʟs") || title.contains("ᴏʀᴅᴇʀ sᴛᴏʀɴɪᴇʀᴇɴ") || title.contains("ɪᴛᴇᴍs ᴀʙʜᴏʟᴇɴ")) {
+        if (title.contains("Slay Shop") || title.contains("SHOP") || title.contains("SCHUL") || title.contains("FOOD") || title.contains("GEAR") || title.contains("Wähle dein Gear") || title.contains("NETHER") || title.contains("SHARDS") || title.contains("ᴀᴜᴋᴛɪᴏɴѕʜᴀᴜѕ") || title.contains("AUKTIONSHAUS") || title.contains("Orders") || title.contains("Kiste") || title.contains("KISTE") || title.contains("Wähle dein Gear") || title.contains("DONUT CORE") || title.contains("ᴍᴇɪɴᴇ ᴀᴜᴋᴛɪᴏɴᴇɴ") || title.contains("MEINE AUKTIONEN") || title.contains("Hilfe") || title.contains("SELL MULTI") || title.contains("ᴄᴏʟʟᴇᴄᴛ ɪᴛᴇᴍs") || title.contains("ᴏʀᴅᴇʀ ᴅᴇᴛᴀɪʟs") || title.contains("ᴏʀᴅᴇʀ sᴛᴏʀɴɪᴇʀᴇɴ") || title.contains("ɪᴛᴇᴍs ᴀʙʜᴏʟᴇɴ") || title.contains("ʙᴀʟᴛᴏᴘ")) {
             e.setCancelled(true);
             e.setResult(org.bukkit.event.Event.Result.DENY);
+        }
+
+        // Baltop GUI: Seitennavigation
+        if (title.contains("ʙᴀʟᴛᴏᴘ")) {
+            e.setCancelled(true);
+            e.setResult(org.bukkit.event.Event.Result.DENY);
+            if (clicked == null || !clicked.hasItemMeta()) return;
+            org.bukkit.entity.Player bp = (org.bukkit.entity.Player) e.getWhoClicked();
+
+            if (e.getSlot() == 45 && clicked.getType() == Material.ARROW) {
+                // Vorherige Seite
+                String t = title;
+                int currentPage = 0;
+                try {
+                    int openP = t.indexOf('(');
+                    int slash = t.indexOf('/');
+                    if (openP >= 0 && slash > openP) {
+                        currentPage = Integer.parseInt(t.substring(openP + 1, slash).trim()) - 1;
+                    }
+                } catch (Exception ignored) {}
+                bp.playSound(bp.getLocation(), org.bukkit.Sound.UI_BUTTON_CLICK, 0.5f, 1f);
+                bp.openInventory(new de.coolemod.donut.commands.BaltopCommand(plugin).createBaltopGUI(bp.getUniqueId(), currentPage - 1));
+                return;
+            }
+            if (e.getSlot() == 53 && clicked.getType() == Material.ARROW) {
+                // Nächste Seite
+                String t = title;
+                int currentPage = 0;
+                try {
+                    int openP = t.indexOf('(');
+                    int slash = t.indexOf('/');
+                    if (openP >= 0 && slash > openP) {
+                        currentPage = Integer.parseInt(t.substring(openP + 1, slash).trim()) - 1;
+                    }
+                } catch (Exception ignored) {}
+                bp.playSound(bp.getLocation(), org.bukkit.Sound.UI_BUTTON_CLICK, 0.5f, 1f);
+                bp.openInventory(new de.coolemod.donut.commands.BaltopCommand(plugin).createBaltopGUI(bp.getUniqueId(), currentPage + 1));
+                return;
+            }
+            return;
         }
 
         // Sell-GUI: Erlaube Item-Platzierung, aber blockiere Buttons

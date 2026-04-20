@@ -26,6 +26,9 @@ commands:
   balance:
     description: "Zeigt deinen Kontostand an"
     usage: /<command>
+  baltop:
+    description: "Zeigt die reichsten Spieler"
+    usage: /baltop [seite]
   crate:
     description: "Öffnet Kisten-Menü oder verwaltet Kisten (admin)"
     usage: /crate | /crate give <player> <crateId> <amount> | /crate reload
