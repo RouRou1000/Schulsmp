@@ -219,8 +219,19 @@ public class InventoryClickListener implements Listener {
                                 cp.openInventory(plugin.getOrderSystem().createCollectGUI(cp.getUniqueId())), 2L);
                         }
                         case "collect_drop_all" -> {
-                            syncCollectGUI(cp, e.getView().getTopInventory());
-                            int dropped = plugin.getOrderSystem().dropAllOrderItems(cp);
+                            // Nur Items der aktuellen Seite (Slots 0-44) droppen
+                            org.bukkit.inventory.Inventory topInv = e.getView().getTopInventory();
+                            int dropped = 0;
+                            for (int s = 0; s < 45; s++) {
+                                ItemStack pageItem = topInv.getItem(s);
+                                if (pageItem != null && !pageItem.getType().isAir()) {
+                                    dropped += pageItem.getAmount();
+                                    cp.getWorld().dropItemNaturally(cp.getLocation(), pageItem.clone());
+                                    topInv.setItem(s, null);
+                                }
+                            }
+                            // Sync verbleibende Items (jetzt leer auf dieser Seite)
+                            syncCollectGUI(cp, topInv);
                             cp.setMetadata("collect_gui_navigating", new org.bukkit.metadata.FixedMetadataValue(plugin, true));
                             cp.closeInventory();
                             cp.removeMetadata("collect_gui_navigating", plugin);
@@ -242,14 +253,7 @@ public class InventoryClickListener implements Listener {
                             Bukkit.getScheduler().runTaskLater(plugin, () ->
                                 cp.openInventory(plugin.getOrderSystem().createCollectGUI(cp.getUniqueId(), prevPage)), 2L);
                         }
-                        case "collect_back" -> {
-                            syncCollectGUI(cp, e.getView().getTopInventory());
-                            cp.setMetadata("collect_gui_navigating", new org.bukkit.metadata.FixedMetadataValue(plugin, true));
-                            cp.closeInventory();
-                            cp.removeMetadata("collect_gui_navigating", plugin);
-                            Bukkit.getScheduler().runTaskLater(plugin, () ->
-                                cp.openInventory(plugin.getOrderSystem().createMyOrdersGUI(cp.getUniqueId())), 2L);
-                        }
+    
                         case "collect_next" -> {
                             syncCollectGUI(cp, e.getView().getTopInventory());
                             de.coolemod.donut.orders.OrderSystem.BrowseSession s = plugin.getOrderSystem().getBrowseSession(cp.getUniqueId());

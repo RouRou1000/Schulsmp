@@ -732,15 +732,17 @@ public class OrderSystem {
 
         // Bottom row controls (slots 45-53)
 
-        // BACK (slot 45)
-        ItemStack back = mark(new ItemStack(Material.ARROW), page > 0 ? "collect_prev" : "collect_back", null);
-        ItemMeta backMeta = back.getItemMeta();
-        backMeta.setDisplayName(page > 0 ? "§e§lBACK" : "§e§lBACK");
-        List<String> backLore = new ArrayList<>();
-        backLore.add("§7Click to go to the previous page");
-        backMeta.setLore(backLore);
-        back.setItemMeta(backMeta);
-        inv.setItem(45, back);
+        // BACK (slot 45) - immer vorherige Seite, nie raus aus GUI
+        if (page > 0) {
+            ItemStack back = mark(new ItemStack(Material.ARROW), "collect_prev", null);
+            ItemMeta backMeta = back.getItemMeta();
+            backMeta.setDisplayName("§e§lBACK");
+            List<String> backLore = new ArrayList<>();
+            backLore.add("§7Click to go to the previous page");
+            backMeta.setLore(backLore);
+            back.setItemMeta(backMeta);
+            inv.setItem(45, back);
+        }
 
         // SELL ALL (slot 48)
         int totalPending = allItems.size();
