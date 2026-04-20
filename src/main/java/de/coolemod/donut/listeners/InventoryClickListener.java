@@ -170,6 +170,12 @@ public class InventoryClickListener implements Listener {
         // Collect Items GUI: Erlaube Item-Entnahme (Slots 0-44), blockiere nur Bottom Row (45-53)
         if (title.contains("Collect Items")) {
             int slot = e.getRawSlot();
+            if (slot >= 0 && slot < 45) {
+                // Items im Collect GUI - EXPLIZIT erlauben (Override falls etwas cancelled hat)
+                e.setCancelled(false);
+                e.setResult(org.bukkit.event.Event.Result.ALLOW);
+                return;
+            }
             if (slot >= 45 && slot <= 53) {
                 // Bottom row buttons - block click but allow action handling below
                 e.setCancelled(true);
