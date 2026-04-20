@@ -665,66 +665,38 @@ public class OrderSystem {
             .sorted(Comparator.comparingLong((Order o) -> o.timestamp).reversed())
             .toList();
 
-        int totalPending = withPending.stream().mapToInt(o -> getPendingItemCount(o.id)).sum();
-        int totalPages = Math.max(1, (withPending.size() + 27) / 28);
+        // Flatten all pending items across orders into individual stacks
+        List<ItemStack> allItems = new ArrayList<>();
+        Map<Integer, String> itemToOrderId = new java.util.LinkedHashMap<>();
+        for (Order order : withPending) {
+            List<ItemStack> pending = pendingCollections.getOrDefault(order.id, new ArrayList<>());
+            for (ItemStack item : pending) {
+                if (item != null && !item.getType().isAir()) {
+                    int idx = allItems.size();
+                    allItems.add(item.clone());
+                    itemToOrderId.put(idx, order.id);
+                }
+            }
+        }
+
+        int itemsPerPage = 45; // slots 0-44
+        int totalPages = Math.max(1, (allItems.size() + itemsPerPage - 1) / itemsPerPage);
         page = Math.max(0, Math.min(page, totalPages - 1));
 
-        Inventory inv = Bukkit.createInventory(null, 54, "§a§l" + toSmallCaps("ITEMS ABHOLEN") + " §8(" + (page + 1) + "/" + totalPages + ")");
+        Inventory inv = Bukkit.createInventory(null, 54, "§8ORDERS -> Collect Items");
 
-        // Fill borders
-        ItemStack border = mark(new ItemStack(Material.BLACK_STAINED_GLASS_PANE), "border", null);
-        ItemMeta borderMeta = border.getItemMeta();
-        borderMeta.setDisplayName("§8⬛");
-        border.setItemMeta(borderMeta);
-        for (int i : new int[]{0,1,2,3,4,5,6,7,8,9,17,18,26,27,35,36,44,45,46,47,48,50,51,52,53}) {
-            inv.setItem(i, border);
-        }
-
-        // Info header
-        ItemStack info = new ItemStack(Material.CHEST);
-        ItemMeta infoMeta = info.getItemMeta();
-        infoMeta.setDisplayName("§a§lAbholbare Items");
-        List<String> infoLore = new ArrayList<>();
-        infoLore.add("§8────────────────");
-        infoLore.add("§7Orders mit Items: §f" + withPending.size());
-        infoLore.add("§7Gesamt abholbar: §a" + totalPending + "x");
-        infoLore.add("§7Seite: §f" + (page + 1) + "§7/§f" + totalPages);
-        infoLore.add("§8────────────────");
-        infoMeta.setLore(infoLore);
-        info.setItemMeta(infoMeta);
-        inv.setItem(4, info);
-
-        // Show orders with pending items (paginated)
-        int start = page * 28;
-        int end = Math.min(start + 28, withPending.size());
-        int slot = 10;
+        // Place items (slots 0–44)
+        int start = page * itemsPerPage;
+        int end = Math.min(start + itemsPerPage, allItems.size());
         for (int i = start; i < end; i++) {
-            if (slot == 17) slot = 19;
-            if (slot == 26) slot = 28;
-            if (slot == 35) slot = 37;
-            if (slot >= 44) break;
-
-            Order order = withPending.get(i);
-            int pending = getPendingItemCount(order.id);
-            ItemStack display = order.itemType.clone();
-            ItemMeta displayMeta = display.getItemMeta();
-            List<String> lore = displayMeta.hasLore() ? new ArrayList<>(displayMeta.getLore()) : new ArrayList<>();
-            lore.add("§8");
-            lore.add("§8§m                    ");
-            lore.add("§7Benötigt: §f" + order.requiredAmount + "x");
-            lore.add("§7Geliefert: §a" + order.delivered + "x");
-            lore.add("§7Abholbar: §a" + pending + "x");
-            lore.add("§8§m                    ");
-            lore.add("§8");
-            lore.add("§a§l▸ Klicken zum Abholen");
-            displayMeta.setLore(lore);
-            display.setItemMeta(displayMeta);
-            mark(display, "collect_single", order.id);
+            int slot = i - start;
+            ItemStack display = allItems.get(i).clone();
+            String orderId = itemToOrderId.get(i);
+            mark(display, "collect_single", orderId);
             inv.setItem(slot, display);
-            slot++;
         }
 
-        if (withPending.isEmpty()) {
+        if (allItems.isEmpty()) {
             ItemStack empty = new ItemStack(Material.BARRIER);
             ItemMeta emptyMeta = empty.getItemMeta();
             emptyMeta.setDisplayName("§7Keine Items abholbar");
@@ -736,66 +708,48 @@ public class OrderSystem {
             inv.setItem(22, empty);
         }
 
-        // Navigation - prev page
-        if (page > 0) {
-            ItemStack prevBtn = mark(new ItemStack(Material.ARROW), "collect_prev", null);
-            ItemMeta prevMeta = prevBtn.getItemMeta();
-            prevMeta.setDisplayName("§e§l◄ " + toSmallCaps("VORHERIGE SEITE"));
-            prevBtn.setItemMeta(prevMeta);
-            inv.setItem(45, prevBtn);
-        } else {
-            // Back button
-            ItemStack back = mark(new ItemStack(Material.ARROW), "collect_back", null);
-            ItemMeta backBtnMeta = back.getItemMeta();
-            backBtnMeta.setDisplayName("§e§lZURÜCK");
-            back.setItemMeta(backBtnMeta);
-            inv.setItem(45, back);
-        }
+        // Bottom row controls (slots 45-53)
 
-        // Collect All button
-        if (totalPending > 0) {
-            ItemStack collectAll = mark(new ItemStack(Material.LIME_STAINED_GLASS_PANE), "collect_all", null);
-            ItemMeta collectAllMeta = collectAll.getItemMeta();
-            collectAllMeta.setDisplayName("§a§l✓ " + toSmallCaps("ALLES ABHOLEN"));
-            List<String> collectAllLore = new ArrayList<>();
-            collectAllLore.add("§8────────────────");
-            collectAllLore.add("§7Alle §a" + totalPending + "x §7Items");
-            collectAllLore.add("§7auf einmal abholen.");
-            collectAllLore.add("§8────────────────");
-            collectAllLore.add("§a▸ Klicken zum Einsammeln");
-            collectAllMeta.setLore(collectAllLore);
-            collectAll.setItemMeta(collectAllMeta);
-            inv.setItem(48, collectAll);
-        }
+        // BACK (slot 45)
+        ItemStack back = mark(new ItemStack(Material.ARROW), page > 0 ? "collect_prev" : "collect_back", null);
+        ItemMeta backMeta = back.getItemMeta();
+        backMeta.setDisplayName(page > 0 ? "§e§lBACK" : "§e§lBACK");
+        List<String> backLore = new ArrayList<>();
+        backLore.add("§7Click to go to the previous page");
+        backMeta.setLore(backLore);
+        back.setItemMeta(backMeta);
+        inv.setItem(45, back);
 
-        // Drop All button
-        if (totalPending > 0) {
-            ItemStack dropAll = mark(new ItemStack(Material.DROPPER), "collect_drop_all", null);
-            ItemMeta dropMeta = dropAll.getItemMeta();
-            dropMeta.setDisplayName("§e§l↓ " + toSmallCaps("ALLES DROPPEN"));
-            List<String> dropLore = new ArrayList<>();
-            dropLore.add("§8────────────────");
-            dropLore.add("§7Alle §a" + totalPending + "x §7Items");
-            dropLore.add("§7auf den Boden werfen.");
-            dropLore.add("§8────────────────");
-            dropLore.add("§e▸ Klicken zum Droppen");
-            dropMeta.setLore(dropLore);
-            dropAll.setItemMeta(dropMeta);
-            inv.setItem(50, dropAll);
-        }
+        // SELL ALL (slot 48)
+        int totalPending = allItems.size();
+        ItemStack sellAll = mark(new ItemStack(Material.EMERALD), "collect_all", null);
+        ItemMeta sellMeta = sellAll.getItemMeta();
+        sellMeta.setDisplayName("§a§lSELL ALL");
+        List<String> sellLore = new ArrayList<>();
+        sellLore.add("§7Click to sell all");
+        sellMeta.setLore(sellLore);
+        sellAll.setItemMeta(sellMeta);
+        inv.setItem(48, sellAll);
 
-        // Page info
-        ItemStack pageInfo = mark(new ItemStack(Material.PAPER), "disabled", null);
-        ItemMeta pageMeta = pageInfo.getItemMeta();
-        pageMeta.setDisplayName("§e§l📄 " + toSmallCaps("SEITE") + " §f" + (page + 1) + "§7/§f" + totalPages);
-        pageInfo.setItemMeta(pageMeta);
-        inv.setItem(49, pageInfo);
+        // DROP LOOT (slot 50)
+        ItemStack dropAll = mark(new ItemStack(Material.DROPPER), "collect_drop_all", null);
+        ItemMeta dropMeta = dropAll.getItemMeta();
+        dropMeta.setDisplayName("§6§lDROP LOOT");
+        List<String> dropLore = new ArrayList<>();
+        dropLore.add("§7Auction-Value: §a$0");
+        dropLore.add("§7Click to drop all loot on the page");
+        dropMeta.setLore(dropLore);
+        dropAll.setItemMeta(dropMeta);
+        inv.setItem(50, dropAll);
 
-        // Navigation - next page
+        // NEXT (slot 53)
         if (page < totalPages - 1) {
             ItemStack nextBtn = mark(new ItemStack(Material.ARROW), "collect_next", null);
             ItemMeta nextMeta = nextBtn.getItemMeta();
-            nextMeta.setDisplayName("§e§l" + toSmallCaps("NÄCHSTE SEITE") + " ►");
+            nextMeta.setDisplayName("§e§lNEXT");
+            List<String> nextLore = new ArrayList<>();
+            nextLore.add("§7Click to go to the next page");
+            nextMeta.setLore(nextLore);
             nextBtn.setItemMeta(nextMeta);
             inv.setItem(53, nextBtn);
         }
