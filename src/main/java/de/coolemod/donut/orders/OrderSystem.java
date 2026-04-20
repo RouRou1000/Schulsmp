@@ -631,7 +631,7 @@ public class OrderSystem {
         }
         inv.setItem(13, info);
 
-        ItemStack collectItem = mark(new ItemStack(getPendingItemCount(order.id) > 0 ? Material.CHEST : Material.HOPPER), getPendingItemCount(order.id) > 0 ? "order_collect" : "disabled", order.id);
+        ItemStack collectItem = mark(new ItemStack(getPendingItemCount(order.id) > 0 ? Material.CHEST : Material.HOPPER), getPendingItemCount(order.id) > 0 ? "open_collect" : "disabled", order.id);
         ItemMeta collectMeta = collectItem.getItemMeta();
         collectMeta.setDisplayName(getPendingItemCount(order.id) > 0 ? "§a§lITEMS ABHOLEN" : "§7§lNICHTS ABZUHOLEN");
         List<String> collectLore = new ArrayList<>();
@@ -639,7 +639,7 @@ public class OrderSystem {
         collectLore.add("§7Abholbare Items: " + (getPendingItemCount(order.id) > 0 ? "§a" + getPendingItemCount(order.id) + "x" : "§c0x"));
         if (getPendingItemCount(order.id) > 0) {
             collectLore.add("§8");
-            collectLore.add("§a▸ Klicken zum Einsammeln");
+            collectLore.add("§a▸ Klicken zum Öffnen");
         }
         collectMeta.setLore(collectLore);
         collectItem.setItemMeta(collectMeta);
