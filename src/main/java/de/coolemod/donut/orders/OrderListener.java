@@ -836,7 +836,7 @@ public class OrderListener implements Listener {
                 if (player.hasMetadata(ORDER_SIGN_MODE)) {
                     cleanupInputSign(player);
                 }
-            }, 200L);
+            }, 2400L);
 
         } catch (Exception ex) {
             player.sendMessage("§cFehler beim Öffnen der Eingabe!");

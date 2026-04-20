@@ -423,8 +423,10 @@ public class OrderListener implements Listener {
             }, 3L);
             
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                block.setType(originalType);
-            }, 200L);
+                if (block.getType() == Material.OAK_SIGN) {
+                    block.setType(originalType);
+                }
+            }, 2400L);
             
         } catch (Exception ex) {
             player.sendMessage("§cFehler beim Öffnen der Mengen-Eingabe!");
@@ -482,8 +484,10 @@ public class OrderListener implements Listener {
             }, 3L);
             
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                block.setType(originalType);
-            }, 200L);
+                if (block.getType() == Material.OAK_SIGN) {
+                    block.setType(originalType);
+                }
+            }, 2400L);
             
         } catch (Exception ex) {
             player.sendMessage("§cFehler beim Öffnen der Preis-Eingabe!");
