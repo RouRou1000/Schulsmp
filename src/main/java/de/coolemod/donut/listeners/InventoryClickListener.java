@@ -170,8 +170,25 @@ public class InventoryClickListener implements Listener {
         // Collect Items GUI: Erlaube Item-Entnahme (Slots 0-44), blockiere nur Bottom Row (45-53)
         if (title.contains("Collect Items")) {
             int slot = e.getRawSlot();
+            int topSize = e.getView().getTopInventory().getSize();
+
+            // Blockiere Shift-Click aus Player-Inventar (würde Items in GUI schieben)
+            if (slot >= topSize && e.isShiftClick()) {
+                e.setCancelled(true);
+                e.setResult(org.bukkit.event.Event.Result.DENY);
+                return;
+            }
+
+            // Blockiere Platzieren von Items in die GUI (Cursor hat Item + Klick in Top-Inv auf leeren Slot)
             if (slot >= 0 && slot < 45) {
-                // Items im Collect GUI - EXPLIZIT erlauben (Override falls etwas cancelled hat)
+                ItemStack cursorItem = e.getCursor();
+                if (cursorItem != null && !cursorItem.getType().isAir() && (clicked == null || clicked.getType().isAir())) {
+                    // Spieler versucht Item aus Cursor in leeren GUI-Slot zu legen
+                    e.setCancelled(true);
+                    e.setResult(org.bukkit.event.Event.Result.DENY);
+                    return;
+                }
+                // Items im Collect GUI - EXPLIZIT erlauben (Entnahme)
                 e.setCancelled(false);
                 e.setResult(org.bukkit.event.Event.Result.ALLOW);
                 return;
@@ -180,10 +197,10 @@ public class InventoryClickListener implements Listener {
                 // Bottom row buttons - block click but allow action handling below
                 e.setCancelled(true);
                 e.setResult(org.bukkit.event.Event.Result.DENY);
-                // Handle button actions
+                // Handle button actions - OrderSystem benutzt "order_action" als PDC Key
                 if (clicked != null && clicked.hasItemMeta()) {
                     org.bukkit.entity.Player cp = (org.bukkit.entity.Player) e.getWhoClicked();
-                    org.bukkit.NamespacedKey actionKey = new org.bukkit.NamespacedKey(plugin, "donut_gui_action");
+                    org.bukkit.NamespacedKey actionKey = new org.bukkit.NamespacedKey(plugin, "order_action");
                     String action = clicked.getItemMeta().getPersistentDataContainer()
                         .getOrDefault(actionKey, org.bukkit.persistence.PersistentDataType.STRING, "");
                     switch (action) {
@@ -247,7 +264,7 @@ public class InventoryClickListener implements Listener {
                     }
                 }
             }
-            // Slots 0-44 and player inventory: allow freely (player can take items)
+            // Player-Inventar Klicks (ohne Shift): erlauben
             return;
         }
 

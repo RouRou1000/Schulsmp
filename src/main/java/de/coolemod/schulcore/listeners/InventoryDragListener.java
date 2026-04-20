@@ -36,8 +36,17 @@ public class InventoryDragListener implements Listener {
             title.contains("Slay")) {
             e.setCancelled(true);
             return;
-        }
-        
+        }        
+        // Collect Items GUI: Blockiere Drag in Top-Inventar, erlaube nur im Player-Inventar
+        if (title.contains("Collect Items")) {
+            for (int slot : e.getRawSlots()) {
+                if (slot < e.getView().getTopInventory().getSize()) {
+                    e.setCancelled(true);
+                    return;
+                }
+            }
+            return;
+        }        
         // Spezielle Logik für Sell und AuctionCreate GUIs
         if (title.contains("ɪᴛᴇᴍѕ ᴠᴇʀᴋᴀᴜꜰᴇɴ") || title.contains("ITEMS VERKAUFEN") ||
             title.contains("ᴀᴜᴋᴛɪᴏɴ ᴇʀѕᴛᴇʟʟᴇɴ") || title.contains("AUKTION ERSTELLEN")) {
