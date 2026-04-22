@@ -40,9 +40,11 @@ public class InventoryClickListener implements Listener {
                     org.bukkit.inventory.meta.ItemMeta meta = clicked.getItemMeta();
                     org.bukkit.NamespacedKey key1 = new org.bukkit.NamespacedKey(plugin, "donut_gui_action");
                     org.bukkit.NamespacedKey key2 = new org.bukkit.NamespacedKey(plugin, "ah_action");
+                    org.bukkit.NamespacedKey key3 = new org.bukkit.NamespacedKey(plugin, "order_action");
 
                     if (meta.getPersistentDataContainer().has(key1, org.bukkit.persistence.PersistentDataType.STRING) ||
-                        meta.getPersistentDataContainer().has(key2, org.bukkit.persistence.PersistentDataType.STRING)) {
+                        meta.getPersistentDataContainer().has(key2, org.bukkit.persistence.PersistentDataType.STRING) ||
+                        meta.getPersistentDataContainer().has(key3, org.bukkit.persistence.PersistentDataType.STRING)) {
                         hasActionKey = true;
                     }
                 }

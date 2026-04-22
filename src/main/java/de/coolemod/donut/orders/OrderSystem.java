@@ -732,13 +732,23 @@ public class OrderSystem {
 
         // Bottom row controls (slots 45-53)
 
-        // BACK (slot 45) - immer vorherige Seite, nie raus aus GUI
+        // Untere Reihe: Füller für alle 9 Slots (45-53)
+        ItemStack filler = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
+        ItemMeta fillerMeta = filler.getItemMeta();
+        fillerMeta.setDisplayName("§8 ");
+        filler.setItemMeta(fillerMeta);
+        for (int fs = 45; fs <= 53; fs++) {
+            inv.setItem(fs, filler);
+        }
+
+        // BACK (slot 45) - vorherige Seite
         if (page > 0) {
-            ItemStack back = mark(new ItemStack(Material.ARROW), "collect_prev", null);
+            ItemStack back = mark(new ItemStack(Material.YELLOW_STAINED_GLASS_PANE), "collect_prev", null);
             ItemMeta backMeta = back.getItemMeta();
-            backMeta.setDisplayName("§e§lBACK");
+            backMeta.setDisplayName("§e§l« BACK");
             List<String> backLore = new ArrayList<>();
-            backLore.add("§7Click to go to the previous page");
+            backLore.add("§7Klick: Vorherige Seite");
+            backLore.add("§8Seite §7" + page + " §8/ §7" + totalPages);
             backMeta.setLore(backLore);
             back.setItemMeta(backMeta);
             inv.setItem(45, back);
@@ -760,7 +770,6 @@ public class OrderSystem {
         ItemMeta dropMeta = dropAll.getItemMeta();
         dropMeta.setDisplayName("§6§lDROP LOOT");
         List<String> dropLore = new ArrayList<>();
-        dropLore.add("§7Auction-Value: §a$0");
         dropLore.add("§7Click to drop all loot on the page");
         dropMeta.setLore(dropLore);
         dropAll.setItemMeta(dropMeta);
@@ -768,11 +777,12 @@ public class OrderSystem {
 
         // NEXT (slot 53)
         if (page < totalPages - 1) {
-            ItemStack nextBtn = mark(new ItemStack(Material.ARROW), "collect_next", null);
+            ItemStack nextBtn = mark(new ItemStack(Material.YELLOW_STAINED_GLASS_PANE), "collect_next", null);
             ItemMeta nextMeta = nextBtn.getItemMeta();
-            nextMeta.setDisplayName("§e§lNEXT");
+            nextMeta.setDisplayName("§e§lNEXT »");
             List<String> nextLore = new ArrayList<>();
-            nextLore.add("§7Click to go to the next page");
+            nextLore.add("§7Klick: Nächste Seite");
+            nextLore.add("§8Seite §7" + (page + 2) + " §8/ §7" + totalPages);
             nextMeta.setLore(nextLore);
             nextBtn.setItemMeta(nextMeta);
             inv.setItem(53, nextBtn);
