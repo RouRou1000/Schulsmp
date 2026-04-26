@@ -94,6 +94,7 @@ public class SpawnerBreakListener implements Listener {
         Location loc = block.getLocation();
         PlacedSpawner ps = manager.getPlacedSpawner(loc);
         if (ps == null) return;
+        manager.ensureSpawnerVisual(loc);
         Player p = e.getPlayer();
         e.setCancelled(true);
         e.setDropItems(false);
@@ -144,6 +145,7 @@ public class SpawnerBreakListener implements Listener {
         Location loc = e.getClickedBlock().getLocation();
         PlacedSpawner ps = manager.getPlacedSpawner(loc);
         if (ps == null) return;
+        manager.ensureSpawnerVisual(loc);
 
         Player p = e.getPlayer();
         // Wenn Spieler einen Spawner gleichen Typs in der Hand hält → zum Stack hinzufügen
@@ -193,7 +195,8 @@ public class SpawnerBreakListener implements Listener {
                 case "sell_all": sellAllDrops(p, spawner); p.closeInventory(); break;
                 case "prev_page": gui.open(p, gui.getCurrentPage() - 1); p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 0.5f, 1f); break;
                 case "next_page": gui.open(p, gui.getCurrentPage() + 1); p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 0.5f, 1f); break;
-                case "drop_page": dropPageDrops(p, spawner, gui.getCurrentPage()); p.closeInventory(); break;
+                case "drop_page": dropPageDrops(p, spawner, gui.getCurrentPage()); gui.open(p, gui.getCurrentPage()); break;
+                case "info": p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 0.3f, 1.4f); break;
             }
             return;
         }

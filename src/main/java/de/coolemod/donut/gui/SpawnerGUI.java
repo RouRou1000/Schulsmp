@@ -101,6 +101,22 @@ public class SpawnerGUI implements InventoryHolder {
         dropPage.setItemMeta(dropMeta);
         inventory.setItem(50, dropPage);
 
+        // === Slot 49: Spawner Info (Mitte) ===
+        ItemStack info = new ItemStack(spawner.getType().getIcon());
+        ItemMeta infoMeta = info.getItemMeta();
+        infoMeta.setDisplayName(spawner.getType().getDisplayName());
+        infoMeta.setLore(Arrays.asList(
+            "§8────────────────",
+            "§7Anzahl§8: §a" + spawner.getStackSize() + "x",
+            "§7Gespeichert§8: " + spawner.getDropsSummary(),
+            "§7Cap§8: §e" + spawner.getStoredDropCount() + "§7/§e" + spawner.getMaxStoredDrops(),
+            "§8────────────────",
+            "§7Seite§8: §e" + (currentPage + 1) + "§7/§e" + totalPages
+        ));
+        infoMeta.getPersistentDataContainer().set(actionKey, PersistentDataType.STRING, "info");
+        info.setItemMeta(infoMeta);
+        inventory.setItem(49, info);
+
         // === Slots 0-44: Stored drops on current page ===
         NamespacedKey dropKey = new NamespacedKey(plugin, "spawner_drop_index");
         int start = currentPage * itemsPerPage;

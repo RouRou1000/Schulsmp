@@ -7,6 +7,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.block.Block;
+import org.bukkit.block.CreatureSpawner;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.EntityType;
@@ -76,8 +78,10 @@ public class SpawnerManager {
                     if (Bukkit.getWorld(world) != null) {
                         Location loc = new Location(Bukkit.getWorld(world), x, y, z);
                         SpawnerType spawnerType = SpawnerType.fromName(type);
-                        if (spawnerType != null)
+                        if (spawnerType != null) {
                             placedSpawners.put(loc, new PlacedSpawner(loc, spawnerType, stack, owner, lastDrop));
+                            applySpawnerBlockState(loc, spawnerType);
+                        }
                     }
                 } catch (Exception e) {
                     plugin.getLogger().warning("[SpawnerSystem] Fehler beim Laden: " + key);
@@ -172,8 +176,31 @@ public class SpawnerManager {
     public boolean placeSpawner(Location loc, SpawnerType type, int stackSize, UUID owner) {
         if (placedSpawners.containsKey(loc)) return false;
         placedSpawners.put(loc, new PlacedSpawner(loc, type, stackSize, owner, System.currentTimeMillis()));
+        applySpawnerBlockState(loc, type);
         saveData();
         return true;
+    }
+
+    public void ensureSpawnerVisual(Location loc) {
+        PlacedSpawner ps = placedSpawners.get(loc);
+        if (ps == null) {
+            return;
+        }
+        applySpawnerBlockState(loc, ps.getType());
+    }
+
+    private void applySpawnerBlockState(Location loc, SpawnerType type) {
+        if (loc == null || loc.getWorld() == null || type == null) {
+            return;
+        }
+        Block block = loc.getBlock();
+        if (block.getType() != Material.SPAWNER) {
+            block.setType(Material.SPAWNER, false);
+        }
+        if (block.getState() instanceof CreatureSpawner creatureSpawner) {
+            creatureSpawner.setSpawnedType(type.getEntityType());
+            creatureSpawner.update(true, false);
+        }
     }
 
     public ItemStack removeSpawner(Location loc) {
