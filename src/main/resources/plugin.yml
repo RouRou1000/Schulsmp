@@ -114,6 +114,12 @@ commands:
     description: "Öffne deine Einstellungen"
     usage: /settings
     aliases: [einstellungen, optionen]
+  maintence:
+    description: "Aktiviert den Maintenance-Modus mit 30 Sekunden Countdown"
+    usage: /maintence
+  unmaintence:
+    description: "Deaktiviert den Maintenance-Modus"
+    usage: /unmaintence
 softdepend: [ProtocolLib, LuckPerms]
 permissions:
   donut.clan:
@@ -157,3 +163,9 @@ permissions:
   donut.balance.others:
     description: "Kontostand anderer Spieler sehen"
     default: false
+  donut.maintenance.manage:
+    description: "Maintenance-Modus aktivieren oder deaktivieren"
+    default: op
+  donut.maintenance.bypass:
+    description: "Darf während Maintenance online bleiben und joinen"
+    default: op

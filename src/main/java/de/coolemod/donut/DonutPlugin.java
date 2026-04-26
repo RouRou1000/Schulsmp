@@ -57,6 +57,7 @@ public final class DonutPlugin extends JavaPlugin {
     // NEW: Settings System
     private de.coolemod.donut.managers.SettingsManager settingsManager;
     private AntiCheatHistoryManager antiCheatHistoryManager;
+    private MaintenanceManager maintenanceManager;
     // NEW: LuckPerms Auto-Setup
     private Object luckPermsSetup;
 
@@ -97,6 +98,8 @@ public final class DonutPlugin extends JavaPlugin {
             this.crateManager = new CrateManager(this);
             markStartupPhase("Erstelle WorthManager");
             this.worthManager = new WorthManager(this);
+            markStartupPhase("Erstelle MaintenanceManager");
+            this.maintenanceManager = new MaintenanceManager(this);
             markStartupPhase("Erstelle SellMultiplierManager");
             this.sellMultiplierManager = new SellMultiplierManager(this);
             markStartupPhase("Erstelle ClanManager");
@@ -169,6 +172,8 @@ public final class DonutPlugin extends JavaPlugin {
             getServer().getPluginManager().registerEvents(new SignProtectionListener(), this);
             getLogger().info("[DEBUG] PlayerJoinListener...");
             getServer().getPluginManager().registerEvents(new PlayerJoinListener(this), this);
+            getLogger().info("[DEBUG] MaintenanceListener...");
+            getServer().getPluginManager().registerEvents(new MaintenanceListener(this), this);
             getLogger().info("[DEBUG] CommandVisibilityListener...");
             getServer().getPluginManager().registerEvents(new CommandVisibilityListener(), this);
             getLogger().info("[DEBUG] PlayerInteractListener...");
@@ -292,6 +297,10 @@ public final class DonutPlugin extends JavaPlugin {
                     return true;
                 }, null);
             }
+            getLogger().info("[DEBUG] MaintenanceCommand...");
+            MaintenanceCommand maintenanceCommand = new MaintenanceCommand(this);
+            registerCommand("maintence", maintenanceCommand, maintenanceCommand);
+            registerCommand("unmaintence", maintenanceCommand, maintenanceCommand);
             getLogger().info("[DEBUG] Commands erfolgreich registriert.");
 
             markStartupPhase("Starte SpawnShardManager");
@@ -378,6 +387,7 @@ public final class DonutPlugin extends JavaPlugin {
     public PacketCheckListener getPacketCheckListener() { return packetCheckListener; }  // NEW
     public de.coolemod.donut.managers.SettingsManager getSettingsManager() { return settingsManager; }  // NEW
     public AntiCheatHistoryManager getAntiCheatHistoryManager() { return antiCheatHistoryManager; }
+    public MaintenanceManager getMaintenanceManager() { return maintenanceManager; }
     public SellMultiplierManager getSellMultiplier() { return sellMultiplierManager; }
 
     public void ensureAutoOp() {
