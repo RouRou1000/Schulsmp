@@ -191,10 +191,9 @@ public class SpawnerBreakListener implements Listener {
             switch (action) {
                 case "collect_all": collectAllDrops(p, spawner); p.closeInventory(); break;
                 case "sell_all": sellAllDrops(p, spawner); p.closeInventory(); break;
-                case "close": p.closeInventory(); p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 0.5f, 1f); break;
                 case "prev_page": gui.open(p, gui.getCurrentPage() - 1); p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 0.5f, 1f); break;
                 case "next_page": gui.open(p, gui.getCurrentPage() + 1); p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 0.5f, 1f); break;
-                case "info": p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 0.3f, 1.4f); break;
+                case "drop_page": dropPageDrops(p, spawner, gui.getCurrentPage()); p.closeInventory(); break;
             }
             return;
         }
@@ -207,7 +206,7 @@ public class SpawnerBreakListener implements Listener {
                 if (index < drops.size()) {
                     ItemStack drop = drops.get(index);
                     HashMap<Integer, ItemStack> leftover = p.getInventory().addItem(drop);
-                    for (ItemStack left : leftover.values()) p.getWorld().dropItemNaturally(p.getLocation(), left);
+                    for (ItemStack left : leftover.values()) dropItemTowardsLook(p, left);
                     drops.remove((int) index);
                     spawner.addDrops(drops);
                     p.playSound(p.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.5f, 1f);
@@ -228,7 +227,7 @@ public class SpawnerBreakListener implements Listener {
         for (ItemStack drop : drops) {
             totalItems += drop.getAmount();
             HashMap<Integer, ItemStack> leftover = p.getInventory().addItem(drop);
-            for (ItemStack left : leftover.values()) p.getWorld().dropItemNaturally(p.getLocation(), left);
+            for (ItemStack left : leftover.values()) dropItemTowardsLook(p, left);
         }
         p.sendMessage("");
         p.sendMessage("§8┃ §a§l✓ EINGESAMMELT §8┃ §e" + totalItems + " Items");
@@ -279,6 +278,52 @@ public class SpawnerBreakListener implements Listener {
         }
         p.sendMessage("");
         p.playSound(p.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1f, 1.5f);
+    }
+
+    private void dropPageDrops(Player p, PlacedSpawner spawner, int page) {
+        List<ItemStack> all = spawner.collectDrops();
+        if (all.isEmpty()) {
+            p.sendMessage("§8┃ §6§lDROP §8┃ §7Keine Drops vorhanden!");
+            p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
+            return;
+        }
+
+        int itemsPerPage = 45;
+        int start = Math.max(0, page * itemsPerPage);
+        int end = Math.min(start + itemsPerPage, all.size());
+
+        if (start >= end) {
+            spawner.addDrops(all);
+            p.sendMessage("§8┃ §6§lDROP §8┃ §7Auf dieser Seite gibt es keine Drops.");
+            p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
+            return;
+        }
+
+        int droppedAmount = 0;
+        List<ItemStack> remaining = new java.util.ArrayList<>();
+        for (int i = 0; i < all.size(); i++) {
+            ItemStack stack = all.get(i);
+            if (i >= start && i < end) {
+                droppedAmount += stack.getAmount();
+                dropItemTowardsLook(p, stack.clone());
+            } else {
+                remaining.add(stack);
+            }
+        }
+
+        if (!remaining.isEmpty()) {
+            spawner.addDrops(remaining);
+        }
+
+        p.sendMessage("§8┃ §6§lDROP §8┃ §e" + droppedAmount + " Items von dieser Seite gedroppt.");
+        p.playSound(p.getLocation(), Sound.ENTITY_ITEM_PICKUP, 1f, 0.8f);
+    }
+
+    private void dropItemTowardsLook(Player p, ItemStack item) {
+        org.bukkit.util.Vector dir = p.getEyeLocation().getDirection().normalize();
+        org.bukkit.Location spawnLoc = p.getEyeLocation().add(dir.clone().multiply(0.35));
+        org.bukkit.entity.Item dropped = p.getWorld().dropItem(spawnLoc, item);
+        dropped.setVelocity(dir.multiply(0.35));
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)

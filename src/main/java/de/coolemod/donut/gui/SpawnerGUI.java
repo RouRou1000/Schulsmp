@@ -61,27 +61,11 @@ public class SpawnerGUI implements InventoryHolder {
             inventory.setItem(s, filler);
         }
 
-        // === Slot 49: Info Item ===
-        ItemStack info = new ItemStack(spawner.getType().getIcon());
-        ItemMeta im = info.getItemMeta();
-        im.setDisplayName(spawner.getType().getDisplayName());
-        im.setLore(Arrays.asList(
-            "§8────────────────",
-            "§7Anzahl§8: §a" + spawner.getStackSize() + "x",
-            "§7Gespeichert§8: " + spawner.getDropsSummary(),
-            "§7Cap§8: §e" + spawner.getStoredDropCount() + "§7/§e" + spawner.getMaxStoredDrops(),
-            "§8────────────────",
-            "§7Seite§8: §e" + (currentPage + 1) + "§7/§e" + totalPages
-        ));
-        im.getPersistentDataContainer().set(actionKey, PersistentDataType.STRING, "info");
-        info.setItemMeta(im);
-        inventory.setItem(49, info);
-
         // === Slot 45: Back Page ===
         if (currentPage > 0) {
             ItemStack back = new ItemStack(Material.YELLOW_STAINED_GLASS_PANE);
             ItemMeta bm = back.getItemMeta();
-            bm.setDisplayName("§e§l« BACK");
+            bm.setDisplayName("§e§lBACK");
             bm.setLore(Arrays.asList("§7Klick: Vorherige Seite"));
             bm.getPersistentDataContainer().set(actionKey, PersistentDataType.STRING, "prev_page");
             back.setItemMeta(bm);
@@ -92,38 +76,30 @@ public class SpawnerGUI implements InventoryHolder {
         if (currentPage < totalPages - 1) {
             ItemStack next = new ItemStack(Material.YELLOW_STAINED_GLASS_PANE);
             ItemMeta nm = next.getItemMeta();
-            nm.setDisplayName("§e§lNEXT »");
+            nm.setDisplayName("§e§lNEXT");
             nm.setLore(Arrays.asList("§7Klick: Nächste Seite"));
             nm.getPersistentDataContainer().set(actionKey, PersistentDataType.STRING, "next_page");
             next.setItemMeta(nm);
             inventory.setItem(53, next);
         }
 
-        // === Slot 48: Collect All ===
-        ItemStack collectAll = new ItemStack(Material.HOPPER);
-        ItemMeta cm = collectAll.getItemMeta();
-        cm.setDisplayName("§a§l✓ ALLE EINSAMMELN");
-        cm.setLore(Arrays.asList("§8────────────────", "§7Sammle alle Items ein!", "§8────────────────", "§eKlicke zum Einsammeln"));
-        cm.getPersistentDataContainer().set(actionKey, PersistentDataType.STRING, "collect_all");
-        collectAll.setItemMeta(cm);
-        inventory.setItem(48, collectAll);
+        // === Slot 48: Sell All ===
+        ItemStack sellAll = new ItemStack(Material.EMERALD);
+        ItemMeta sm = sellAll.getItemMeta();
+        sm.setDisplayName("§a§lSELL ALL");
+        sm.setLore(Arrays.asList("§7Klick: Verkaufe alle Spawner-Drops"));
+        sm.getPersistentDataContainer().set(actionKey, PersistentDataType.STRING, "sell_all");
+        sellAll.setItemMeta(sm);
+        inventory.setItem(48, sellAll);
 
-        // === Slot 50: Sell All ===
-        ItemStack sellAll = new ItemStack(Material.GOLD_INGOT);
-        ItemMeta sm2 = sellAll.getItemMeta();
-        sm2.setDisplayName("§6§l💰 ALLE VERKAUFEN");
-        sm2.setLore(Arrays.asList("§8────────────────", "§7Verkaufe alle Drops direkt!", "§7Wie §e/sell all§7, aber für Spawner", "§8────────────────", "§eKlicke zum Verkaufen"));
-        sm2.getPersistentDataContainer().set(actionKey, PersistentDataType.STRING, "sell_all");
-        sellAll.setItemMeta(sm2);
-        inventory.setItem(50, sellAll);
-
-        // === Slot 47: Close ===
-        ItemStack close = new ItemStack(Material.BARRIER);
-        ItemMeta closeMeta = close.getItemMeta();
-        closeMeta.setDisplayName("§c§l✖ SCHLIESSEN");
-        closeMeta.getPersistentDataContainer().set(actionKey, PersistentDataType.STRING, "close");
-        close.setItemMeta(closeMeta);
-        inventory.setItem(47, close);
+        // === Slot 50: Drop Page ===
+        ItemStack dropPage = new ItemStack(Material.DROPPER);
+        ItemMeta dropMeta = dropPage.getItemMeta();
+        dropMeta.setDisplayName("§6§lDROP LOOT");
+        dropMeta.setLore(Arrays.asList("§7Klick: Droppe nur die aktuelle Seite"));
+        dropMeta.getPersistentDataContainer().set(actionKey, PersistentDataType.STRING, "drop_page");
+        dropPage.setItemMeta(dropMeta);
+        inventory.setItem(50, dropPage);
 
         // === Slots 0-44: Stored drops on current page ===
         NamespacedKey dropKey = new NamespacedKey(plugin, "spawner_drop_index");
