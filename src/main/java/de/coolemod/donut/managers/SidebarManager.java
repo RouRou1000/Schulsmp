@@ -92,7 +92,7 @@ public class SidebarManager {
         obj.getScore(kd).setScore(2);
 
         obj.getScore("   ").setScore(1);
-        obj.getScore("§7ᴘʟᴀʏ.ѕᴄʜᴜʟ-ѕᴍᴘ.ᴅᴇ").setScore(0);
+        obj.getScore("§7ѕᴄʜᴜʟѕᴍᴘ.ɴᴇᴛ").setScore(0);
 
         p.setScoreboard(board);
     }
