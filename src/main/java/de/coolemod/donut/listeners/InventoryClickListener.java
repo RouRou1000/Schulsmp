@@ -239,8 +239,18 @@ public class InventoryClickListener implements Listener {
                             for (int s = 0; s < 45; s++) {
                                 ItemStack pageItem = topInv.getItem(s);
                                 if (pageItem != null && !pageItem.getType().isAir()) {
+                                    // Niemals disabled/Info-Items droppen (z.B. leerer BARRIER-Hinweis)
+                                    if (pageItem.hasItemMeta()) {
+                                        org.bukkit.NamespacedKey pageActionKey = new org.bukkit.NamespacedKey(plugin, "order_action");
+                                        String pageAction = pageItem.getItemMeta().getPersistentDataContainer()
+                                            .getOrDefault(pageActionKey, org.bukkit.persistence.PersistentDataType.STRING, "");
+                                        if ("disabled".equals(pageAction)) {
+                                            continue;
+                                        }
+                                    }
+
                                     dropped += pageItem.getAmount();
-                                    cp.getWorld().dropItemNaturally(cp.getLocation(), pageItem.clone());
+                                    dropItemTowardsLook(cp, pageItem.clone());
                                     topInv.setItem(s, null);
                                 }
                             }
@@ -1199,5 +1209,12 @@ public class InventoryClickListener implements Listener {
             }
         }
         plugin.getOrderSystem().syncPendingFromCollectGUI(player.getUniqueId(), remaining);
+    }
+
+    private void dropItemTowardsLook(org.bukkit.entity.Player player, ItemStack item) {
+        org.bukkit.util.Vector dir = player.getEyeLocation().getDirection().normalize();
+        org.bukkit.Location spawnLoc = player.getEyeLocation().add(dir.clone().multiply(0.35));
+        org.bukkit.entity.Item dropped = player.getWorld().dropItem(spawnLoc, item);
+        dropped.setVelocity(dir.multiply(0.35));
     }
 }

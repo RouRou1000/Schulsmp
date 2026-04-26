@@ -475,7 +475,7 @@ public class OrderSystem {
             }
             amount += item.getAmount();
             for (ItemStack leftover : player.getInventory().addItem(item.clone()).values()) {
-                player.getWorld().dropItemNaturally(player.getLocation(), leftover);
+                dropItemTowardsLook(player, leftover);
             }
         }
 
@@ -917,12 +917,19 @@ public class OrderSystem {
             for (ItemStack item : pending) {
                 if (item == null || item.getType() == Material.AIR) continue;
                 total += item.getAmount();
-                player.getWorld().dropItemNaturally(player.getLocation(), item.clone());
+                dropItemTowardsLook(player, item.clone());
             }
             clearPendingItems(order.id);
             cleanupClosedOrder(order.id);
         }
         return total;
+    }
+
+    private void dropItemTowardsLook(Player player, ItemStack item) {
+        org.bukkit.util.Vector dir = player.getEyeLocation().getDirection().normalize();
+        org.bukkit.Location spawnLoc = player.getEyeLocation().add(dir.clone().multiply(0.35));
+        org.bukkit.entity.Item dropped = player.getWorld().dropItem(spawnLoc, item);
+        dropped.setVelocity(dir.multiply(0.35));
     }
 
     public Inventory createOrderCancelConfirmGUI(UUID player, String orderId) {
