@@ -20,6 +20,7 @@ public class SpawnerGUI implements InventoryHolder {
     private final DonutPlugin plugin;
     private final PlacedSpawner spawner;
     private Inventory inventory;
+    private int currentPage = 0;
 
     public SpawnerGUI(DonutPlugin plugin, PlacedSpawner spawner) {
         this.plugin = plugin;
@@ -27,34 +28,40 @@ public class SpawnerGUI implements InventoryHolder {
     }
 
     public void open(Player player) {
+        open(player, 0);
+    }
+
+    public void open(Player player, int page) {
+        List<ItemStack> drops = spawner.getStoredDrops();
+        int itemsPerPage = 45;
+        int totalPages = Math.max(1, (drops.size() + itemsPerPage - 1) / itemsPerPage);
+        this.currentPage = Math.max(0, Math.min(page, totalPages - 1));
+
         String rawName = spawner.getType().getDisplayName();
-        // Strip color codes for title
         String cleanName = rawName.replaceAll("§.", "");
-        String title = "§6⛃ " + cleanName + " ⛃";
+        String title = "§8SPAWNER -> " + cleanName;
         inventory = Bukkit.createInventory(this, 54, title);
-        fillBorders();
         updateContent();
         player.openInventory(inventory);
         player.playSound(player.getLocation(), Sound.BLOCK_CHEST_OPEN, 0.5f, 1.2f);
     }
 
-    private void fillBorders() {
-        ItemStack border = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
-        ItemMeta bm = border.getItemMeta();
-        bm.setDisplayName(" ");
-        border.setItemMeta(bm);
-        for (int i = 0; i < 9; i++) inventory.setItem(i, border);
-        for (int i = 45; i < 54; i++) inventory.setItem(i, border);
-        for (int i = 1; i < 5; i++) {
-            inventory.setItem(i * 9, border);
-            inventory.setItem(i * 9 + 8, border);
-        }
-    }
-
     private void updateContent() {
         NamespacedKey actionKey = new NamespacedKey(plugin, "spawner_action");
+        List<ItemStack> drops = spawner.getStoredDrops();
+        int itemsPerPage = 45;
+        int totalPages = Math.max(1, (drops.size() + itemsPerPage - 1) / itemsPerPage);
 
-        // === Slot 4: Info Item ===
+        // Fill bottom row (45-53) with neutral panes for a clean consistent layout
+        ItemStack filler = new ItemStack(Material.GRAY_STAINED_GLASS_PANE);
+        ItemMeta fillerMeta = filler.getItemMeta();
+        fillerMeta.setDisplayName("§8 ");
+        filler.setItemMeta(fillerMeta);
+        for (int s = 45; s <= 53; s++) {
+            inventory.setItem(s, filler);
+        }
+
+        // === Slot 49: Info Item ===
         ItemStack info = new ItemStack(spawner.getType().getIcon());
         ItemMeta im = info.getItemMeta();
         im.setDisplayName(spawner.getType().getDisplayName());
@@ -64,11 +71,33 @@ public class SpawnerGUI implements InventoryHolder {
             "§7Gespeichert§8: " + spawner.getDropsSummary(),
             "§7Cap§8: §e" + spawner.getStoredDropCount() + "§7/§e" + spawner.getMaxStoredDrops(),
             "§8────────────────",
-            "§7Sneak+Platzieren = Hand-Stack",
-            "§7Sneak+Abbauen = 1 Stack"
+            "§7Seite§8: §e" + (currentPage + 1) + "§7/§e" + totalPages
         ));
+        im.getPersistentDataContainer().set(actionKey, PersistentDataType.STRING, "info");
         info.setItemMeta(im);
-        inventory.setItem(4, info);
+        inventory.setItem(49, info);
+
+        // === Slot 45: Back Page ===
+        if (currentPage > 0) {
+            ItemStack back = new ItemStack(Material.YELLOW_STAINED_GLASS_PANE);
+            ItemMeta bm = back.getItemMeta();
+            bm.setDisplayName("§e§l« BACK");
+            bm.setLore(Arrays.asList("§7Klick: Vorherige Seite"));
+            bm.getPersistentDataContainer().set(actionKey, PersistentDataType.STRING, "prev_page");
+            back.setItemMeta(bm);
+            inventory.setItem(45, back);
+        }
+
+        // === Slot 53: Next Page ===
+        if (currentPage < totalPages - 1) {
+            ItemStack next = new ItemStack(Material.YELLOW_STAINED_GLASS_PANE);
+            ItemMeta nm = next.getItemMeta();
+            nm.setDisplayName("§e§lNEXT »");
+            nm.setLore(Arrays.asList("§7Klick: Nächste Seite"));
+            nm.getPersistentDataContainer().set(actionKey, PersistentDataType.STRING, "next_page");
+            next.setItemMeta(nm);
+            inventory.setItem(53, next);
+        }
 
         // === Slot 48: Collect All ===
         ItemStack collectAll = new ItemStack(Material.HOPPER);
@@ -88,48 +117,35 @@ public class SpawnerGUI implements InventoryHolder {
         sellAll.setItemMeta(sm2);
         inventory.setItem(50, sellAll);
 
-        // === Slot 45: Close ===
+        // === Slot 47: Close ===
         ItemStack close = new ItemStack(Material.BARRIER);
         ItemMeta closeMeta = close.getItemMeta();
         closeMeta.setDisplayName("§c§l✖ SCHLIESSEN");
         closeMeta.getPersistentDataContainer().set(actionKey, PersistentDataType.STRING, "close");
         close.setItemMeta(closeMeta);
-        inventory.setItem(45, close);
+        inventory.setItem(47, close);
 
-        // === Slot 53: Stack Info ===
-        ItemStack stackInfo = new ItemStack(Material.PAPER);
-        ItemMeta sm = stackInfo.getItemMeta();
-        sm.setDisplayName("§e§l📊 INFO");
-        sm.setLore(Arrays.asList("§8────────────────",
-            "§7Anzahl§8: §a" + spawner.getStackSize() + "x",
-            "§8────────────────",
-            "§7Drop-Rate§8: §a" + (plugin.getSpawnerManager().getTicksPerDrop() / 20) + "s",
-            "§7Drops pro Tick§8: §a~" + spawner.getStackSize() + " Items"
-        ));
-        stackInfo.setItemMeta(sm);
-        inventory.setItem(53, stackInfo);
-
-        // === Slots 10-43: Stored drops (sorted by material name) ===
-        List<ItemStack> drops = spawner.getStoredDrops();
+        // === Slots 0-44: Stored drops on current page ===
         NamespacedKey dropKey = new NamespacedKey(plugin, "spawner_drop_index");
-        int slot = 10;
-        for (int i = 0; i < drops.size() && slot < 44; i++) {
-            if (slot % 9 == 0 || slot % 9 == 8) { slot++; i--; continue; }
-            if (slot >= 45) break;
-            ItemStack drop = drops.get(i).clone();
+        int start = currentPage * itemsPerPage;
+        int end = Math.min(start + itemsPerPage, drops.size());
+        for (int globalIndex = start; globalIndex < end; globalIndex++) {
+            int slot = globalIndex - start;
+            ItemStack drop = drops.get(globalIndex).clone();
             ItemMeta dm = drop.getItemMeta();
             List<String> lore = dm.hasLore() ? new java.util.ArrayList<>(dm.getLore()) : new java.util.ArrayList<>();
             lore.add("§8────────────────");
             lore.add("§eKlicke zum Einsammeln");
             dm.setLore(lore);
-            dm.getPersistentDataContainer().set(dropKey, PersistentDataType.INTEGER, i);
+            dm.getPersistentDataContainer().set(dropKey, PersistentDataType.INTEGER, globalIndex);
             drop.setItemMeta(dm);
             inventory.setItem(slot, drop);
-            slot++;
         }
     }
 
     public PlacedSpawner getSpawner() { return spawner; }
+
+    public int getCurrentPage() { return currentPage; }
 
     @Override
     public Inventory getInventory() { return inventory; }

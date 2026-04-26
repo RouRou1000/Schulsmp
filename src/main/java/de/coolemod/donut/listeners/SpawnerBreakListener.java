@@ -192,6 +192,9 @@ public class SpawnerBreakListener implements Listener {
                 case "collect_all": collectAllDrops(p, spawner); p.closeInventory(); break;
                 case "sell_all": sellAllDrops(p, spawner); p.closeInventory(); break;
                 case "close": p.closeInventory(); p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 0.5f, 1f); break;
+                case "prev_page": gui.open(p, gui.getCurrentPage() - 1); p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 0.5f, 1f); break;
+                case "next_page": gui.open(p, gui.getCurrentPage() + 1); p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 0.5f, 1f); break;
+                case "info": p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 0.3f, 1.4f); break;
             }
             return;
         }
@@ -208,7 +211,7 @@ public class SpawnerBreakListener implements Listener {
                     drops.remove((int) index);
                     spawner.addDrops(drops);
                     p.playSound(p.getLocation(), Sound.ENTITY_ITEM_PICKUP, 0.5f, 1f);
-                    gui.open(p);
+                    gui.open(p, gui.getCurrentPage());
                 }
             }
         }
