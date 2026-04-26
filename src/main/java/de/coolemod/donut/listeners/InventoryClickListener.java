@@ -183,6 +183,18 @@ public class InventoryClickListener implements Listener {
 
             // Blockiere Platzieren von Items in die GUI (Cursor hat Item + Klick in Top-Inv auf leeren Slot)
             if (slot >= 0 && slot < 45) {
+                // Platzhalter/Info-Items bleiben im GUI
+                if (clicked != null && clicked.hasItemMeta()) {
+                    org.bukkit.NamespacedKey actionKey = new org.bukkit.NamespacedKey(plugin, "order_action");
+                    String action = clicked.getItemMeta().getPersistentDataContainer()
+                        .getOrDefault(actionKey, org.bukkit.persistence.PersistentDataType.STRING, "");
+                    if ("disabled".equals(action)) {
+                        e.setCancelled(true);
+                        e.setResult(org.bukkit.event.Event.Result.DENY);
+                        return;
+                    }
+                }
+
                 ItemStack cursorItem = e.getCursor();
                 if (cursorItem != null && !cursorItem.getType().isAir() && (clicked == null || clicked.getType().isAir())) {
                     // Spieler versucht Item aus Cursor in leeren GUI-Slot zu legen

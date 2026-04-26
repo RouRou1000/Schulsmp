@@ -24,6 +24,7 @@ public class OrderSystem {
     private final Map<UUID, BrowseSession> browseSessions = new HashMap<>();
     private final Map<UUID, DeliverySession> deliverySessions = new HashMap<>();
     private final Map<String, List<ItemStack>> pendingCollections = new HashMap<>();
+    private final Map<UUID, List<ItemStack>> collectPageSnapshots = new HashMap<>();
 
     private final NamespacedKey UI_KEY;
     private final NamespacedKey ACTION_KEY;
@@ -336,28 +337,121 @@ public class OrderSystem {
     }
 
     /**
-     * Called when the collect GUI is closed. Clears all pending items for the player
-     * and re-adds whatever items remain in the GUI (not taken by the player).
+     * Syncs only the currently visible collect page by diffing against the page snapshot.
+     * This preserves items on other pages.
      */
     public void syncPendingFromCollectGUI(UUID playerUUID, List<ItemStack> remainingItems) {
-        // Get all orders with pending items for this player
+        List<ItemStack> snapshot = collectPageSnapshots.getOrDefault(playerUUID, Collections.emptyList());
+        if (snapshot.isEmpty()) {
+            return;
+        }
+
+        List<ItemStack> normalizedRemaining = new ArrayList<>();
+        if (remainingItems != null) {
+            for (ItemStack item : remainingItems) {
+                if (item != null && !item.getType().isAir()) {
+                    normalizedRemaining.add(item.clone());
+                }
+            }
+        }
+
+        List<ItemStack> removed = subtractItems(snapshot, normalizedRemaining);
+        if (removed.isEmpty()) {
+            return;
+        }
+
+        removePendingItemsForPlayer(playerUUID, removed);
+    }
+
+    private List<ItemStack> subtractItems(List<ItemStack> base, List<ItemStack> remaining) {
+        List<ItemStack> rest = new ArrayList<>();
+        for (ItemStack item : remaining) {
+            if (item != null && !item.getType().isAir()) {
+                rest.add(item.clone());
+            }
+        }
+
+        List<ItemStack> removed = new ArrayList<>();
+        for (ItemStack fromBase : base) {
+            if (fromBase == null || fromBase.getType().isAir()) {
+                continue;
+            }
+
+            int unmatched = fromBase.getAmount();
+            for (ItemStack r : rest) {
+                if (unmatched <= 0) {
+                    break;
+                }
+                if (r == null || r.getType().isAir() || r.getAmount() <= 0 || !r.isSimilar(fromBase)) {
+                    continue;
+                }
+
+                int matched = Math.min(unmatched, r.getAmount());
+                unmatched -= matched;
+                r.setAmount(r.getAmount() - matched);
+            }
+
+            if (unmatched > 0) {
+                ItemStack diff = fromBase.clone();
+                diff.setAmount(unmatched);
+                removed.add(diff);
+            }
+        }
+        return removed;
+    }
+
+    private void removePendingItemsForPlayer(UUID playerUUID, List<ItemStack> toRemove) {
+        if (toRemove == null || toRemove.isEmpty()) {
+            return;
+        }
+
         List<Order> playerOrders = orders.values().stream()
             .filter(o -> o.owner.equals(playerUUID))
             .filter(o -> hasPendingItems(o.id))
+            .sorted(Comparator.comparingLong((Order o) -> o.timestamp).reversed())
             .toList();
 
-        // Clear all pending for this player's orders
-        for (Order order : playerOrders) {
-            clearPendingItems(order.id);
+        for (ItemStack removeStack : toRemove) {
+            if (removeStack == null || removeStack.getType().isAir() || removeStack.getAmount() <= 0) {
+                continue;
+            }
+
+            int remainingAmount = removeStack.getAmount();
+            for (Order order : playerOrders) {
+                if (remainingAmount <= 0) {
+                    break;
+                }
+
+                List<ItemStack> pending = pendingCollections.get(order.id);
+                if (pending == null || pending.isEmpty()) {
+                    continue;
+                }
+
+                for (int i = 0; i < pending.size() && remainingAmount > 0; i++) {
+                    ItemStack p = pending.get(i);
+                    if (p == null || p.getType().isAir() || !p.isSimilar(removeStack)) {
+                        continue;
+                    }
+
+                    int take = Math.min(remainingAmount, p.getAmount());
+                    remainingAmount -= take;
+                    int newAmount = p.getAmount() - take;
+                    if (newAmount <= 0) {
+                        pending.set(i, null);
+                    } else {
+                        p.setAmount(newAmount);
+                    }
+                }
+
+                pending.removeIf(it -> it == null || it.getType().isAir() || it.getAmount() <= 0);
+                if (pending.isEmpty()) {
+                    pendingCollections.remove(order.id);
+                } else {
+                    pendingCollections.put(order.id, pending);
+                }
+            }
         }
 
-        // Put remaining items back into the first order that had pending
-        if (!remainingItems.isEmpty() && !playerOrders.isEmpty()) {
-            String firstOrderId = playerOrders.get(0).id;
-            pendingCollections.put(firstOrderId, new ArrayList<>(remainingItems));
-        }
-
-        // Cleanup any closed orders that no longer have pending items
         for (Order order : playerOrders) {
             cleanupClosedOrder(order.id);
         }
@@ -710,16 +804,20 @@ public class OrderSystem {
 
         Inventory inv = Bukkit.createInventory(null, 54, "§8ORDERS -> Collect Items");
 
-        // Place items (slots 0–44) - NO PDC marking, plain items players can take
+        // Place items (slots 0-44) - NO PDC marking, plain items players can take
         int start = page * itemsPerPage;
         int end = Math.min(start + itemsPerPage, allItems.size());
+        List<ItemStack> pageSnapshot = new ArrayList<>();
         for (int i = start; i < end; i++) {
             int slot = i - start;
-            inv.setItem(slot, allItems.get(i).clone());
+            ItemStack pageItem = allItems.get(i).clone();
+            inv.setItem(slot, pageItem);
+            pageSnapshot.add(pageItem.clone());
         }
+        collectPageSnapshots.put(player, pageSnapshot);
 
         if (allItems.isEmpty()) {
-            ItemStack empty = new ItemStack(Material.BARRIER);
+            ItemStack empty = mark(new ItemStack(Material.BARRIER), "disabled", null);
             ItemMeta emptyMeta = empty.getItemMeta();
             emptyMeta.setDisplayName("§7Keine Items abholbar");
             List<String> emptyLore = new ArrayList<>();
