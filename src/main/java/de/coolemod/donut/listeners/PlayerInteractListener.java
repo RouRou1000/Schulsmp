@@ -21,7 +21,7 @@ import java.util.List;
 
 /**
  * Handles right-click interactions:
- * - Drill Enchant Book: apply drill enchant to held pickaxe/shovel
+ * - Custom Enchant Books (Drill, Frost): apply enchant to held weapon/tool
  * - Physical chests named after a crate: open the crate
  */
 public class PlayerInteractListener implements Listener {
@@ -35,45 +35,21 @@ public class PlayerInteractListener implements Listener {
 
         ItemStack hand = e.getItem();
 
-        // Handle Drill Enchant Book application
+        // Handle Custom Enchant Book application
         if (hand != null && hand.hasItemMeta()) {
             NamespacedKey enchantTypeKey = new NamespacedKey(plugin, "donut_enchant");
             if (hand.getItemMeta().getPersistentDataContainer().has(enchantTypeKey, PersistentDataType.STRING)) {
                 String enchantType = hand.getItemMeta().getPersistentDataContainer().get(enchantTypeKey, PersistentDataType.STRING);
+                e.setCancelled(true);
+                Player p = e.getPlayer();
+                ItemStack offhand = p.getInventory().getItemInOffHand();
+
                 if ("drill".equals(enchantType)) {
-                    e.setCancelled(true);
-                    Player p = e.getPlayer();
-                    ItemStack offhand = p.getInventory().getItemInOffHand();
-                    String offhandType = offhand == null ? "" : offhand.getType().name();
-                    boolean validTool = offhandType.endsWith("_PICKAXE") || offhandType.endsWith("_SHOVEL");
-
-                    if (!validTool) {
-                        p.sendMessage("§8┃ §d§lDRILL §8┃ §cHalte eine Spitzhacke oder Schaufel in der zweiten Hand!");
-                        return;
-                    }
-
-                    NamespacedKey drillKey = new NamespacedKey(plugin, "donut_drill");
-                    ItemMeta offMeta = offhand.getItemMeta();
-                    if (offMeta.getPersistentDataContainer().has(drillKey, PersistentDataType.INTEGER)) {
-                        p.sendMessage("§8┃ §d§lDRILL §8┃ §cDieses Werkzeug hat den Drill Enchant bereits!");
-                        return;
-                    }
-
-                    // Apply drill enchant
-                    offMeta.getPersistentDataContainer().set(drillKey, PersistentDataType.INTEGER, 1);
-                    List<String> lore = offMeta.hasLore() ? new ArrayList<>(offMeta.getLore()) : new ArrayList<>();
-                    lore.add("§5✦ §dDrill §5I");
-                    offMeta.setLore(lore);
-                    offhand.setItemMeta(offMeta);
-                    p.getInventory().setItemInOffHand(offhand);
-
-                    // Consume the book
-                    hand.setAmount(hand.getAmount() - 1);
-                    if (hand.getAmount() <= 0) p.getInventory().setItemInMainHand(null);
-                    else p.getInventory().setItemInMainHand(hand);
-
-                    p.sendMessage("§8┃ §d§l✦ DRILL §8┃ §aDer §dDrill §aEnchant wurde erfolgreich angewendet!");
-                    p.playSound(p.getLocation(), Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1f, 1f);
+                    applyDrill(p, hand, offhand);
+                    return;
+                }
+                if ("frost_1".equals(enchantType) || "frost_2".equals(enchantType)) {
+                    applyFrost(p, hand, offhand, enchantType);
                     return;
                 }
             }
@@ -96,6 +72,62 @@ public class PlayerInteractListener implements Listener {
                 }
             }
         }
+    }
+
+    private void applyDrill(Player p, ItemStack hand, ItemStack offhand) {
+        String offhandType = offhand == null ? "" : offhand.getType().name();
+        boolean validTool = offhandType.endsWith("_PICKAXE") || offhandType.endsWith("_SHOVEL");
+        if (!validTool) {
+            p.sendMessage("§8┃ §d§lDRILL §8┃ §cHalte eine Spitzhacke oder Schaufel in der zweiten Hand!");
+            return;
+        }
+        NamespacedKey drillKey = new NamespacedKey(plugin, "donut_drill");
+        ItemMeta offMeta = offhand.getItemMeta();
+        if (offMeta.getPersistentDataContainer().has(drillKey, PersistentDataType.INTEGER)) {
+            p.sendMessage("§8┃ §d§lDRILL §8┃ §cDieses Werkzeug hat den Drill Enchant bereits!");
+            return;
+        }
+        offMeta.getPersistentDataContainer().set(drillKey, PersistentDataType.INTEGER, 1);
+        List<String> lore = offMeta.hasLore() ? new ArrayList<>(offMeta.getLore()) : new ArrayList<>();
+        lore.add("§5✦ §dDrill §5I");
+        offMeta.setLore(lore);
+        offhand.setItemMeta(offMeta);
+        p.getInventory().setItemInOffHand(offhand);
+        consumeBook(p, hand);
+        p.sendMessage("§8┃ §d§l✦ DRILL §8┃ §aDer §dDrill §aEnchant wurde erfolgreich angewendet!");
+        p.playSound(p.getLocation(), Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1f, 1f);
+    }
+
+    private void applyFrost(Player p, ItemStack hand, ItemStack offhand, String enchantType) {
+        String offhandType = offhand == null ? "" : offhand.getType().name();
+        boolean validWeapon = offhandType.endsWith("_SWORD") || offhandType.endsWith("_AXE") || offhandType.equals("MACE");
+        if (!validWeapon) {
+            p.sendMessage("§8┃ §b§lFROST §8┃ §cHalte ein Schwert, eine Axt oder eine Keule in der zweiten Hand!");
+            return;
+        }
+        NamespacedKey frostKey = new NamespacedKey(plugin, "donut_frost");
+        ItemMeta offMeta = offhand.getItemMeta();
+        if (offMeta.getPersistentDataContainer().has(frostKey, PersistentDataType.INTEGER)) {
+            p.sendMessage("§8┃ §b§lFROST §8┃ §cDiese Waffe hat bereits einen Frost Enchant!");
+            return;
+        }
+        int level = enchantType.equals("frost_1") ? 1 : 2;
+        String levelRoman = level == 1 ? "I" : "II";
+        offMeta.getPersistentDataContainer().set(frostKey, PersistentDataType.INTEGER, level);
+        List<String> lore = offMeta.hasLore() ? new ArrayList<>(offMeta.getLore()) : new ArrayList<>();
+        lore.add("§b❆ §fFrost §b" + levelRoman);
+        offMeta.setLore(lore);
+        offhand.setItemMeta(offMeta);
+        p.getInventory().setItemInOffHand(offhand);
+        consumeBook(p, hand);
+        p.sendMessage("§8┃ §b§l❆ FROST §8┃ §aDer §bFrost " + levelRoman + " §aEnchant wurde erfolgreich angewendet!");
+        p.playSound(p.getLocation(), Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1f, 1.4f);
+    }
+
+    private void consumeBook(Player p, ItemStack hand) {
+        hand.setAmount(hand.getAmount() - 1);
+        if (hand.getAmount() <= 0) p.getInventory().setItemInMainHand(null);
+        else p.getInventory().setItemInMainHand(hand);
     }
 }
 

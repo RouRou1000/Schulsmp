@@ -387,17 +387,36 @@ public class ShopListener_NEW implements Listener {
                 "§8┃ §5§lEffekt§8: §7Baut ein §d3×3 §7Feld pro Abbau ab.",
                 "§8┃ §7Funktioniert mit: §fSpitzhacke§7, §fSchaufel",
                 "§8┃",
-                "§8┃ §e§lAnwendung (Amboss)§8:",
-                "§8┃ §7Werkzeug §fin linkes Feld§7, Buch §fin rechtes Feld.",
-                "§8┃ §e§lAnwendung (Alternative)§8:",
-                "§8┃ §7Buch in §fHaupthand§7, Werkzeug in §fNebenhand§7, Rechtsklick.",
+                "§8┃ §e§lAnwendung§8: §7Buch in §fHaupthand§7, Werkzeug in §fNebenhand§7, Rechtsklick.",
                 "§8┃"
             ));
-            // Hidden Unbreaking I: makes vanilla consider the anvil combination valid
-            // HIDE_ADDITIONAL_TOOLTIP hides stored enchants from the tooltip
             m.addStoredEnchant(Enchantment.UNBREAKING, 1, true);
             m.addItemFlags(ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
             m.getPersistentDataContainer().set(new NamespacedKey(plugin, "donut_enchant"), PersistentDataType.STRING, "drill");
+            book.setItemMeta(m);
+            return book;
+        }
+        if ("frost_1".equals(enchantId) || "frost_2".equals(enchantId)) {
+            int level = enchantId.equals("frost_1") ? 1 : 2;
+            String levelRoman = level == 1 ? "I" : "II";
+            String chanceStr = level == 1 ? "20%" : "50%";
+            String durStr = level == 1 ? "2s" : "3s";
+            String slowStr = level == 1 ? "Langsamkeit 2" : "Langsamkeit 3";
+            ItemStack book = new ItemStack(Material.ENCHANTED_BOOK);
+            EnchantmentStorageMeta m = (EnchantmentStorageMeta) book.getItemMeta();
+            m.setDisplayName("§b❆ §f§lFrost §b§l" + levelRoman + " §7Enchant-Buch");
+            m.setLore(Arrays.asList(
+                "§8┃",
+                "§8┃ §b§lEffekt§8: §7Bei Treffer §b" + chanceStr + " §7Chance:",
+                "§8┃ §7» §f" + slowStr + " §7für §b" + durStr,
+                "§8┃ §7Funktioniert mit: §fSchwert§7, §fAxt§7, §fKeule",
+                "§8┃",
+                "§8┃ §e§lAnwendung§8: §7Buch in §fHaupthand§7, Waffe in §fNebenhand§7, Rechtsklick.",
+                "§8┃"
+            ));
+            m.addStoredEnchant(Enchantment.UNBREAKING, 1, true);
+            m.addItemFlags(ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
+            m.getPersistentDataContainer().set(new NamespacedKey(plugin, "donut_enchant"), PersistentDataType.STRING, enchantId);
             book.setItemMeta(m);
             return book;
         }

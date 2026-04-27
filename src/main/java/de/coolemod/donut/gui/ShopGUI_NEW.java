@@ -64,11 +64,19 @@ public class ShopGUI_NEW implements InventoryHolder {
             "§8┃ §7Kaufe zusaetzliche Shards mit Geld",
             "§8┃ §7Waehle die Menge im Kaufmenue",
             "§8▸ §aPreis§8: §e$1,000 §7pro Shard"));
-        // Custom Enchant: Drill
+        // Custom Enchants
         SHARD_ITEMS.put(29, new ShopItem(Material.ENCHANTED_BOOK, "§5✦ §d§lDrill §7Enchant-Buch", 2500, "drill",
             "§8┃ §7Baut ein §d3×3 §7Feld pro Abbau ab",
             "§8┃ §7Für: §fSpitzhacke §7& §fSchaufel",
             "§8▸ §aPreis§8: §d2500 Shards"));
+        SHARD_ITEMS.put(28, new ShopItem(Material.ENCHANTED_BOOK, "§b❆ §f§lFrost §b§lI §7Enchant-Buch", 1500, "frost_1",
+            "§8┃ §7Treffer: §b20% §7Chance, §fLangsamkeit 2 §7für §b2s",
+            "§8┃ §7Für: §fSchwert§7, §fAxt§7 & §fKeule",
+            "§8▸ §aPreis§8: §b1500 Shards"));
+        SHARD_ITEMS.put(30, new ShopItem(Material.ENCHANTED_BOOK, "§b❆ §f§lFrost §b§lII §7Enchant-Buch", 3000, "frost_2",
+            "§8┃ §7Treffer: §b50% §7Chance, §fLangsamkeit 3 §7für §b3s",
+            "§8┃ §7Für: §fSchwert§7, §fAxt§7 & §fKeule",
+            "§8▸ §aPreis§8: §b3000 Shards"));
         SHARD_ITEMS.put(11, new ShopItem(Material.SPAWNER, "§d§lZombie Spawner", 500, 1, "ZOMBIE", "§8┃ §7Spawner für Zombies", "§8┃ §d§lSHARD-ONLY!", "§8▸ §aPreis§8: §d500 Shards"));
         SHARD_ITEMS.put(13, new ShopItem(Material.SPAWNER, "§d§lSkeleton Spawner", 500, 1, "SKELETON", "§8┃ §7Spawner für Skelette", "§8┃ §d§lSHARD-ONLY!", "§8▸ §aPreis§8: §d500 Shards"));
         SHARD_ITEMS.put(15, new ShopItem(Material.SPAWNER, "§d§lCreeper Spawner", 750, 1, "CREEPER", "§8┃ §7Spawner für Creeper", "§8┃ §d§lSEHR WERTVOLL!", "§8▸ §aPreis§8: §d750 Shards"));
