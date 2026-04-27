@@ -1,6 +1,7 @@
 package de.coolemod.donut.listeners;
 
 import de.coolemod.donut.DonutPlugin;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
@@ -27,7 +28,7 @@ public class AnvilCustomEnchantListener implements Listener {
     }
 
     // Shows the result in the output slot
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onPrepareAnvil(PrepareAnvilEvent e) {
         AnvilInventory inv = e.getInventory();
         ItemStack base = inv.getItem(0);
@@ -50,7 +51,16 @@ public class AnvilCustomEnchantListener implements Listener {
 
         e.setResult(result);
         inv.setRepairCost(0);
-        inv.setMaximumRepairCost(0);
+        inv.setMaximumRepairCost(Integer.MAX_VALUE);
+
+        // Schedule an override to prevent vanilla from wiping the result after this event
+        final ItemStack finalResult = result;
+        Bukkit.getScheduler().runTask(plugin, () -> {
+            if (inv.getItem(0) != null && inv.getItem(1) != null) {
+                inv.setItem(2, finalResult);
+                inv.setRepairCost(0);
+            }
+        });
     }
 
     // Handles the actual click on the result slot — bypasses XP cost entirely
