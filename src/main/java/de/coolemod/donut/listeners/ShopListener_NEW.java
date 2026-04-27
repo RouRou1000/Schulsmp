@@ -15,6 +15,9 @@ import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.enchantments.Enchantment;
+import org.bukkit.inventory.ItemFlag;
+import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
@@ -377,7 +380,7 @@ public class ShopListener_NEW implements Listener {
     private ItemStack createEnchantBook(String enchantId) {
         if ("drill".equals(enchantId)) {
             ItemStack book = new ItemStack(Material.ENCHANTED_BOOK);
-            ItemMeta m = book.getItemMeta();
+            EnchantmentStorageMeta m = (EnchantmentStorageMeta) book.getItemMeta();
             m.setDisplayName("§5✦ §d§lDrill §7Enchant-Buch");
             m.setLore(Arrays.asList(
                 "§8┃",
@@ -390,6 +393,10 @@ public class ShopListener_NEW implements Listener {
                 "§8┃ §7Buch in §fHaupthand§7, Werkzeug in §fNebenhand§7, Rechtsklick.",
                 "§8┃"
             ));
+            // Hidden Unbreaking I: makes vanilla consider the anvil combination valid
+            // HIDE_ADDITIONAL_TOOLTIP hides stored enchants from the tooltip
+            m.addStoredEnchant(Enchantment.UNBREAKING, 1, true);
+            m.addItemFlags(ItemFlag.HIDE_ADDITIONAL_TOOLTIP);
             m.getPersistentDataContainer().set(new NamespacedKey(plugin, "donut_enchant"), PersistentDataType.STRING, "drill");
             book.setItemMeta(m);
             return book;

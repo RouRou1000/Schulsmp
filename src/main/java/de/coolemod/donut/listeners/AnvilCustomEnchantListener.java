@@ -51,9 +51,8 @@ public class AnvilCustomEnchantListener implements Listener {
 
         e.setResult(result);
         inv.setRepairCost(0);
-        inv.setMaximumRepairCost(Integer.MAX_VALUE);
 
-        // Schedule an override to prevent vanilla from wiping the result after this event
+        // Force the result slot next tick in case vanilla overrides it
         final ItemStack finalResult = result;
         Bukkit.getScheduler().runTask(plugin, () -> {
             if (inv.getItem(0) != null && inv.getItem(1) != null) {
