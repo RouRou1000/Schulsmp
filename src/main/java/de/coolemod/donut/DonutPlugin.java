@@ -180,6 +180,8 @@ public final class DonutPlugin extends JavaPlugin {
             getServer().getPluginManager().registerEvents(new PlayerInteractListener(this), this);
             getLogger().info("[DEBUG] DrillListener...");
             getServer().getPluginManager().registerEvents(new de.coolemod.donut.listeners.DrillListener(this), this);
+            getLogger().info("[DEBUG] AnvilCustomEnchantListener...");
+            getServer().getPluginManager().registerEvents(new de.coolemod.donut.listeners.AnvilCustomEnchantListener(this), this);
             getLogger().info("[DEBUG] ClanListener...");
             getServer().getPluginManager().registerEvents(new ClanListener(this), this);
             getLogger().info("[DEBUG] PlayerChatListener...");

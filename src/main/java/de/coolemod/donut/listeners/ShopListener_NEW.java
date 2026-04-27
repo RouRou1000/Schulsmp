@@ -381,12 +381,13 @@ public class ShopListener_NEW implements Listener {
             m.setDisplayName("§5✦ §d§lDrill §7Enchant-Buch");
             m.setLore(Arrays.asList(
                 "§8┃",
-                "§8┃ §7Anwenden: §dDrill-Buch §7in Haupthand halten,",
-                "§8┃ §7Spitzhacke §7oder §7Schaufel in zweiter Hand.",
-                "§8┃ §7Rechtsklick zum Verzaubern.",
-                "§8┃",
                 "§8┃ §5§lEffekt§8: §7Baut ein §d3×3 §7Feld pro Abbau ab.",
                 "§8┃ §7Funktioniert mit: §fSpitzhacke§7, §fSchaufel",
+                "§8┃",
+                "§8┃ §e§lAnwendung (Amboss)§8:",
+                "§8┃ §7Werkzeug §fin linkes Feld§7, Buch §fin rechtes Feld.",
+                "§8┃ §e§lAnwendung (Alternative)§8:",
+                "§8┃ §7Buch in §fHaupthand§7, Werkzeug in §fNebenhand§7, Rechtsklick.",
                 "§8┃"
             ));
             m.getPersistentDataContainer().set(new NamespacedKey(plugin, "donut_enchant"), PersistentDataType.STRING, "drill");
