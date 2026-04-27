@@ -87,14 +87,6 @@ public class CrateGUI {
     }
 
     private int countKeys(Player p, String crateId) {
-        int cnt = 0;
-        for (ItemStack is : p.getInventory().getContents()) {
-            if (is == null) continue;
-            if (is.getType() == Material.TRIPWIRE_HOOK && is.hasItemMeta()) {
-                String id = is.getItemMeta().getPersistentDataContainer().get(new org.bukkit.NamespacedKey(plugin, "donut_crate_id"), org.bukkit.persistence.PersistentDataType.STRING);
-                if (crateId.equals(id)) cnt += is.getAmount();
-            }
-        }
-        return cnt;
+        return plugin.getCrateManager().getKeyCount(p.getUniqueId(), crateId);
     }
 }

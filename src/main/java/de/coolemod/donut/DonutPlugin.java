@@ -178,6 +178,8 @@ public final class DonutPlugin extends JavaPlugin {
             getServer().getPluginManager().registerEvents(new CommandVisibilityListener(), this);
             getLogger().info("[DEBUG] PlayerInteractListener...");
             getServer().getPluginManager().registerEvents(new PlayerInteractListener(this), this);
+            getLogger().info("[DEBUG] DrillListener...");
+            getServer().getPluginManager().registerEvents(new de.coolemod.donut.listeners.DrillListener(this), this);
             getLogger().info("[DEBUG] ClanListener...");
             getServer().getPluginManager().registerEvents(new ClanListener(this), this);
             getLogger().info("[DEBUG] PlayerChatListener...");
@@ -360,6 +362,7 @@ public final class DonutPlugin extends JavaPlugin {
         if (clanManager != null) clanManager.save();
         if (settingsManager != null) settingsManager.save();
         if (antiCheatHistoryManager != null) antiCheatHistoryManager.save();
+        if (crateManager != null) crateManager.saveVirtualKeys();
         getLogger().info("SchulCore deaktiviert und Daten gespeichert.");
     }
 

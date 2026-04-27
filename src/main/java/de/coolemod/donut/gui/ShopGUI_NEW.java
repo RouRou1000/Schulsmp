@@ -64,6 +64,11 @@ public class ShopGUI_NEW implements InventoryHolder {
             "§8┃ §7Kaufe zusaetzliche Shards mit Geld",
             "§8┃ §7Waehle die Menge im Kaufmenue",
             "§8▸ §aPreis§8: §e$1,000 §7pro Shard"));
+        // Custom Enchant: Drill
+        SHARD_ITEMS.put(29, new ShopItem(Material.ENCHANTED_BOOK, "§5✦ §d§lDrill §7Enchant-Buch", 200, "drill",
+            "§8┃ §7Baut ein §d3×3 §7Feld pro Abbau ab",
+            "§8┃ §7Für: §fSpitzhacke §7& §fSchaufel",
+            "§8▸ §aPreis§8: §d200 Shards"));
         SHARD_ITEMS.put(11, new ShopItem(Material.SPAWNER, "§d§lZombie Spawner", 500, 1, "ZOMBIE", "§8┃ §7Spawner für Zombies", "§8┃ §d§lSHARD-ONLY!", "§8▸ §aPreis§8: §d500 Shards"));
         SHARD_ITEMS.put(13, new ShopItem(Material.SPAWNER, "§d§lSkeleton Spawner", 500, 1, "SKELETON", "§8┃ §7Spawner für Skelette", "§8┃ §d§lSHARD-ONLY!", "§8▸ §aPreis§8: §d500 Shards"));
         SHARD_ITEMS.put(15, new ShopItem(Material.SPAWNER, "§d§lCreeper Spawner", 750, 1, "CREEPER", "§8┃ §7Spawner für Creeper", "§8┃ §d§lSEHR WERTVOLL!", "§8▸ §aPreis§8: §d750 Shards"));
@@ -408,6 +413,7 @@ public class ShopGUI_NEW implements InventoryHolder {
         public final String[] lore;
         public final boolean isShard;
         public final boolean grantsShardBalance;
+        public String enchantId = null; // null for regular items
 
         private ShopItem(Material material, String name, int price, int amount, String spawnerType,
                          boolean isShard, boolean grantsShardBalance, String... lore) {
@@ -435,6 +441,13 @@ public class ShopGUI_NEW implements InventoryHolder {
         public ShopItem(Material material, String name, int price, int amount, boolean grantsShardBalance,
                         String lore1, String lore2, String lore3) {
             this(material, name, price, amount, null, false, grantsShardBalance, lore1, lore2, lore3);
+        }
+
+        // Custom Enchant (isShard = true, enchantId gesetzt)
+        public ShopItem(Material material, String name, int price, String enchantId,
+                        String lore1, String lore2, String lore3) {
+            this(material, name, price, 1, null, true, false, lore1, lore2, lore3);
+            this.enchantId = enchantId;
         }
 
         public ItemStack toItemStack() {

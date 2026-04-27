@@ -15,7 +15,10 @@ import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
+
+import java.util.Arrays;
 
 import java.util.Map;
 import java.util.UUID;
@@ -277,8 +280,15 @@ public class ShopListener_NEW implements Listener {
             }
 
             if (plugin.getShards().removeShards(p.getUniqueId(), requiredShards)) {
-                // Gib Spawner
-                if (item.spawnerType != null && item.material == Material.SPAWNER) {
+                // Gib Item basierend auf Typ
+                if (item.enchantId != null) {
+                    // Custom Enchant Book
+                    ItemStack book = createEnchantBook(item.enchantId);
+                    for (int i = 0; i < amount; i++) {
+                        java.util.HashMap<Integer, ItemStack> leftover = p.getInventory().addItem(book.clone());
+                        for (ItemStack left : leftover.values()) p.getWorld().dropItemNaturally(p.getLocation(), left);
+                    }
+                } else if (item.spawnerType != null && item.material == Material.SPAWNER) {
                     try {
                         org.bukkit.entity.EntityType entityType = org.bukkit.entity.EntityType.valueOf(item.spawnerType);
                         ItemStack spawner = plugin.getSpawnerManager().createSpawnerItem(entityType);
@@ -362,6 +372,28 @@ public class ShopListener_NEW implements Listener {
             }
             remaining -= stackAmount;
         }
+    }
+
+    private ItemStack createEnchantBook(String enchantId) {
+        if ("drill".equals(enchantId)) {
+            ItemStack book = new ItemStack(Material.ENCHANTED_BOOK);
+            ItemMeta m = book.getItemMeta();
+            m.setDisplayName("§5✦ §d§lDrill §7Enchant-Buch");
+            m.setLore(Arrays.asList(
+                "§8┃",
+                "§8┃ §7Anwenden: §dDrill-Buch §7in Haupthand halten,",
+                "§8┃ §7Spitzhacke §7oder §7Schaufel in zweiter Hand.",
+                "§8┃ §7Rechtsklick zum Verzaubern.",
+                "§8┃",
+                "§8┃ §5§lEffekt§8: §7Baut ein §d3×3 §7Feld pro Abbau ab.",
+                "§8┃ §7Funktioniert mit: §fSpitzhacke§7, §fSchaufel",
+                "§8┃"
+            ));
+            m.getPersistentDataContainer().set(new NamespacedKey(plugin, "donut_enchant"), PersistentDataType.STRING, "drill");
+            book.setItemMeta(m);
+            return book;
+        }
+        return new ItemStack(Material.ENCHANTED_BOOK);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)

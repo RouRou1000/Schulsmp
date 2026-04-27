@@ -34,8 +34,8 @@ public class CrateCommand implements CommandExecutor {
         if (target == null) { sender.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§cSpieler nicht online."); return true; }
         String crateId = args[2]; int amount; try { amount = Integer.parseInt(args[3]); } catch (NumberFormatException e) { sender.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§cUngültige Zahl."); return true; }
         if (!plugin.getCrateManager().hasCrate(crateId)) { sender.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§cKiste nicht gefunden."); return true; }
-        target.getInventory().addItem(plugin.getCrateManager().createKey(crateId, amount));
-        sender.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§a" + amount + " Schlüssel für Kiste §e" + crateId + " §agegeben.");
+        plugin.getCrateManager().giveKeys(target.getUniqueId(), crateId, amount);
+        sender.sendMessage(plugin.getConfig().getString("messages.prefix", "") + "§a" + amount + " Schlüssel für Kiste §e" + crateId + " §agegeben (virtuell).");
         return true;
     }
 }

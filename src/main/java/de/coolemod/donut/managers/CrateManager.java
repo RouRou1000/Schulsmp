@@ -4,6 +4,8 @@ import de.coolemod.donut.DonutPlugin;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -11,6 +13,8 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -27,14 +31,57 @@ public class CrateManager {
 
     private final Map<String, Crate> crates = new HashMap<>();
 
+    // Virtual key storage: playerUUID -> crateId -> amount
+    private final Map<UUID, Map<String, Integer>> virtualKeys = new HashMap<>();
+    private File keyFile;
+    private FileConfiguration keyConfig;
+
     public CrateManager(DonutPlugin plugin) {
         this.plugin = plugin;
         loadCrates();
+        loadVirtualKeys();
     }
 
     public void reload() {
         crates.clear();
         loadCrates();
+    }
+
+    // ==================== VIRTUAL KEY STORAGE ====================
+
+    private void loadVirtualKeys() {
+        keyFile = new File(plugin.getDataFolder(), "crate_keys.yml");
+        if (!keyFile.exists()) {
+            try { keyFile.createNewFile(); } catch (IOException ignored) {}
+        }
+        keyConfig = YamlConfiguration.loadConfiguration(keyFile);
+        if (!keyConfig.isConfigurationSection("keys")) return;
+        for (String uuidStr : keyConfig.getConfigurationSection("keys").getKeys(false)) {
+            try {
+                UUID uuid = UUID.fromString(uuidStr);
+                var section = keyConfig.getConfigurationSection("keys." + uuidStr);
+                if (section == null) continue;
+                Map<String, Integer> playerKeys = new HashMap<>();
+                for (String crateId : section.getKeys(false)) {
+                    int amount = keyConfig.getInt("keys." + uuidStr + "." + crateId);
+                    if (amount > 0) playerKeys.put(crateId, amount);
+                }
+                if (!playerKeys.isEmpty()) virtualKeys.put(uuid, playerKeys);
+            } catch (IllegalArgumentException ignored) {}
+        }
+    }
+
+    public void saveVirtualKeys() {
+        if (keyConfig == null) return;
+        for (Map.Entry<UUID, Map<String, Integer>> e : virtualKeys.entrySet()) {
+            String uuidStr = e.getKey().toString();
+            for (Map.Entry<String, Integer> ce : e.getValue().entrySet()) {
+                keyConfig.set("keys." + uuidStr + "." + ce.getKey(), ce.getValue());
+            }
+        }
+        try { keyConfig.save(keyFile); } catch (IOException ex) {
+            plugin.getLogger().warning("Konnte crate_keys.yml nicht speichern: " + ex.getMessage());
+        }
     }
 
     private void loadCrates() {
@@ -139,36 +186,26 @@ public class CrateManager {
     public Crate getCrate(String id) { return crates.get(id); }
 
     /**
-     * Zählt wie viele Keys ein Spieler für eine bestimmte Kiste hat.
+     * Gibt die Anzahl virtueller Keys eines Spielers für eine Kiste zurück.
      */
     public int getKeyCount(UUID playerId, String crateId) {
-        Player p = Bukkit.getPlayer(playerId);
-        if (p == null) return 0;
-        int count = 0;
-        for (ItemStack is : p.getInventory().getContents()) {
-            if (is == null) continue;
-            if (is.getType() == Material.TRIPWIRE_HOOK && is.hasItemMeta()) {
-                ItemMeta meta = is.getItemMeta();
-                if (meta.getPersistentDataContainer().has(new NamespacedKey(plugin, "donut_crate_id"), PersistentDataType.STRING)) {
-                    String id = meta.getPersistentDataContainer().get(new NamespacedKey(plugin, "donut_crate_id"), PersistentDataType.STRING);
-                    if (crateId.equals(id)) count += is.getAmount();
-                }
-            }
-        }
-        return count;
+        Map<String, Integer> playerKeys = virtualKeys.get(playerId);
+        if (playerKeys == null) return 0;
+        return playerKeys.getOrDefault(crateId, 0);
     }
 
     /**
-     * Gibt einem Spieler Keys für eine Kiste.
+     * Gibt einem Spieler Keys für eine Kiste (virtuell gespeichert, kein Item).
      */
     public void giveKeys(UUID playerId, String crateId, int amount) {
+        virtualKeys.computeIfAbsent(playerId, k -> new HashMap<>())
+                   .merge(crateId, amount, Integer::sum);
+        saveVirtualKeys();
         Player p = Bukkit.getPlayer(playerId);
-        if (p == null) return;
-        ItemStack key = createKey(crateId, amount);
-        if (p.getInventory().firstEmpty() == -1) {
-            p.getWorld().dropItemNaturally(p.getLocation(), key);
-        } else {
-            p.getInventory().addItem(key);
+        if (p != null) {
+            String displayName = crates.containsKey(crateId) ? crates.get(crateId).display : crateId;
+            p.sendMessage(plugin.getConfig().getString("messages.prefix", "") +
+                "§a+" + amount + " §6Schlüssel §afür §e" + displayName + " §aerhalten!");
         }
     }
 
@@ -186,20 +223,14 @@ public class CrateManager {
     }
 
     public boolean consumeKey(Player p, String crateId) {
-        for (int i = 0; i < p.getInventory().getSize(); i++) {
-            ItemStack is = p.getInventory().getItem(i);
-            if (is == null) continue;
-            if (is.getType() == Material.TRIPWIRE_HOOK && is.hasItemMeta() && is.getItemMeta().getPersistentDataContainer().has(new NamespacedKey(plugin, "donut_crate_id"), PersistentDataType.STRING)) {
-                String id = is.getItemMeta().getPersistentDataContainer().get(new NamespacedKey(plugin, "donut_crate_id"), PersistentDataType.STRING);
-                if (crateId.equals(id)) {
-                    is.setAmount(is.getAmount() - 1);
-                    if (is.getAmount() <= 0) p.getInventory().setItem(i, null);
-                    else p.getInventory().setItem(i, is);
-                    return true;
-                }
-            }
-        }
-        return false;
+        Map<String, Integer> playerKeys = virtualKeys.get(p.getUniqueId());
+        if (playerKeys == null) return false;
+        int count = playerKeys.getOrDefault(crateId, 0);
+        if (count <= 0) return false;
+        if (count == 1) playerKeys.remove(crateId);
+        else playerKeys.put(crateId, count - 1);
+        saveVirtualKeys();
+        return true;
     }
 
     private ItemStack pickWeighted(Crate c) {
